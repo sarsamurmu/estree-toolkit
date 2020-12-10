@@ -1,0 +1,19 @@
+{
+  "cSpell.words": [
+    "escodegen",
+    "estree",
+    "meriyah",
+    "nodepath"
+  ],
+  "files.associations": {
+    "*.tsconfig.json": "jsonc"
+  },
+  "json.schemas": [
+    {
+      "fileMatch": [
+        "*.tsconfig.json"
+      ],
+      "url": "https://json.schemastore.org/tsconfig"
+    }
+  ],
+}
