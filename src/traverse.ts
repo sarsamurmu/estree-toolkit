@@ -1,19 +1,21 @@
 import { BaseNode, Node } from 'estree';
 
 import { NodePath } from './nodepath';
-import { lazy, Lazy } from './utils';
 
 interface TraverserOptions {}
 
 interface VisitorContext {}
 
-type VisitorFn = (this: VisitorContext, path: NodePath) => boolean | void;
+type VisitorFn<T extends BaseNode = BaseNode> = (this: VisitorContext, path: NodePath<T>) => boolean | void;
+type Visitor<T extends BaseNode> = VisitorFn<T> | {
+  enter?: VisitorFn<T>;
+  leave?: VisitorFn<T>;
+}
 
-interface Visitors {
-  [type: string]: VisitorFn | {
-    enter?: VisitorFn;
-    leave?: VisitorFn;
-  }
+type Visitors = {
+  [K in Node as `${K['type']}`]?: Visitor<K>;
+} & {
+  [type: string]: Visitor<BaseNode>;
 }
 
 export const createTraverser = (options: TraverserOptions) => {
@@ -40,21 +42,19 @@ export const createTraverser = (options: TraverserOptions) => {
     const visitorContext: VisitorContext = {};
 
     const visit = ({
-      node, key, listKey, getParentPath
+      node, key, listKey, parentPath
     }: {
       node: BaseNode;
       key: string | number;
-      listKey: string | undefined;
-      getParentPath: Lazy<NodePath | undefined>;
+      listKey: string | null;
+      parentPath: NodePath | null;
     }) => {
       if (node) {
         const visitor = normalizedVisitors[node.type] || {};
-        const getNodePath: Lazy<NodePath> = lazy(() => (
-          new NodePath({ node, key, listKey, getParentPath })
-        ));
+        const nodePath = new NodePath({ node, key, listKey, parentPath });
 
-        if (visitor.enter) {
-          visitor.enter.call(visitorContext, getNodePath());
+        if (visitor.enter != null) {
+          visitor.enter.call(visitorContext, nodePath);
         }
 
         for (const key in node) {
@@ -64,12 +64,12 @@ export const createTraverser = (options: TraverserOptions) => {
 
           if (Array.isArray(value)) {
             for (let i = 0; i < value.length; i++) {
-              if (value[i] && typeof value[i].type === 'string') {
+              if (value[i] != null && typeof value[i].type === 'string') {
                 visit({
                   node: value[i],
                   key: i,
                   listKey: key,
-                  getParentPath: getNodePath
+                  parentPath: nodePath
                 });
               }
             }
@@ -77,23 +77,23 @@ export const createTraverser = (options: TraverserOptions) => {
             visit({
               node: value,
               key,
-              listKey: undefined,
-              getParentPath: getNodePath
+              listKey: null,
+              parentPath: nodePath
             });
           }
         }
 
-        if (visitor.leave) {
-          visitor.leave.call(visitorContext, getNodePath());
+        if (visitor.leave != null) {
+          visitor.leave.call(visitorContext, nodePath);
         }
       }
     }
 
     visit({
       node: ast,
-      key: undefined as any,
-      listKey: undefined,
-      getParentPath: lazy(() => undefined)
+      key: null as any,
+      listKey: null,
+      parentPath: null
     });
   }
 }

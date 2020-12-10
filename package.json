@@ -8,7 +8,7 @@
     "build": "tsc",
     "build:watch": "tsc --incremental -w",
     "test": "jest",
-    "test:watch": "jest -w",
+    "test:watch": "jest --watch",
     "test:build": "tsc -p ./tests/build.tsconfig.json",
     "test:build:watch": "tsc -p ./tests/build.tsconfig.json --incremental -w"
   },
