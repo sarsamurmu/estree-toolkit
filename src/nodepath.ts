@@ -6,9 +6,9 @@ export class NodePath<T extends Node = Node> {
   /** The node associated with this NodePath */
   node: T;
   /** This node's key in its parent */
-  key: string | number;
+  key: Node['type'] | number;
   /** If this node is part of an array, `listKey` is the key of the array in its parent */
-  listKey: string | null;
+  listKey: Node['type'] | null;
   /** Get the parent path of this path */
   parentPath: NodePath | null;
   /** Type of the node that is associated with this NodePath */
