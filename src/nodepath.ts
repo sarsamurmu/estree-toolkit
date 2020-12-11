@@ -1,10 +1,9 @@
-import { BaseNode } from 'estree';
+import { Node } from 'estree';
 
 import { debugLog } from './utils';
 
-const internal = Symbol('internal');
-
-export class NodePath<T extends BaseNode = BaseNode> {
+export class NodePath<T extends Node = Node> {
+  /** The node associated with this NodePath */
   node: T;
   /** This node's key in its parent */
   key: string | number;
@@ -12,12 +11,8 @@ export class NodePath<T extends BaseNode = BaseNode> {
   listKey: string | null;
   /** Get the parent path of this path */
   parentPath: NodePath | null;
-
-  [internal]: {};
-
-  static get internalSymbol() {
-    return internal;
-  }
+  /** Type of the node that is associated with this NodePath */
+  type: T['type'];
 
   constructor(data: {
     node: NodePath<T>['node'];
@@ -29,8 +24,7 @@ export class NodePath<T extends BaseNode = BaseNode> {
     this.key = data.key;
     this.listKey = data.listKey;
     this.parentPath = data.parentPath;
-
-    this[internal] = {}
+    this.type = this.node.type;
   }
 
   /* Things related to removal */
@@ -39,9 +33,9 @@ export class NodePath<T extends BaseNode = BaseNode> {
   isRemoved() {
     if (!this.parentPath) return false;
     if (this.listKey) {
-      return ((this.parentPath.node as any)[this.listKey] as BaseNode[]).indexOf(this.node) > -1;
+      return ((this.parentPath.node as any)[this.listKey] as Node[]).indexOf(this.node) > -1;
     } else if (this.key) {
-      return (this.parentPath.node as any)[this.key] == this.node;
+      return (this.parentPath.node as any)[this.key] === this.node;
     }
   }
 
@@ -49,7 +43,7 @@ export class NodePath<T extends BaseNode = BaseNode> {
   remove() {
     if (this.parentPath) {
       if (this.listKey) {
-        const nodes = (this.parentPath.node as any)[this.listKey] as BaseNode[];
+        const nodes = (this.parentPath.node as any)[this.listKey] as Node[];
         const nodeIndex = nodes.indexOf(this.node);
         if (nodeIndex > -1) {
           nodes.splice(nodeIndex, 1);

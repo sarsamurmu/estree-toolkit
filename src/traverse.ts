@@ -1,4 +1,5 @@
-import { BaseNode, Node } from 'estree';
+/* eslint-disable @typescript-eslint/no-empty-interface */
+import { Node } from 'estree';
 
 import { NodePath } from './nodepath';
 
@@ -6,8 +7,8 @@ interface TraverserOptions {}
 
 interface VisitorContext {}
 
-type VisitorFn<T extends BaseNode = BaseNode> = (this: VisitorContext, path: NodePath<T>) => boolean | void;
-type Visitor<T extends BaseNode> = VisitorFn<T> | {
+type VisitorFn<T extends Node = Node> = (this: VisitorContext, path: NodePath<T>) => boolean | void;
+type Visitor<T extends Node> = VisitorFn<T> | {
   enter?: VisitorFn<T>;
   leave?: VisitorFn<T>;
 }
@@ -15,7 +16,7 @@ type Visitor<T extends BaseNode> = VisitorFn<T> | {
 type Visitors = {
   [K in Node as `${K['type']}`]?: Visitor<K>;
 } & {
-  [type: string]: Visitor<BaseNode>;
+  [type: string]: Visitor<Node>;
 }
 
 export const createTraverser = (options: TraverserOptions) => {
@@ -44,7 +45,7 @@ export const createTraverser = (options: TraverserOptions) => {
     const visit = ({
       node, key, listKey, parentPath
     }: {
-      node: BaseNode;
+      node: Node;
       key: string | number;
       listKey: string | null;
       parentPath: NodePath | null;
