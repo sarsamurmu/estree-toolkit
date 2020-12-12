@@ -1,48 +1,38 @@
 import { createTraverser } from '<project>';
-import { Node } from 'estree';
+import { Node, ExpressionStatement, AssignmentExpression } from 'estree';
 
-describe('Removal', () => {
-  test('single', () => {
+describe('Methods', () => {
+  test('findParent', () => {
     const ast: Node = {
-      type: 'IfStatement',
-      test: {
-        type: 'Literal',
-        value: 0
-      },
-      consequent: {
-        type: 'BlockStatement',
-        body: []
-      },
-      alternate: {
-        type: 'ExpressionStatement',
-        expression: {
-          type: 'Literal',
-          value: true
+      type: 'BlockStatement',
+      body: [
+        {
+          type: 'BlockStatement',
+          body: [
+            {
+              type: 'ExpressionStatement',
+              expression: {
+                type: 'Literal',
+                value: 0
+              }
+            }
+          ]
         }
-      }
+      ]
     };
 
     createTraverser({})(ast, {
-      ExpressionStatement(path) {
-        path.remove();
+      Literal(path) {
+        expect(
+          path.findParent((parent) => parent.type === 'BlockStatement').node
+        ).toBe(ast.body[0]);
       }
     });
 
-    expect(ast).toEqual({
-      type: 'IfStatement',
-      test: {
-        type: 'Literal',
-        value: 0
-      },
-      consequent: {
-        type: 'BlockStatement',
-        body: []
-      },
-      alternate: null
-    });
+    expect.assertions(1);
   });
 
-  test('array', () => {
+  test('getFunctionParent', () => {
     const ast: Node = {
       type: 'Program',
       sourceType: 'script',
@@ -50,42 +40,175 @@ describe('Removal', () => {
         {
           type: 'ExpressionStatement',
           expression: {
-            type: 'Literal',
-            value: 'string'
+            type: 'ArrowFunctionExpression',
+            params: [],
+            body: {
+              type: 'Literal',
+              value: 'arrow'
+            },
+            async: false,
+            expression: true
           }
         },
         {
+          type: 'ExpressionStatement',
+          expression: {
+            type: 'AssignmentExpression',
+            left: {
+              type: 'Identifier',
+              name: 'a'
+            },
+            operator: '=',
+            right: {
+              type: 'FunctionExpression',
+              id: null,
+              params: [],
+              body: {
+                type: 'BlockStatement',
+                body: [
+                  {
+                    type: 'ExpressionStatement',
+                    expression: {
+                      type: 'Literal',
+                      value: 'expression'
+                    }
+                  }
+                ]
+              },
+              async: false,
+              generator: false
+            }
+          }
+        },
+        {
+          type: 'FunctionDeclaration',
+          id: {
+            type: 'Identifier',
+            name: 'b'
+          },
+          params: [],
+          body: {
+            type: 'BlockStatement',
+            body: [
+              {
+                type: 'ExpressionStatement',
+                expression: {
+                  type: 'Literal',
+                  value: 'declaration'
+                }
+              }
+            ]
+          },
+          async: false,
+          generator: false
+        }
+      ]
+    };
+
+    createTraverser({})(ast, {
+      Literal(path) {
+        const { node: { value } } = path;
+        if (value === 'arrow') {
+          expect(path.getFunctionParent().node).toBe((ast.body[0] as ExpressionStatement).expression);
+        } else if (value === 'expression') {
+          expect(path.getFunctionParent().node).toBe(
+            ((ast.body[1] as ExpressionStatement).expression as AssignmentExpression).right
+          );
+        } else if (value === 'declaration') {
+          expect(path.getFunctionParent().node).toBe(ast.body[2]);
+        }
+      }
+    });
+
+    expect.assertions(3);
+  });
+
+  describe('remove', () => {
+    test('single', () => {
+      const ast: Node = {
+        type: 'IfStatement',
+        test: {
+          type: 'Literal',
+          value: 0
+        },
+        consequent: {
+          type: 'BlockStatement',
+          body: []
+        },
+        alternate: {
           type: 'ExpressionStatement',
           expression: {
             type: 'Literal',
             value: true
           }
         }
-      ]
-    };
+      };
 
-    createTraverser({})(ast, {
-      ExpressionStatement(path) {
-        const expressionNode = path.node.expression;
-        if (
-          expressionNode.type === 'Literal' &&
-          typeof expressionNode.value === 'boolean'
-        ) path.remove();
-      }
+      createTraverser({})(ast, {
+        ExpressionStatement(path) {
+          path.remove();
+        }
+      });
+
+      expect(ast).toEqual({
+        type: 'IfStatement',
+        test: {
+          type: 'Literal',
+          value: 0
+        },
+        consequent: {
+          type: 'BlockStatement',
+          body: []
+        },
+        alternate: null
+      });
     });
 
-    expect(ast).toEqual({
-      type: 'Program',
-      sourceType: 'script',
-      body: [
-        {
-          type: 'ExpressionStatement',
-          expression: {
-            type: 'Literal',
-            value: 'string'
+    test('array', () => {
+      const ast: Node = {
+        type: 'Program',
+        sourceType: 'script',
+        body: [
+          {
+            type: 'ExpressionStatement',
+            expression: {
+              type: 'Literal',
+              value: 'string'
+            }
+          },
+          {
+            type: 'ExpressionStatement',
+            expression: {
+              type: 'Literal',
+              value: true
+            }
           }
+        ]
+      };
+
+      createTraverser({})(ast, {
+        ExpressionStatement(path) {
+          const expressionNode = path.node.expression;
+          if (
+            expressionNode.type === 'Literal' &&
+            typeof expressionNode.value === 'boolean'
+          ) path.remove();
         }
-      ]
+      });
+
+      expect(ast).toEqual({
+        type: 'Program',
+        sourceType: 'script',
+        body: [
+          {
+            type: 'ExpressionStatement',
+            expression: {
+              type: 'Literal',
+              value: 'string'
+            }
+          }
+        ]
+      });
     });
   });
 });
@@ -207,6 +330,31 @@ describe('Properties', () => {
     createTraverser({})(ast, {
       ExpressionStatement(path) {
         expect(path.type).toBe('ExpressionStatement');
+      }
+    });
+
+    expect.assertions(1);
+  });
+
+  test('removed', () => {
+    const ast: Node = {
+      type: 'Program',
+      sourceType: 'script',
+      body: [
+        {
+          type: 'ExpressionStatement',
+          expression: {
+            type: 'Literal',
+            value: 0
+          }
+        }
+      ]
+    };
+
+    createTraverser({})(ast, {
+      ExpressionStatement(path) {
+        path.remove();
+        expect(path.removed).toBe(true);
       }
     });
 
