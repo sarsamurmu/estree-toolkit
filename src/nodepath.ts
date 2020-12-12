@@ -1,4 +1,4 @@
-import { Node } from 'estree';
+import { ArrowFunctionExpression, FunctionDeclaration, FunctionExpression, Node } from 'estree';
 
 import { debugLog } from './utils';
 
@@ -13,6 +13,8 @@ export class NodePath<T extends Node = Node> {
   parentPath: NodePath | null;
   /** Type of the node that is associated with this NodePath */
   type: T['type'];
+  /** If the node has been removed from its parent */
+  removed: boolean;
 
   constructor(data: {
     node: NodePath<T>['node'];
@@ -25,36 +27,60 @@ export class NodePath<T extends Node = Node> {
     this.listKey = data.listKey;
     this.parentPath = data.parentPath;
     this.type = this.node.type;
+    this.removed = false;
   }
 
-  /* Things related to removal */
+  //#region Ancestry
 
-  /** If the node has been removed from its parent */
-  isRemoved() {
-    if (!this.parentPath) return false;
-    if (this.listKey) {
-      return ((this.parentPath.node as any)[this.listKey] as Node[]).indexOf(this.node) > -1;
-    } else if (this.key) {
-      return (this.parentPath.node as any)[this.key] === this.node;
+  /**
+   * Starting at the parent path of this NodePath and going up the tree,
+   * returns first parent path where predicate is true
+   */
+  findParent(predicate: (path: NodePath) => boolean): NodePath | null {
+    let parent = this.parentPath;
+    while (parent != null) {
+      if (predicate(parent)) return parent;
+      parent = parent.parentPath;
     }
+    return null;
   }
+
+  /** Get the closest function parent */
+  getFunctionParent(): NodePath<FunctionDeclaration | FunctionExpression | ArrowFunctionExpression> | null {
+    return this.findParent(({ type }) => (
+      type === 'FunctionDeclaration' ||
+      type === 'FunctionExpression' ||
+      type === 'ArrowFunctionExpression'
+    )) as any;
+  }
+
+  //#endregion
+
+  //#region Removal
 
   /** Remove the node from its parent */
-  remove() {
+  remove(): void {
+    if (this.removed) return;
     if (this.parentPath) {
       if (this.listKey) {
         const nodes = (this.parentPath.node as any)[this.listKey] as Node[];
-        const nodeIndex = nodes.indexOf(this.node);
-        if (nodeIndex > -1) {
-          nodes.splice(nodeIndex, 1);
+        const index = this.key as number;
+        if (nodes[index] === this.node) {
+          nodes.splice(index, 1);
+          this.removed = true;
+
+          // ! Update sibling index
         } else {
-          debugLog("Something went wrong when calling remove(), path's node is not available in nodes array");
+          debugLog("Something went wrong when calling remove(), path's node is not available in its index");
         }
-      } else if (this.key) {
+      } else {
         (this.parentPath.node as any)[this.key] = null;
+        this.removed = true;
       }
     } else {
       throw new Error('Can not remove a path which does not have a parent')
     }
   }
+
+  //#endregion
 }
