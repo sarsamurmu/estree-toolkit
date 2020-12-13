@@ -38,6 +38,10 @@ export const traverse = (ast: Node, visitors: Visitors) => {
   }
 
   const visitorContext: VisitorContext = {};
+  const cleanupCB: (() => void)[] = []
+  const pathCache = new Map<Node, Map<Node, NodePath>>();
+
+  cleanupCB.push(() => pathCache.clear());
 
   const visit = ({
     node, key, listKey, parentPath
@@ -49,11 +53,14 @@ export const traverse = (ast: Node, visitors: Visitors) => {
   }) => {
     if (node) {
       const visitor = normalizedVisitors[node.type] || {};
-      const nodePath = new NodePath({
+      const nodePath = NodePath.get({
         node,
         key: key as Node['type'],
         listKey: listKey as Node['type'],
-        parentPath
+        parentPath,
+        internal: {
+          pathCache
+        }
       });
 
       if (visitor.enter != null) {
@@ -98,4 +105,10 @@ export const traverse = (ast: Node, visitors: Visitors) => {
     listKey: null,
     parentPath: null
   });
+
+  return {
+    destroy: () => {
+      cleanupCB.forEach((clean) => clean());
+    }
+  }
 }

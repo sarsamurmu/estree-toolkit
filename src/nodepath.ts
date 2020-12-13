@@ -2,32 +2,59 @@ import { ArrowFunctionExpression, FunctionDeclaration, FunctionExpression, Node 
 
 import { debugLog } from './utils';
 
+const mapSet = <K, V>(map: Map<K, V>, key: K, value: V): V => {
+  map.set(key, value);
+  return value;
+}
+
+const internal = Symbol();
+
 export class NodePath<T extends Node = Node> {
-  /** The node associated with this `NodePath` */
+  /** The node associated with this NodePath */
   node: T;
+  /** Type of the node that is associated with this NodePath */
+  type: T['type'];
   /** This node's key in its parent */
   key: Node['type'] | number;
   /** If this node is part of an array, `listKey` is the key of the array in its parent */
   listKey: Node['type'] | null;
-  /** Get the parent path of this `NodePath` */
+  /** Get the parent path of this NodePath */
   parentPath: NodePath | null;
-  /** Type of the node that is associated with this `NodePath` */
-  type: T['type'];
+  /** Get the parent node of this node */
+  parent: Node | null;
+  /** Container of the node */
+  container: Node | Node[] | null;
   /** If the node has been removed from its parent */
   removed: boolean;
+
+  [internal]: {
+    pathCache: Map<Node | null, Map<Node, NodePath>>;
+  }
 
   constructor(data: {
     node: NodePath<T>['node'];
     key: NodePath['key'];
     listKey: NodePath['listKey'];
-    parentPath: NodePath['parentPath']
+    parentPath: NodePath['parentPath'];
+    internal: NodePath[typeof internal];
   }) {
     this.node = data.node;
+    this.type = this.node.type;
     this.key = data.key;
     this.listKey = data.listKey;
     this.parentPath = data.parentPath;
-    this.type = this.node.type;
+    this.parent = this.parentPath && this.parentPath.node;
+    this.container = this.listKey ? (this.parent as any)[this.listKey] : this.parent;
     this.removed = false;
+
+    this[internal] = data.internal;
+  }
+
+  static get(data: ConstructorParameters<typeof NodePath>[0]) {
+    const pathCache = data.internal.pathCache;
+    const parentNode = data.parentPath && data.parentPath.node;
+    const children = pathCache.get(parentNode) || mapSet(pathCache, parentNode, new Map<Node, NodePath>());
+    return children.get(data.node) || mapSet(children, data.node, new this(data));
   }
 
   //#region Ancestry
@@ -81,8 +108,8 @@ export class NodePath<T extends Node = Node> {
         if (nodes[index] === this.node) {
           nodes.splice(index, 1);
           this.removed = true;
-
-          // ! Update sibling index
+          
+          // ! TODO: Update sibling index
         } else {
           debugLog("Something went wrong when calling remove(), path's node is not available in its index");
         }

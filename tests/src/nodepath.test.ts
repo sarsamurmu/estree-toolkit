@@ -258,6 +258,30 @@ describe('Properties', () => {
     expect.assertions(1);
   });
 
+  test('type', () => {
+    const ast: Node = {
+      type: 'Program',
+      sourceType: 'script',
+      body: [
+        {
+          type: 'ExpressionStatement',
+          expression: {
+            type: 'Literal',
+            value: 0
+          }
+        }
+      ]
+    };
+
+    traverse(ast, {
+      ExpressionStatement(path) {
+        expect(path.type).toBe('ExpressionStatement');
+      }
+    });
+
+    expect.assertions(1);
+  });
+
   test('key', () => {
     const ast: Node = {
       type: 'Program',
@@ -331,7 +355,7 @@ describe('Properties', () => {
     expect.assertions(1);
   });
 
-  test('type', () => {
+  test('parent', () => {
     const ast: Node = {
       type: 'Program',
       sourceType: 'script',
@@ -348,11 +372,38 @@ describe('Properties', () => {
 
     traverse(ast, {
       ExpressionStatement(path) {
-        expect(path.type).toBe('ExpressionStatement');
+        expect(path.parent).toBe(ast);
       }
     });
 
     expect.assertions(1);
+  });
+
+  test('container', () => {
+    const ast: Node = {
+      type: 'Program',
+      sourceType: 'script',
+      body: [
+        {
+          type: 'ExpressionStatement',
+          expression: {
+            type: 'Literal',
+            value: 0
+          }
+        }
+      ]
+    };
+
+    traverse(ast, {
+      ExpressionStatement(path) {
+        expect(path.container).toBe(ast.body);
+      },
+      Literal(path) {
+        expect(path.container).toBe(ast.body[0]);
+      }
+    });
+
+    expect.assertions(2);
   });
 
   test('removed', () => {
