@@ -1,4 +1,4 @@
-import { createTraverser } from '<project>';
+import { traverse } from '<project>';
 import { Node, ExpressionStatement, AssignmentExpression } from 'estree';
 
 describe('Methods', () => {
@@ -21,7 +21,7 @@ describe('Methods', () => {
       ]
     };
 
-    createTraverser({})(ast, {
+    traverse(ast, {
       Literal(path) {
         expect(
           path.findParent((parent) => parent.type === 'BlockStatement').node
@@ -41,7 +41,7 @@ describe('Methods', () => {
       }
     };
 
-    createTraverser({})(ast, {
+    traverse(ast, {
       Literal(path) {
         expect(path.find((p) => p.type === 'Literal').node).toBe(ast.expression);
         expect(path.find((p) => p.type === 'ExpressionStatement').node).toBe(ast);
@@ -124,7 +124,7 @@ describe('Methods', () => {
       ]
     };
 
-    createTraverser({})(ast, {
+    traverse(ast, {
       Literal(path) {
         const { node: { value } } = path;
         if (value === 'arrow') {
@@ -163,7 +163,7 @@ describe('Methods', () => {
         }
       };
 
-      createTraverser({})(ast, {
+      traverse(ast, {
         ExpressionStatement(path) {
           path.remove();
         }
@@ -205,7 +205,7 @@ describe('Methods', () => {
         ]
       };
 
-      createTraverser({})(ast, {
+      traverse(ast, {
         ExpressionStatement(path) {
           const expressionNode = path.node.expression;
           if (
@@ -249,7 +249,7 @@ describe('Properties', () => {
       ]
     };
 
-    createTraverser({})(ast, {
+    traverse(ast, {
       Literal(path) {
         expect(path.node).toBe(literalNode);
       }
@@ -273,7 +273,7 @@ describe('Properties', () => {
       ]
     };
 
-    createTraverser({})(ast, {
+    traverse(ast, {
       Literal(path) {
         expect(path.key).toBe('expression');
       }
@@ -297,7 +297,7 @@ describe('Properties', () => {
       ]
     };
 
-    createTraverser({})(ast, {
+    traverse(ast, {
       ExpressionStatement(path) {
         expect(path.key).toBe(0);
         expect(path.listKey).toBe('body');
@@ -322,7 +322,7 @@ describe('Properties', () => {
       ]
     };
 
-    createTraverser({})(ast, {
+    traverse(ast, {
       ExpressionStatement(path) {
         expect(path.parentPath.node).toBe(ast);
       }
@@ -346,7 +346,7 @@ describe('Properties', () => {
       ]
     };
 
-    createTraverser({})(ast, {
+    traverse(ast, {
       ExpressionStatement(path) {
         expect(path.type).toBe('ExpressionStatement');
       }
@@ -370,7 +370,7 @@ describe('Properties', () => {
       ]
     };
 
-    createTraverser({})(ast, {
+    traverse(ast, {
       ExpressionStatement(path) {
         path.remove();
         expect(path.removed).toBe(true);
