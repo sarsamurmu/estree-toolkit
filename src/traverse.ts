@@ -52,7 +52,12 @@ export const createTraverser = (options: TraverserOptions) => {
     }) => {
       if (node) {
         const visitor = normalizedVisitors[node.type] || {};
-        const nodePath = new NodePath({ node, key, listKey, parentPath });
+        const nodePath = new NodePath({
+          node,
+          key: key as Node['type'],
+          listKey: listKey as Node['type'],
+          parentPath
+        });
 
         if (visitor.enter != null) {
           visitor.enter.call(visitorContext, nodePath);

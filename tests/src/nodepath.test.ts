@@ -32,6 +32,25 @@ describe('Methods', () => {
     expect.assertions(1);
   });
 
+  test('find', () => {
+    const ast: Node = {
+      type: 'ExpressionStatement',
+      expression: {
+        type: 'Literal',
+        value: 0
+      }
+    };
+
+    createTraverser({})(ast, {
+      Literal(path) {
+        expect(path.find((p) => p.type === 'Literal').node).toBe(ast.expression);
+        expect(path.find((p) => p.type === 'ExpressionStatement').node).toBe(ast);
+      }
+    });
+
+    expect.assertions(2);
+  });
+
   test('getFunctionParent', () => {
     const ast: Node = {
       type: 'Program',

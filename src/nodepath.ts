@@ -3,15 +3,15 @@ import { ArrowFunctionExpression, FunctionDeclaration, FunctionExpression, Node 
 import { debugLog } from './utils';
 
 export class NodePath<T extends Node = Node> {
-  /** The node associated with this NodePath */
+  /** The node associated with this `NodePath` */
   node: T;
   /** This node's key in its parent */
   key: Node['type'] | number;
   /** If this node is part of an array, `listKey` is the key of the array in its parent */
   listKey: Node['type'] | null;
-  /** Get the parent path of this path */
+  /** Get the parent path of this `NodePath` */
   parentPath: NodePath | null;
-  /** Type of the node that is associated with this NodePath */
+  /** Type of the node that is associated with this `NodePath` */
   type: T['type'];
   /** If the node has been removed from its parent */
   removed: boolean;
@@ -33,14 +33,27 @@ export class NodePath<T extends Node = Node> {
   //#region Ancestry
 
   /**
-   * Starting at the parent path of this NodePath and going up the tree,
-   * returns first parent path where predicate is true
+   * Starting at the parent path of this `NodePath` and going up the tree,
+   * returns first parent path where `predicate` is true
    */
   findParent(predicate: (path: NodePath) => boolean): NodePath | null {
     let parent = this.parentPath;
     while (parent != null) {
       if (predicate(parent)) return parent;
       parent = parent.parentPath;
+    }
+    return null;
+  }
+
+  /** Starting from this `NodePath` and going up the tree,
+   * returns the first `NodePath` where `predicate` is true
+   */
+  find(predicate: (path: NodePath) => boolean): NodePath | null {
+    // eslint-disable-next-line @typescript-eslint/no-this-alias
+    let nodePath: NodePath | null = this;
+    while (nodePath != null) {
+      if (predicate(nodePath)) return nodePath;
+      nodePath = nodePath.parentPath;
     }
     return null;
   }
