@@ -31,7 +31,8 @@ const defaultTSOptions = {
       asyncArrow: 'always'
     }],
     '@typescript-eslint/explicit-module-boundary-types': 'off',
-    '@typescript-eslint/no-namespace': ['error', { allowDeclarations: true }]
+    '@typescript-eslint/no-namespace': ['error', { allowDeclarations: true }],
+    '@typescript-eslint/no-non-null-assertion': 'off'
   }
 }
 
