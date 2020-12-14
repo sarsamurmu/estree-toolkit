@@ -1,5 +1,5 @@
 import { traverse } from '<project>';
-import { Node, ExpressionStatement, AssignmentExpression } from 'estree';
+import { Node, ExpressionStatement, AssignmentExpression, Literal } from 'estree';
 
 describe('Methods', () => {
   test('findParent', () => {
@@ -142,6 +142,92 @@ describe('Methods', () => {
     expect.assertions(3);
   });
 
+  test('insertAfter', () => {
+    const ast: Node = {
+      type: 'Program',
+      sourceType: 'script',
+      body: [
+        {
+          type: 'ExpressionStatement',
+          expression: {
+            type: 'Literal',
+            value: 1
+          }
+        },
+        {
+          type: 'ExpressionStatement',
+          expression: {
+            type: 'Literal',
+            value: 2
+          }
+        },
+        {
+          type: 'ExpressionStatement',
+          expression: {
+            type: 'Literal',
+            value: 3
+          }
+        }
+      ]
+    };
+
+    traverse(ast, {
+      ExpressionStatement(path) {
+        const literal = path.node.expression as Literal;
+        if (literal.value === 2) {
+          expect(path.key).toBe(1);
+          const nodePaths = path.insertAfter([
+            {
+              type: 'EmptyStatement',
+            },
+            {
+              type: 'EmptyStatement',
+            }
+          ]);
+          expect(nodePaths[0].key).toBe(2);
+          expect(nodePaths[1].key).toBe(3);
+        }
+        if (literal.value === '3') {
+          expect(path.key).toBe(4);
+        }
+      }
+    });
+
+    expect(ast).toEqual({
+      type: 'Program',
+      sourceType: 'script',
+      body: [
+        {
+          type: 'ExpressionStatement',
+          expression: {
+            type: 'Literal',
+            value: 1
+          }
+        },
+        {
+          type: 'ExpressionStatement',
+          expression: {
+            type: 'Literal',
+            value: 2
+          }
+        },
+        {
+          type: 'EmptyStatement',
+        },
+        {
+          type: 'EmptyStatement',
+        },
+        {
+          type: 'ExpressionStatement',
+          expression: {
+            type: 'Literal',
+            value: 3
+          }
+        }
+      ]
+    });
+  });
+
   describe('remove', () => {
     test('single', () => {
       const ast: Node = {
@@ -201,6 +287,20 @@ describe('Methods', () => {
               type: 'Literal',
               value: true
             }
+          },
+          {
+            type: 'ExpressionStatement',
+            expression: {
+              type: 'Literal',
+              value: 1
+            }
+          },
+          {
+            type: 'ExpressionStatement',
+            expression: {
+              type: 'Literal',
+              value: 2
+            }
           }
         ]
       };
@@ -208,11 +308,16 @@ describe('Methods', () => {
       traverse(ast, {
         ExpressionStatement(path) {
           const expressionNode = path.node.expression;
-          if (
-            expressionNode.type === 'Literal' &&
-            typeof expressionNode.value === 'boolean'
-          ) path.remove();
-        }
+          if (expressionNode.type === 'Literal') {
+            if (typeof expressionNode.value === 'boolean') path.remove();
+            if (expressionNode.value === 1) {
+              expect(path.key).toBe(1);
+            }
+            if (expressionNode.value === 2) {
+              expect(path.key).toBe(2);
+            }
+          }
+        },
       });
 
       expect(ast).toEqual({
@@ -224,6 +329,20 @@ describe('Methods', () => {
             expression: {
               type: 'Literal',
               value: 'string'
+            }
+          },
+          {
+            type: 'ExpressionStatement',
+            expression: {
+              type: 'Literal',
+              value: 1
+            }
+          },
+          {
+            type: 'ExpressionStatement',
+            expression: {
+              type: 'Literal',
+              value: 2
             }
           }
         ]
