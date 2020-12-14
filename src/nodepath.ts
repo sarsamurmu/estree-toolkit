@@ -7,7 +7,7 @@ const mapSet = <K, V>(map: Map<K, V>, key: K, value: V): V => {
   return value;
 }
 
-const internal = Symbol();
+const internal = Symbol('__internal__');
 
 export class NodePath<T extends Node = Node> {
   /** The node associated with this NodePath */
@@ -15,14 +15,16 @@ export class NodePath<T extends Node = Node> {
   /** Type of the node that is associated with this NodePath */
   type: T['type'];
   /** This node's key in its parent */
-  key: Node['type'] | number;
+  key: string | number | null;
   /** If this node is part of an array, `listKey` is the key of the array in its parent */
-  listKey: Node['type'] | null;
+  listKey: string | null;
   /** Get the parent path of this NodePath */
   parentPath: NodePath | null;
   /** Get the parent node of this node */
   parent: Node | null;
-  /** Container of the node */
+  /** Container of the node
+   * Value is `this.parent[this.listKey]` if `this.listKey` is truthy, else `this.parent`
+   */
   container: Node | Node[] | null;
   /** If the node has been removed from its parent */
   removed: boolean;
@@ -50,7 +52,7 @@ export class NodePath<T extends Node = Node> {
     this[internal] = data.internal;
   }
 
-  static get(data: ConstructorParameters<typeof NodePath>[0]) {
+  static for(data: ConstructorParameters<typeof NodePath>[0]) {
     const pathCache = data.internal.pathCache;
     const parentNode = data.parentPath && data.parentPath.node;
     const children = pathCache.get(parentNode) || mapSet(pathCache, parentNode, new Map<Node, NodePath>());
@@ -96,6 +98,39 @@ export class NodePath<T extends Node = Node> {
 
   //#endregion
 
+  //#region Modification
+
+  /** Inserts the `nodes` after the current node */
+  insertAfter(nodes: Node[]): NodePath[] {
+    if (Array.isArray(this.container)) {
+      const key = this.key as number;
+      this.container.splice(key + 1, 0, ...nodes);
+      this.updateSiblingIndex(key + nodes.length, nodes.length);
+      
+      return nodes.map((node, idx) => (
+        NodePath.for({
+          node,
+          key: key + idx + 1,
+          listKey: this.listKey,
+          parentPath: this.parentPath,
+          internal: this[internal]
+        })
+      ));
+    } else {
+      throw new Error('Can not insert after a node where `container` is not an Array');
+    }
+  }
+
+  updateSiblingIndex(fromIndex: number, incrementBy: number): void {
+    this[internal].pathCache.get(this.parent)?.forEach((path) => {
+      if ((path.key as number) >= fromIndex) {
+        (path.key as number) += incrementBy;
+      }
+    });
+  }
+
+  //#endregion
+
   //#region Removal
 
   /** Remove the node from its parent */
@@ -104,16 +139,16 @@ export class NodePath<T extends Node = Node> {
     if (this.parentPath) {
       if (this.listKey) {
         const nodes = (this.parentPath.node as any)[this.listKey] as Node[];
-        const index = this.key as number;
-        if (nodes[index] === this.node) {
-          nodes.splice(index, 1);
+        const key = this.key as number;
+        if (nodes[key] === this.node) {
+          nodes.splice(key, 1);
           this.removed = true;
-          
-          // ! TODO: Update sibling index
+          this[internal].pathCache.get(this.parent)?.delete(this.node);
+          this.updateSiblingIndex(key, -1);
         } else {
           debugLog("Something went wrong when calling remove(), path's node is not available in its index");
         }
-      } else {
+      } else if (this.key) {
         (this.parentPath.node as any)[this.key] = null;
         this.removed = true;
       }

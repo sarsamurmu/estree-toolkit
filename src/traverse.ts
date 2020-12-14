@@ -3,24 +3,110 @@ import { Node } from 'estree';
 
 import { NodePath } from './nodepath';
 
+// TODO: Work on VisitorContext
 interface VisitorContext {}
 
 type VisitorFn<T extends Node = Node> = (this: VisitorContext, path: NodePath<T>) => boolean | void;
-type Visitor<T extends Node> = VisitorFn<T> | {
+type ExpandedVisitor<T extends Node> = {
   enter?: VisitorFn<T>;
   leave?: VisitorFn<T>;
 }
+type Visitor<T extends Node> = VisitorFn<T> | ExpandedVisitor<T>;
 
 type Visitors = {
   [K in Node as `${K['type']}`]?: Visitor<K>;
 } & {
   [type: string]: Visitor<Node>;
 }
+type ExpandedVisitors = {
+  [type: string]: ExpandedVisitor<Node> | undefined;
+}
 
-export const traverse = (ast: Node, visitors: Visitors) => {
-  const normalizedVisitors: {
-    [type: string]: Exclude<Visitors[string], VisitorFn> | null;
-  } = {};
+class Traverser {
+  visitors: ExpandedVisitors;
+  internal: {
+    pathCache: Map<Node, Map<Node, NodePath>>;
+  }
+
+  constructor(data: {
+    visitors: ExpandedVisitors;
+  }) {
+    this.visitors = data.visitors;
+    this.internal = {
+      pathCache: new Map<Node, Map<Node, NodePath>>()
+    }
+  }
+
+  get exports() {
+    return {
+      dispose: () => {
+        this.internal.pathCache.clear();
+      }
+    }
+  }
+
+  visitNode(data: {
+    node: Node;
+    key: string | number | null;
+    listKey: string | null;
+    parentPath: NodePath | null;
+  }) {
+    const visitorContext = {};
+    const visitor = this.visitors[data.node.type] || {};
+    const nodePath = NodePath.for({
+      node: data.node,
+      key: data.key,
+      listKey: data.listKey,
+      parentPath: data.parentPath,
+      internal: this.internal
+    });
+
+    if (visitor.enter != null) {
+      visitor.enter.call(visitorContext, nodePath);
+    }
+
+    for (const property in data.node) {
+      const value: Node | Node[] | null | undefined = (data.node as any)[property];
+
+      if (!value) continue;
+
+      if (Array.isArray(value)) {
+        const childNodePaths = value.map((node, index) => (
+          NodePath.for({
+            node,
+            key: index,
+            listKey: property,
+            parentPath: nodePath,
+            internal: this.internal
+          })
+        ));
+
+        for (let i = 0; i < childNodePaths.length; i++) {
+          this.visitNode({
+            node: childNodePaths[i].node,
+            key: childNodePaths[i].key,
+            listKey: childNodePaths[i].listKey,
+            parentPath: childNodePaths[i].parentPath,
+          });
+        }
+      } else if (typeof value.type === 'string') {
+        this.visitNode({
+          node: value,
+          key: property,
+          listKey: null,
+          parentPath: nodePath
+        });
+      }
+    }
+
+    if (visitor.leave != null) {
+      visitor.leave.call(visitorContext, nodePath);
+    }
+  }
+}
+
+export const traverse = (node: Node, visitors: Visitors) => {
+  const expandedVisitors: ExpandedVisitors = {};
 
   for (const keyName in visitors) {
     // keyName can contain multiple visitors - "FunctionExpression|FunctionDeclaration"
@@ -28,87 +114,22 @@ export const traverse = (ast: Node, visitors: Visitors) => {
     const visitor = visitors[keyName];
     if (typeof visitor === 'function') {
       keys.forEach((key) => {
-        normalizedVisitors[key] = { enter: visitor };
+        expandedVisitors[key] = { enter: visitor };
       });
     } else if (typeof visitor === 'object') {
       keys.forEach((key) => {
-        normalizedVisitors[key] = visitor;
+        expandedVisitors[key] = visitor;
       });
     }
   }
 
-  const visitorContext: VisitorContext = {};
-  const cleanupCB: (() => void)[] = []
-  const pathCache = new Map<Node, Map<Node, NodePath>>();
-
-  cleanupCB.push(() => pathCache.clear());
-
-  const visit = ({
-    node, key, listKey, parentPath
-  }: {
-    node: Node;
-    key: string | number;
-    listKey: string | null;
-    parentPath: NodePath | null;
-  }) => {
-    if (node) {
-      const visitor = normalizedVisitors[node.type] || {};
-      const nodePath = NodePath.get({
-        node,
-        key: key as Node['type'],
-        listKey: listKey as Node['type'],
-        parentPath,
-        internal: {
-          pathCache
-        }
-      });
-
-      if (visitor.enter != null) {
-        visitor.enter.call(visitorContext, nodePath);
-      }
-
-      for (const key in node) {
-        const value = (node as any)[key];
-
-        if (!value) continue;
-
-        if (Array.isArray(value)) {
-          for (let i = 0; i < value.length; i++) {
-            if (value[i] != null && typeof value[i].type === 'string') {
-              visit({
-                node: value[i],
-                key: i,
-                listKey: key,
-                parentPath: nodePath
-              });
-            }
-          }
-        } else if (typeof value.type === 'string') {
-          visit({
-            node: value,
-            key,
-            listKey: null,
-            parentPath: nodePath
-          });
-        }
-      }
-
-      if (visitor.leave != null) {
-        visitor.leave.call(visitorContext, nodePath);
-      }
-    }
-  }
-
-  visit({
-    node: ast,
-    key: null as any,
+  const traverser = new Traverser({ visitors: expandedVisitors });
+  traverser.visitNode({
+    node,
+    key: null,
     listKey: null,
     parentPath: null
   });
 
-  return {
-    destroy: () => {
-      cleanupCB.forEach((clean) => clean());
-    }
-  }
+  return traverser.exports;
 }
