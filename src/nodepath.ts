@@ -215,6 +215,17 @@ export class NodePath<T extends Node = Node> {
       internal: this[internal]
     }) as NodePath;
   }
+
+  /** Get the NodePath of its sibling for which the key is `key` */
+  getSibling<N extends Node = Node>(key: string | number): NodePath<N> | undefined {
+    if (!this.parentPath) {
+      throw new Error('Can not use `getSibling` on a NodePath which does not have any parent');
+    }
+
+    if (typeof key === 'string') {
+      return this.parentPath.get(key) as NodePath<N>;
+    } else if (this.listKey) {
+      return (this.parentPath.get(this.listKey) as NodePath[])[key] as NodePath<N>;
     }
   }
 

@@ -362,6 +362,72 @@ describe('Methods', () => {
         expect(path.get('test').parent).toBe(ifStatement);
       }
     });
+
+    expect.assertions(11);
+  });
+
+  test('getSibling', () => {
+    const ast: Node = {
+      type: 'Program',
+      sourceType: 'script',
+      body: [
+        {
+          type: 'ExpressionStatement',
+          expression: {
+            type: 'Literal',
+            value: 1
+          }
+        },
+        {
+          type: 'ExpressionStatement',
+          expression: {
+            type: 'Literal',
+            value: 2
+          }
+        },
+        {
+          type: 'ExpressionStatement',
+          expression: {
+            type: 'Literal',
+            value: 3
+          }
+        },
+        {
+          type: 'ExpressionStatement',
+          expression: {
+            type: 'AssignmentExpression',
+            left: {
+              type: 'Identifier',
+              name: 'a'
+            },
+            operator: '=',
+            right: {
+              type: 'Identifier',
+              name: 'b'
+            }
+          }
+        }
+      ]
+    };
+
+    traverse(ast, {
+      ExpressionStatement(path) {
+        if (
+          path.node.expression.type === 'Literal' &&
+          path.node.expression.value === 2
+        ) {
+          expect(path.getSibling(0).node).toBe(ast.body[0]);
+          expect(path.getSibling(2).node).toBe(ast.body[2]);
+        }
+      },
+      Identifier(path) {
+        if (path.node.name === 'a') {
+          expect(path.getSibling('right').node).toBe((path.parentPath.node as AssignmentExpression).right);
+        }
+      }
+    });
+
+    expect.assertions(3);
   });
 
   describe('remove', () => {
