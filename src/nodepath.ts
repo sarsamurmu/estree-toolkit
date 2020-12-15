@@ -166,33 +166,26 @@ export class NodePath<T extends Node = Node> {
 
   //#region Family
 
+  /** Get the children NodePath for which the key is `key` */
   get<K extends Exclude<keyof T, keyof BaseNode>>(
     key: K
   ): T[K] extends Node[]
     ? NodePath<T[K][number]>[]
-    : T[K] extends Node ? NodePath<T[K]> : undefined;
-  get<N extends Node | Node[]>(
+    : T[K] extends Node ? NodePath<T[K]> : NodePath<never>;
+  get<N extends Node | Node[] | null = null>(
     key: string
-  ): N extends Node[]
+  ): null extends N
+    ? NodePath | NodePath[]
+    : N extends Node[]
     ? NodePath<N[number]>[]
-    : N extends Node ? NodePath<N> : undefined;
+      : N extends Node ? NodePath<N> : NodePath<never>;
 
-  get(key: string): NodePath | NodePath[] | undefined {
+  get(key: string): NodePath | NodePath[] {
     if (this.node == null) {
       throw new Error('Can not use method `get` on a null NodePath');
     }
 
     const value: Node | Node[] | null = (this.node as any)[key];
-
-    if (value == null) {
-      return NodePath.for({
-        node: null,
-        key: key,
-        listKey: null,
-        parentPath: this as any as NodePath,
-        internal: this[internal]
-      });
-    }
 
     if (Array.isArray(value)) {
       return value.map((node, index) => (
@@ -203,15 +196,25 @@ export class NodePath<T extends Node = Node> {
           parentPath: this as any as NodePath,
           internal: this[internal]
         })
-      ));
-    } else if (typeof (value as any as Node).type == 'string') {
+      )) as NodePath[];
+    } else if (value != null && typeof value.type == 'string') {
       return NodePath.for({
         node: value as any as Node,
         key: key,
         listKey: null,
         parentPath: this as any as NodePath,
         internal: this[internal]
-      });
+      }) as NodePath;
+    }
+
+    return NodePath.for({
+      node: null,
+      key: key,
+      listKey: null,
+      parentPath: this as any as NodePath,
+      internal: this[internal]
+    }) as NodePath;
+  }
     }
   }
 
