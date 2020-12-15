@@ -100,6 +100,29 @@ export class NodePath<T extends Node = Node> {
 
   //#region Modification
 
+  /** Inserts the `nodes` before the current node */
+  insertBefore(nodes: Node[]): NodePath[] {
+    // TODO: Handle more cases
+
+    if (Array.isArray(this.container)) {
+      const key = this.key as number;
+      this.container.splice(key, 0, ...nodes);
+      this.updateSiblingIndex(key, nodes.length);
+
+      return nodes.map((node, idx) => (
+        NodePath.for({
+          node,
+          key: key + idx,
+          listKey: this.listKey,
+          parentPath: this.parentPath,
+          internal: this[internal]
+        })
+      ));
+    } else {
+      throw new Error('Can not insert before a node where `container` is not an Array');
+    }
+  }
+
   /** Inserts the `nodes` after the current node */
   insertAfter(nodes: Node[]): NodePath[] {
     if (Array.isArray(this.container)) {
