@@ -125,10 +125,12 @@ export class NodePath<T extends Node = Node> {
 
   /** Inserts the `nodes` after the current node */
   insertAfter(nodes: Node[]): NodePath[] {
+    // TODO: Handle more cases
+
     if (Array.isArray(this.container)) {
       const key = this.key as number;
       this.container.splice(key + 1, 0, ...nodes);
-      this.updateSiblingIndex(key + nodes.length, nodes.length);
+      this.updateSiblingIndex(key + 1, nodes.length);
       
       return nodes.map((node, idx) => (
         NodePath.for({
@@ -167,7 +169,7 @@ export class NodePath<T extends Node = Node> {
           nodes.splice(key, 1);
           this.removed = true;
           this[internal].pathCache.get(this.parent)?.delete(this.node);
-          this.updateSiblingIndex(key, -1);
+          this.updateSiblingIndex(key + 1, -1);
         } else {
           debugLog("Something went wrong when calling remove(), path's node is not available in its index");
         }
