@@ -1,5 +1,5 @@
 import { traverse } from '<project>';
-import { Node, ExpressionStatement, AssignmentExpression, Literal } from 'estree';
+import { Node, ExpressionStatement, AssignmentExpression, Literal, IfStatement } from 'estree';
 
 describe('Methods', () => {
   test('findParent', () => {
@@ -311,6 +311,56 @@ describe('Methods', () => {
           }
         }
       ]
+    });
+  });
+
+  test('get', () => {
+    const ast: Node = {
+      type: 'Program',
+      sourceType: 'script',
+      body: [
+        {
+          type: 'IfStatement',
+          test: {
+            type: 'Literal',
+            value: 0
+          },
+          consequent: {
+            type: 'BlockStatement',
+            body: []
+          },
+          alternate: null
+        },
+        {
+          type: 'ExpressionStatement',
+          expression: {
+            type: 'Literal',
+            value: true
+          }
+        }
+      ]
+    };
+
+    traverse(ast, {
+      Program(path) {
+        const bodyNodePaths = path.get('body');
+
+        expect(bodyNodePaths[0].node).toBe(ast.body[0]);
+        expect(bodyNodePaths[0].key).toBe(0);
+        expect(bodyNodePaths[0].parent).toBe(ast);
+        expect(bodyNodePaths[0].listKey).toBe('body');
+
+        expect(bodyNodePaths[1].node).toBe(ast.body[1]);
+        expect(bodyNodePaths[1].key).toBe(1);
+        expect(bodyNodePaths[1].parent).toBe(ast);
+        expect(bodyNodePaths[1].listKey).toBe('body');
+      },
+      IfStatement(path) {
+        const ifStatement = ast.body[0] as IfStatement;
+        expect(path.get('test').node).toBe(ifStatement.test);
+        expect(path.get('test').key).toBe('test');
+        expect(path.get('test').parent).toBe(ifStatement);
+      }
     });
   });
 

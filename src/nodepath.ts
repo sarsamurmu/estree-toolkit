@@ -1,4 +1,10 @@
-import { ArrowFunctionExpression, FunctionDeclaration, FunctionExpression, Node } from 'estree';
+import {
+  ArrowFunctionExpression,
+  FunctionDeclaration,
+  FunctionExpression,
+  Node,
+  BaseNode
+} from 'estree';
 
 import { debugLog } from './utils';
 
@@ -11,9 +17,9 @@ const internal = Symbol('__internal__');
 
 export class NodePath<T extends Node = Node> {
   /** The node associated with this NodePath */
-  node: T;
+  node: T | null;
   /** Type of the node that is associated with this NodePath */
-  type: T['type'];
+  type: T['type'] | null;
   /** This node's key in its parent */
   key: string | number | null;
   /** If this node is part of an array, `listKey` is the key of the array in its parent */
@@ -29,9 +35,11 @@ export class NodePath<T extends Node = Node> {
   /** If the node has been removed from its parent */
   removed: boolean;
 
-  [internal]: {
-    pathCache: Map<Node | null, Map<Node, NodePath>>;
+  protected [internal]: {
+    pathCache: Map<Node | null, Map<Node | null, NodePath>>;
   }
+
+  protected get internalSymbol() { return internal }
 
   constructor(data: {
     node: NodePath<T>['node'];
@@ -41,7 +49,7 @@ export class NodePath<T extends Node = Node> {
     internal: NodePath[typeof internal];
   }) {
     this.node = data.node;
-    this.type = this.node.type;
+    this.type = this.node && this.node.type;
     this.key = data.key;
     this.listKey = data.listKey;
     this.parentPath = data.parentPath;
@@ -52,11 +60,11 @@ export class NodePath<T extends Node = Node> {
     this[internal] = data.internal;
   }
 
-  static for(data: ConstructorParameters<typeof NodePath>[0]) {
+  static for<T extends Node = Node>(data: ConstructorParameters<typeof NodePath>[0]) {
     const pathCache = data.internal.pathCache;
     const parentNode = data.parentPath && data.parentPath.node;
     const children = pathCache.get(parentNode) || mapSet(pathCache, parentNode, new Map<Node, NodePath>());
-    return children.get(data.node) || mapSet(children, data.node, new this(data));
+    return (children.get(data.node) || mapSet(children, data.node, new this(data))) as NodePath<T>;
   }
 
   //#region Ancestry
@@ -146,12 +154,65 @@ export class NodePath<T extends Node = Node> {
     }
   }
 
-  updateSiblingIndex(fromIndex: number, incrementBy: number): void {
+  protected updateSiblingIndex(fromIndex: number, incrementBy: number): void {
     this[internal].pathCache.get(this.parent)?.forEach((path) => {
       if ((path.key as number) >= fromIndex) {
         (path.key as number) += incrementBy;
       }
     });
+  }
+
+  //#endregion
+
+  //#region Family
+
+  get<K extends Exclude<keyof T, keyof BaseNode>>(
+    key: K
+  ): T[K] extends Node[]
+    ? NodePath<T[K][number]>[]
+    : T[K] extends Node ? NodePath<T[K]> : undefined;
+  get<N extends Node | Node[]>(
+    key: string
+  ): N extends Node[]
+    ? NodePath<N[number]>[]
+    : N extends Node ? NodePath<N> : undefined;
+
+  get(key: string): NodePath | NodePath[] | undefined {
+    if (this.node == null) {
+      throw new Error('Can not use method `get` on a null NodePath');
+    }
+
+    const value: Node | Node[] | null = (this.node as any)[key];
+
+    if (value == null) {
+      return NodePath.for({
+        node: null,
+        key: key,
+        listKey: null,
+        parentPath: this as any as NodePath,
+        internal: this[internal]
+      });
+    }
+
+    if (Array.isArray(value)) {
+      return value.map((node, index) => (
+        NodePath.for({
+          node,
+          key: index,
+          listKey: key,
+          parentPath: this as any as NodePath,
+          internal: this[internal]
+        })
+      ));
+    } else if (typeof (value as any as Node).type == 'string') {
+      return NodePath.for({
+        node: value as any as Node,
+        key: key,
+        listKey: null,
+        parentPath: this as any as NodePath,
+        internal: this[internal]
+      });
+    }
   }
 
   //#endregion
@@ -167,9 +228,9 @@ export class NodePath<T extends Node = Node> {
         const key = this.key as number;
         if (nodes[key] === this.node) {
           nodes.splice(key, 1);
-          this.removed = true;
           this[internal].pathCache.get(this.parent)?.delete(this.node);
           this.updateSiblingIndex(key + 1, -1);
+          this.removed = true;
         } else {
           debugLog("Something went wrong when calling remove(), path's node is not available in its index");
         }
