@@ -142,6 +142,92 @@ describe('Methods', () => {
     expect.assertions(3);
   });
 
+  test('insertBefore', () => {
+    const ast: Node = {
+      type: 'Program',
+      sourceType: 'script',
+      body: [
+        {
+          type: 'ExpressionStatement',
+          expression: {
+            type: 'Literal',
+            value: 1
+          }
+        },
+        {
+          type: 'ExpressionStatement',
+          expression: {
+            type: 'Literal',
+            value: 2
+          }
+        },
+        {
+          type: 'ExpressionStatement',
+          expression: {
+            type: 'Literal',
+            value: 3
+          }
+        }
+      ]
+    };
+
+    traverse(ast, {
+      ExpressionStatement(path) {
+        const literal = path.node.expression as Literal;
+        if (literal.value === 2) {
+          const nodePaths = path.insertBefore([
+            {
+              type: 'EmptyStatement',
+            },
+            {
+              type: 'EmptyStatement',
+            }
+          ]);
+          expect(path.key).toBe(3);
+          expect(nodePaths[0].key).toBe(1);
+          expect(nodePaths[1].key).toBe(2);
+        }
+        if (literal.value === 3) {
+          expect(path.key).toBe(4);
+        }
+      }
+    });
+
+    expect(ast).toEqual({
+      type: 'Program',
+      sourceType: 'script',
+      body: [
+        {
+          type: 'ExpressionStatement',
+          expression: {
+            type: 'Literal',
+            value: 1
+          }
+        },
+        {
+          type: 'EmptyStatement',
+        },
+        {
+          type: 'EmptyStatement',
+        },
+        {
+          type: 'ExpressionStatement',
+          expression: {
+            type: 'Literal',
+            value: 2
+          }
+        },
+        {
+          type: 'ExpressionStatement',
+          expression: {
+            type: 'Literal',
+            value: 3
+          }
+        }
+      ]
+    });
+  });
+
   test('insertAfter', () => {
     const ast: Node = {
       type: 'Program',
@@ -175,7 +261,6 @@ describe('Methods', () => {
       ExpressionStatement(path) {
         const literal = path.node.expression as Literal;
         if (literal.value === 2) {
-          expect(path.key).toBe(1);
           const nodePaths = path.insertAfter([
             {
               type: 'EmptyStatement',
@@ -184,10 +269,11 @@ describe('Methods', () => {
               type: 'EmptyStatement',
             }
           ]);
+          expect(path.key).toBe(1);
           expect(nodePaths[0].key).toBe(2);
           expect(nodePaths[1].key).toBe(3);
         }
-        if (literal.value === '3') {
+        if (literal.value === 3) {
           expect(path.key).toBe(4);
         }
       }
