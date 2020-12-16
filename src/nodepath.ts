@@ -333,15 +333,10 @@ export class NodePath<T extends Node = Node> {
     if (this.listKey != null) {
       const key = this.key as number;
       const container = this.container as Node[];
-
-      if (container[key] === this.node) {
-        container.splice(key, 1);
-        this[internal].pathCache.get(this.parent)?.delete(this.node);
-        this.updateSiblingIndex(key + 1, -1);
-        this.removed = true;
-      } else {
-        debugLog("Something went wrong when calling remove(), path's node is not available in its index");
-      }
+      container.splice(key, 1);
+      this[internal].pathCache.get(this.parent)?.delete(this.node);
+      this.updateSiblingIndex(key + 1, -1);
+      this.removed = true;
     } else if (this.key != null) {
       (this.container as any as Record<string, Node | null>)[this.key] = null;
       this.removed = true;
