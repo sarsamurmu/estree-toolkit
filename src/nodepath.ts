@@ -39,7 +39,7 @@ export class NodePath<T extends Node = Node> {
     pathCache: Map<Node | null, Map<Node | null, NodePath>>;
   }
 
-  protected get internalSymbol() { return internal }
+  protected static internalSymbol = internal;
 
   constructor(data: {
     node: NodePath<T>['node'];
@@ -62,15 +62,22 @@ export class NodePath<T extends Node = Node> {
     this[internal] = data.internal;
   }
 
-  static for<T extends Node = Node>(data: ConstructorParameters<typeof NodePath>[0]) {
+  /** Get the cached NodePath object or create new if cache is not available */
+  static for<N extends Node = Node>(data: ConstructorParameters<typeof NodePath>[0]) {
     const pathCache = data.internal.pathCache;
     const parentNode = data.parentPath && data.parentPath.node;
     const children = pathCache.get(parentNode) || mapSet(pathCache, parentNode, new Map<Node, NodePath>());
-    return (children.get(data.node) || mapSet(children, data.node, new this(data))) as NodePath<T>;
+    return (children.get(data.node) || mapSet(children, data.node, new this(data))) as NodePath<N>;
   }
 
   protected throwNoParent(methodName: string): never {
     throw new Error(`Can not use \`${methodName}\` on a NodePath which does not have a parent`);
+  }
+
+  protected assertNotRemoved(): void {
+    if (this.removed) {
+      throw new Error('Path is removed and it is now read-only');
+    }
   }
 
   //#region Ancestry
@@ -124,6 +131,8 @@ export class NodePath<T extends Node = Node> {
 
   /** Inserts the `nodes` before the current node */
   insertBefore(nodes: Node[]): NodePath[] {
+    this.assertNotRemoved();
+
     // TODO: Handle more cases
 
     if (Array.isArray(this.container)) {
@@ -147,6 +156,8 @@ export class NodePath<T extends Node = Node> {
 
   /** Inserts the `nodes` after the current node */
   insertAfter(nodes: Node[]): NodePath[] {
+    this.assertNotRemoved();
+
     // TODO: Handle more cases
 
     if (Array.isArray(this.container)) {
@@ -170,6 +181,8 @@ export class NodePath<T extends Node = Node> {
 
   /** Insert child nodes at the start of the container */
   unshiftContainer(listKey: string, nodes: Node[]): NodePath[] {
+    this.assertNotRemoved();
+
     const firstNode = (this.node as any as Record<string, Node[]>)[listKey][0];
     return NodePath.for({
       node: firstNode,
@@ -182,6 +195,8 @@ export class NodePath<T extends Node = Node> {
 
   /** Insert the child nodes at the end of the container */
   pushContainer(listKey: string, nodes: Node[]): NodePath[] {
+    this.assertNotRemoved();
+
     const container = (this.node as any as Record<string, Node[]>)[listKey];
     const lastNode = container[container.length - 1];
     return NodePath.for({
@@ -307,7 +322,9 @@ export class NodePath<T extends Node = Node> {
 
   /** Remove the node from its parent */
   remove(): void {
-    if (this.removed) return;
+    if (this.removed) {
+      throw new Error('Node is already removed');
+    }
 
     if (this.container == null) {
       this.throwNoParent('remove');
