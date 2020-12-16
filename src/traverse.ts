@@ -46,11 +46,13 @@ class Traverser {
   }
 
   visitNode(data: {
-    node: Node;
+    node: Node | null;
     key: string | number | null;
     listKey: string | null;
     parentPath: NodePath | null;
   }) {
+    if (data.node == null) return;
+
     const visitorContext = {};
     const visitor = this.visitors[data.node.type] || {};
     const nodePath = NodePath.for({
@@ -68,7 +70,7 @@ class Traverser {
     for (const property in data.node) {
       const value: Node | Node[] | null | undefined = (data.node as any)[property];
 
-      if (!value) continue;
+      if (value == null) continue;
 
       if (Array.isArray(value)) {
         const childNodePaths = value.map((node, index) => (
@@ -82,12 +84,15 @@ class Traverser {
         ));
 
         for (let i = 0; i < childNodePaths.length; i++) {
-          this.visitNode({
-            node: childNodePaths[i].node,
-            key: childNodePaths[i].key,
-            listKey: childNodePaths[i].listKey,
-            parentPath: childNodePaths[i].parentPath,
-          });
+          const childNodePath = childNodePaths[i];
+          if (!childNodePath.removed) {
+            this.visitNode({
+              node: childNodePath.node,
+              key: childNodePath.key,
+              listKey: childNodePath.listKey,
+              parentPath: childNodePath.parentPath,
+            });
+          }
         }
       } else if (typeof value.type === 'string') {
         this.visitNode({

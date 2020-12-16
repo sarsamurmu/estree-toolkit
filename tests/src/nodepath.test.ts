@@ -2,6 +2,9 @@ import { traverse } from '<project>';
 import { Node, ExpressionStatement, AssignmentExpression, Literal, IfStatement } from 'estree';
 
 describe('Methods', () => {
+
+  //#region Ancestry
+
   test('findParent', () => {
     const ast: Node = {
       type: 'BlockStatement',
@@ -141,6 +144,10 @@ describe('Methods', () => {
 
     expect.assertions(3);
   });
+
+  //#endregion
+
+  //#region Modification
 
   test('insertBefore', () => {
     const ast: Node = {
@@ -314,6 +321,10 @@ describe('Methods', () => {
     });
   });
 
+  //#endregion
+
+  //#region Family
+
   test('get', () => {
     const ast: Node = {
       type: 'Program',
@@ -429,6 +440,175 @@ describe('Methods', () => {
 
     expect.assertions(3);
   });
+
+  test('getOpposite', () => {
+    const ast: Node = {
+      type: 'AssignmentExpression',
+      left: {
+        type: 'Identifier',
+        name: 'a'
+      },
+      operator: '=',
+      right: {
+        type: 'Identifier',
+        name: 'b'
+      }
+    };
+
+    traverse(ast, {
+      Identifier(path) {
+        if (path.key === 'left') {
+          expect(path.getOpposite().node).toBe(ast.right);
+        } else if (path.key === 'right') {
+          expect(path.getOpposite().node).toBe(ast.left);
+        }
+      }
+    });
+
+    expect.assertions(2);
+  });
+
+  test('getPrevSibling', () => {
+    const ast: Node = {
+      type: 'ArrayExpression',
+      elements: [
+        {
+          type: 'Literal',
+          value: 1
+        },
+        {
+          type: 'Literal',
+          value: 2
+        },
+        {
+          type: 'Literal',
+          value: 3
+        }
+      ]
+    };
+
+    traverse(ast, {
+      Literal(path) {
+        if (path.node.value === 2) {
+          expect(path.getPrevSibling().node).toBe(ast.elements[0]);
+        }
+      }
+    });
+
+    expect.assertions(1);
+  });
+
+  test('getPrevSibling', () => {
+    const ast: Node = {
+      type: 'ArrayExpression',
+      elements: [
+        {
+          type: 'Literal',
+          value: 1
+        },
+        {
+          type: 'Literal',
+          value: 2
+        },
+        {
+          type: 'Literal',
+          value: 3
+        }
+      ]
+    };
+
+    traverse(ast, {
+      Literal(path) {
+        if (path.node.value === 2) {
+          expect(path.getNextSibling().node).toBe(ast.elements[2]);
+        }
+      }
+    });
+
+    expect.assertions(1);
+  });
+
+  test('getAllPrevSiblings', () => {
+    const ast: Node = {
+      type: 'ArrayExpression',
+      elements: [
+        {
+          type: 'Literal',
+          value: 1
+        },
+        {
+          type: 'Literal',
+          value: 2
+        },
+        {
+          type: 'Literal',
+          value: 3
+        },
+        {
+          type: 'Literal',
+          value: 4
+        },
+        {
+          type: 'Literal',
+          value: 5
+        }
+      ]
+    };
+
+    traverse(ast, {
+      Literal(path) {
+        if (path.node.value === 3) {
+          const prevSiblings = path.getAllPrevSiblings();
+          expect(prevSiblings[0].node).toBe(ast.elements[1]);
+          expect(prevSiblings[1].node).toBe(ast.elements[0]);
+        }
+      }
+    });
+
+    expect.assertions(2);
+  });
+
+  test('getAllNextSiblings', () => {
+    const ast: Node = {
+      type: 'ArrayExpression',
+      elements: [
+        {
+          type: 'Literal',
+          value: 1
+        },
+        {
+          type: 'Literal',
+          value: 2
+        },
+        {
+          type: 'Literal',
+          value: 3
+        },
+        {
+          type: 'Literal',
+          value: 4
+        },
+        {
+          type: 'Literal',
+          value: 5
+        }
+      ]
+    };
+
+    traverse(ast, {
+      Literal(path) {
+        if (path.node.value === 3) {
+          const nextSiblings = path.getAllNextSiblings();
+          expect(nextSiblings[0].node).toBe(ast.elements[3]);
+          expect(nextSiblings[1].node).toBe(ast.elements[4]);
+        }
+      }
+    });
+
+    expect.assertions(2);
+  });
+
+  //#endregion
 
   describe('remove', () => {
     test('single', () => {

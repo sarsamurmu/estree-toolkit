@@ -67,6 +67,10 @@ export class NodePath<T extends Node = Node> {
     return (children.get(data.node) || mapSet(children, data.node, new this(data))) as NodePath<T>;
   }
 
+  protected throwNoParent(methodName: string): never {
+    throw new Error(`Can not use \`${methodName}\` on a NodePath which does not have a parent`);
+  }
+
   //#region Ancestry
 
   /**
@@ -177,9 +181,9 @@ export class NodePath<T extends Node = Node> {
   ): null extends N
     ? NodePath | NodePath[]
     : N extends Node[]
-    ? NodePath<N[number]>[]
+      ? NodePath<N[number]>[]
       : N extends Node ? NodePath<N> : NodePath<never>;
-
+  
   get(key: string): NodePath | NodePath[] {
     if (this.node == null) {
       throw new Error('Can not use method `get` on a null NodePath');
@@ -217,16 +221,57 @@ export class NodePath<T extends Node = Node> {
   }
 
   /** Get the NodePath of its sibling for which the key is `key` */
-  getSibling<N extends Node = Node>(key: string | number): NodePath<N> | undefined {
-    if (!this.parentPath) {
-      throw new Error('Can not use `getSibling` on a NodePath which does not have any parent');
+  getSibling<N extends Node = Node>(key: string | number): NodePath<N> | undefined | never {
+    if (this.parentPath == null) {
+      this.throwNoParent('getSibling');
     }
 
     if (typeof key === 'string') {
       return this.parentPath.get(key) as NodePath<N>;
-    } else if (this.listKey) {
+    } else if (this.listKey != null) {
       return (this.parentPath.get(this.listKey) as NodePath[])[key] as NodePath<N>;
     }
+  }
+
+  /** Get the opposite NodePath */
+  getOpposite() {
+    switch (this.key) {
+      case 'left': return this.getSibling('right');
+      case 'right': return this.getSibling('left');
+    }
+  }
+
+  /** The the previous sibling of the current node */
+  getPrevSibling(): NodePath | undefined | never {
+    return this.getSibling((this.key as number) - 1);
+  }
+
+  /** The the next sibling of the current node */
+  getNextSibling(): NodePath | undefined | never {
+    return this.getSibling((this.key as number) + 1);
+  }
+
+  /** Get all previous siblings of the current node */
+  getAllPrevSiblings(): NodePath[] | undefined | never {
+    if (this.parentPath == null) {
+      this.throwNoParent('getAllPrevSiblings');
+    }
+
+    return this.parentPath
+      .get<Node[]>(this.listKey as string)
+      .slice(0, this.key as number)
+      .reverse();
+  }
+
+  /** Get all next siblings of the current node */
+  getAllNextSiblings(): NodePath[] | undefined | never {
+    if (this.parentPath == null) {
+      this.throwNoParent('getAllNextSiblings');
+    }
+
+    return this.parentPath
+      .get<Node[]>(this.listKey as string)
+      .slice((this.key as number) + 1);
   }
 
   //#endregion
