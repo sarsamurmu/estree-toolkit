@@ -349,4 +349,38 @@ export class NodePath<T extends Node = Node> {
   }
 
   //#endregion
+
+  //#region Replacement
+
+  /** Removes the old node and inserts the new node in the old node's position */
+  replaceWith<N extends Node = Node>(node: N): NodePath<N> {
+    if (this.container == null) {
+      this.throwNoParent('replaceWith');
+    }
+
+    (this.container as any as Record<string | number, Node>)[this.key!] = node;
+    this[internal].pathCache.get(this.parent)?.delete(this.node);
+    this.removed = true;
+
+    return NodePath.for({
+      node,
+      key: this.key,
+      listKey: this.listKey,
+      parentPath: this.parentPath,
+      internal: this[internal]
+    });
+  }
+
+  /** Removes the old node and inserts the new nodes in the old node's position */
+  replaceWithMultiple<N extends Node[]>(nodes: N): NodePath<N[number]>[] {
+    if (this.container == null) {
+      this.throwNoParent('replaceWith');
+    }
+
+    const newPath = this.replaceWith(nodes[0]);
+
+    return [newPath].concat(newPath.insertAfter(nodes.slice(1)));
+  } 
+
+  //#endregion
 }

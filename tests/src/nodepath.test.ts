@@ -921,6 +921,123 @@ describe('Methods', () => {
       });
     });
   });
+
+  //#region Replacement
+
+  test('replaceWith', () => {
+    const ast: Node = {
+      type: 'ArrayExpression',
+      elements: [
+        {
+          type: 'Literal',
+          value: 1
+        },
+        {
+          type: 'Literal',
+          value: 2
+        },
+        {
+          type: 'Literal',
+          value: 3
+        }
+      ]
+    };
+
+    traverse(ast, {
+      Literal(path) {
+        if (path.node.value === 2) {
+          const newPath = path.replaceWith({
+            type: 'Literal',
+            value: null
+          });
+
+          expect(path.removed).toBe(true);
+          expect(newPath.key).toBe(path.key);
+          expect(newPath.listKey).toBe(path.listKey);
+          expect(newPath.parentPath).toBe(path.parentPath);
+        }
+      }
+    });
+
+    expect(ast).toEqual({
+      type: 'ArrayExpression',
+      elements: [
+        {
+          type: 'Literal',
+          value: 1
+        },
+        {
+          type: 'Literal',
+          value: null
+        },
+        {
+          type: 'Literal',
+          value: 3
+        }
+      ]
+    });
+  });
+
+  test('replaceWithMultiple', () => {
+    const ast: Node = {
+      type: 'ArrayExpression',
+      elements: [
+        {
+          type: 'Literal',
+          value: 0
+        }
+      ]
+    };
+
+    traverse(ast, {
+      Literal(path) {
+        if (path.node.value === 0) {
+          const newPaths = path.replaceWithMultiple([
+            {
+              type: 'Literal',
+              value: 1
+            },
+            {
+              type: 'Literal',
+              value: 2
+            },
+            {
+              type: 'Literal',
+              value: 3
+            }
+          ]);
+          expect(path.removed).toBe(true);
+          expect(newPaths[0].key).toBe(0);
+          expect(newPaths[1].key).toBe(1);
+          expect(newPaths[2].key).toBe(2);
+
+          expect(newPaths[0].listKey).toBe(path.listKey);
+          expect(newPaths[1].listKey).toBe(path.listKey);
+          expect(newPaths[2].listKey).toBe(path.listKey);
+        }
+      }
+    });
+
+    expect(ast).toEqual({
+      type: 'ArrayExpression',
+      elements: [
+        {
+          type: 'Literal',
+          value: 1
+        },
+        {
+          type: 'Literal',
+          value: 2
+        },
+        {
+          type: 'Literal',
+          value: 3
+        }
+      ]
+    });
+  });
+
+  //#endregion
 });
 
 describe('Properties', () => {
