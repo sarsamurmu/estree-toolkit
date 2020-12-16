@@ -114,6 +114,14 @@ export class NodePath<T extends Node = Node> {
 
   //#region Modification
 
+  protected updateSiblingIndex(fromIndex: number, incrementBy: number): void {
+    this[internal].pathCache.get(this.parent)?.forEach((path) => {
+      if ((path.key as number) >= fromIndex) {
+        (path.key as number) += incrementBy;
+      }
+    });
+  }
+
   /** Inserts the `nodes` before the current node */
   insertBefore(nodes: Node[]): NodePath[] {
     // TODO: Handle more cases
@@ -160,12 +168,29 @@ export class NodePath<T extends Node = Node> {
     }
   }
 
-  protected updateSiblingIndex(fromIndex: number, incrementBy: number): void {
-    this[internal].pathCache.get(this.parent)?.forEach((path) => {
-      if ((path.key as number) >= fromIndex) {
-        (path.key as number) += incrementBy;
-      }
-    });
+  /** Insert child nodes at the start of the container */
+  unshiftContainer(listKey: string, nodes: Node[]): NodePath[] {
+    const firstNode = (this.node as any as Record<string, Node[]>)[listKey][0];
+    return NodePath.for({
+      node: firstNode,
+      key: 0,
+      listKey,
+      parentPath: this,
+      internal: this[internal]
+    }).insertBefore(nodes);
+  }
+
+  /** Insert the child nodes at the end of the container */
+  pushContainer(listKey: string, nodes: Node[]): NodePath[] {
+    const container = (this.node as any as Record<string, Node[]>)[listKey];
+    const lastNode = container[container.length - 1];
+    return NodePath.for({
+      node: lastNode,
+      key: container.length - 1,
+      listKey,
+      parentPath: this,
+      internal: this[internal]
+    }).insertAfter(nodes);
   }
 
   //#endregion

@@ -321,6 +321,196 @@ describe('Methods', () => {
     });
   });
 
+  test('unshiftContainer', () => {
+    const ast1: Node = {
+      type: 'ArrayExpression',
+      elements: [
+        {
+          type: 'Literal',
+          value: 2
+        },
+        {
+          type: 'Literal',
+          value: 3
+        }
+      ]
+    };
+
+    traverse(ast1, {
+      ArrayExpression(path) {
+        const nodePaths = path.unshiftContainer('elements', [
+          {
+            type: 'Literal',
+            value: 0
+          },
+          {
+            type: 'Literal',
+            value: 1
+          },
+        ]);
+        expect(nodePaths[0].key).toBe(0);
+        expect(nodePaths[1].key).toBe(1);
+        expect(nodePaths[0].listKey).toBe('elements');
+        expect(nodePaths[1].listKey).toBe('elements');
+      }
+    });
+
+    expect(ast1).toEqual({
+      type: 'ArrayExpression',
+      elements: [
+        {
+          type: 'Literal',
+          value: 0
+        },
+        {
+          type: 'Literal',
+          value: 1
+        },
+        {
+          type: 'Literal',
+          value: 2
+        },
+        {
+          type: 'Literal',
+          value: 3
+        }
+      ]
+    });
+
+    const ast2: Node = {
+      type: 'ArrayExpression',
+      elements: []
+    };
+
+    traverse(ast2, {
+      ArrayExpression(path) {
+        const nodePaths = path.unshiftContainer('elements', [
+          {
+            type: 'Literal',
+            value: 0
+          },
+          {
+            type: 'Literal',
+            value: 1
+          },
+        ]);
+        expect(nodePaths[0].key).toBe(0);
+        expect(nodePaths[1].key).toBe(1);
+        expect(nodePaths[0].listKey).toBe('elements');
+        expect(nodePaths[1].listKey).toBe('elements');
+      }
+    });
+
+    expect(ast2).toEqual({
+      type: 'ArrayExpression',
+      elements: [
+        {
+          type: 'Literal',
+          value: 0
+        },
+        {
+          type: 'Literal',
+          value: 1
+        }
+      ]
+    });
+  });
+
+  test('insertContainer', () => {
+    const ast1: Node = {
+      type: 'ArrayExpression',
+      elements: [
+        {
+          type: 'Literal',
+          value: 0
+        },
+        {
+          type: 'Literal',
+          value: 1
+        }
+      ]
+    };
+
+    traverse(ast1, {
+      ArrayExpression(path) {
+        const nodePaths = path.pushContainer('elements', [
+          {
+            type: 'Literal',
+            value: 2
+          },
+          {
+            type: 'Literal',
+            value: 3
+          },
+        ]);
+        expect(nodePaths[0].key).toBe(2);
+        expect(nodePaths[1].key).toBe(3);
+        expect(nodePaths[0].listKey).toBe('elements');
+        expect(nodePaths[1].listKey).toBe('elements');
+      }
+    });
+
+    expect(ast1).toEqual({
+      type: 'ArrayExpression',
+      elements: [
+        {
+          type: 'Literal',
+          value: 0
+        },
+        {
+          type: 'Literal',
+          value: 1
+        },
+        {
+          type: 'Literal',
+          value: 2
+        },
+        {
+          type: 'Literal',
+          value: 3
+        }
+      ]
+    });
+
+    const ast2: Node = {
+      type: 'ArrayExpression',
+      elements: []
+    };
+
+    traverse(ast2, {
+      ArrayExpression(path) {
+        const nodePaths = path.pushContainer('elements', [
+          {
+            type: 'Literal',
+            value: 0
+          },
+          {
+            type: 'Literal',
+            value: 1
+          },
+        ]);
+        expect(nodePaths[0].key).toBe(0);
+        expect(nodePaths[1].key).toBe(1);
+        expect(nodePaths[0].listKey).toBe('elements');
+        expect(nodePaths[1].listKey).toBe('elements');
+      }
+    });
+
+    expect(ast2).toEqual({
+      type: 'ArrayExpression',
+      elements: [
+        {
+          type: 'Literal',
+          value: 0
+        },
+        {
+          type: 'Literal',
+          value: 1
+        }
+      ]
+    });
+  });
+
   //#endregion
 
   //#region Family
