@@ -16,17 +16,17 @@ const mapSet = <K, V>(map: Map<K, V>, key: K, value: V): V => {
 const internal = Symbol('__internal__');
 
 export class NodePath<T extends Node = Node> {
-  /** The node associated with this NodePath */
+  /** The node associated with the current NodePath */
   node: T | null;
   /** Type of the node that is associated with this NodePath */
   type: T['type'] | null;
-  /** This node's key in its parent */
+  /** The current node's key in its parent */
   key: string | number | null;
   /** If this node is part of an array, `listKey` is the key of the array in its parent */
   listKey: string | null;
-  /** Get the parent path of this NodePath */
+  /** The parent path of the current NodePath */
   parentPath: NodePath | null;
-  /** Get the parent node of this node */
+  /** The parent node of the current NodePath */
   parent: Node | null;
   /** Container of the node
    * Value is `this.parent[this.listKey]` if `this.listKey` is truthy, else `this.parent`
@@ -54,7 +54,9 @@ export class NodePath<T extends Node = Node> {
     this.listKey = data.listKey;
     this.parentPath = data.parentPath;
     this.parent = this.parentPath && this.parentPath.node;
-    this.container = this.listKey ? (this.parent as any)[this.listKey] : this.parent;
+    this.container = this.listKey
+      ? (this.parent as any as Record<string, Node[]>)[this.listKey]
+      : this.parent;
     this.removed = false;
 
     this[internal] = data.internal;
@@ -86,7 +88,7 @@ export class NodePath<T extends Node = Node> {
     return null;
   }
 
-  /** Starting from this `NodePath` and going up the tree,
+  /** Starting from **this** `NodePath` and going up the tree,
    * returns the first `NodePath` where `predicate` is true
    */
   find(predicate: (path: NodePath) => boolean): NodePath | null {
@@ -105,7 +107,7 @@ export class NodePath<T extends Node = Node> {
       type === 'FunctionDeclaration' ||
       type === 'FunctionExpression' ||
       type === 'ArrowFunctionExpression'
-    )) as any;
+    )) as NodePath<FunctionDeclaration | FunctionExpression | ArrowFunctionExpression>;
   }
 
   //#endregion
@@ -189,7 +191,7 @@ export class NodePath<T extends Node = Node> {
       throw new Error('Can not use method `get` on a null NodePath');
     }
 
-    const value: Node | Node[] | null = (this.node as any)[key];
+    const value = (this.node as any as Record<string, Node | Node[] | null>)[key];
 
     if (Array.isArray(value)) {
       return value.map((node, index) => (
@@ -281,24 +283,26 @@ export class NodePath<T extends Node = Node> {
   /** Remove the node from its parent */
   remove(): void {
     if (this.removed) return;
-    if (this.parentPath) {
-      if (this.listKey) {
-        const nodes = (this.parentPath.node as any)[this.listKey] as Node[];
-        const key = this.key as number;
-        if (nodes[key] === this.node) {
-          nodes.splice(key, 1);
-          this[internal].pathCache.get(this.parent)?.delete(this.node);
-          this.updateSiblingIndex(key + 1, -1);
-          this.removed = true;
-        } else {
-          debugLog("Something went wrong when calling remove(), path's node is not available in its index");
-        }
-      } else if (this.key) {
-        (this.parentPath.node as any)[this.key] = null;
+
+    if (this.container == null) {
+      this.throwNoParent('remove');
+    }
+
+    if (this.listKey != null) {
+      const key = this.key as number;
+      const container = this.container as Node[];
+
+      if (container[key] === this.node) {
+        container.splice(key, 1);
+        this[internal].pathCache.get(this.parent)?.delete(this.node);
+        this.updateSiblingIndex(key + 1, -1);
         this.removed = true;
+      } else {
+        debugLog("Something went wrong when calling remove(), path's node is not available in its index");
       }
-    } else {
-      throw new Error('Can not remove a path which does not have a parent')
+    } else if (this.key != null) {
+      (this.container as any as Record<string, Node | null>)[this.key] = null;
+      this.removed = true;
     }
   }
 
