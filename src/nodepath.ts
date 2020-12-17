@@ -6,7 +6,8 @@ import {
   BaseNode
 } from 'estree';
 
-import { debugLog } from './utils';
+
+// * Tip: Fold the regions or comments for better experience
 
 const mapSet = <K, V>(map: Map<K, V>, key: K, value: V): V => {
   map.set(key, value);
@@ -20,16 +21,109 @@ export class NodePath<T extends Node = Node> {
   node: T | null;
   /** Type of the node that is associated with this NodePath */
   type: T['type'] | null;
-  /** The current node's key in its parent */
+  /**
+   * The current node's key in its parent
+   * 
+   * Example
+   * ```
+   * const ast = {
+   *   type: 'IfStatement',
+   *   test: {
+   *     type: 'Identifier',
+   *     name: 'targetNode'
+   *   },
+   *   consequent: {
+   *     type: 'EmptyStatement'
+   *   },
+   *   alternate: null
+   * };
+   *
+   * traverse(ast, {
+   *   Identifier(path) {
+   *     if (path.node.name === 'targetNode') {
+   *       path.key === 'test' // => true
+   *     }
+   *   }
+   * });
+   * ```
+   */
   key: string | number | null;
-  /** If this node is part of an array, `listKey` is the key of the array in its parent */
+  /**
+   * If this node is part of an array, `listKey` is the key of the array in its parent
+   * 
+   * Example
+   * ```
+   * const ast = {
+   *   type: 'ArrayExpression',
+   *   elements: [
+   *     {
+   *       type: 'Identifier',
+   *       name: 'targetNode'
+   *     }
+   *   ]
+   * };
+   * 
+   * traverse(ast, {
+   *   Identifier(path) {
+   *     if (path.node.name === 'targetNode') {
+   *       path.listKey === 'elements' // => true
+   *       path.key === 0 // => true
+   *     }
+   *   }
+   * });
+   * ```
+   */
   listKey: string | null;
   /** The parent path of the current NodePath */
   parentPath: NodePath | null;
   /** The parent node of the current NodePath */
   parent: Node | null;
-  /** Container of the node
-   * Value is `this.parent[this.listKey]` if `this.listKey` is truthy, else `this.parent`
+  /**
+   * Container of the node
+   * 
+   * Example - 1
+   * ```
+   * const ast = {
+   *   type: 'ArrayExpression',
+   *   elements: [
+   *     {
+   *       type: 'Identifier',
+   *       name: 'targetNode'
+   *     }
+   *   ]
+   * };
+   * 
+   * traverse(ast, {
+   *   Identifier(path) {
+   *     if (path.node.name === 'targetNode') {
+   *       path.container === ast.elements // => true
+   *     }
+   *   }
+   * });
+   * ```
+   * 
+   * Example - 2
+   * ```
+   * const ast = {
+   *   type: 'IfStatement',
+   *   test: {
+   *     type: 'Identifier',
+   *     name: 'targetNode'
+   *   },
+   *   consequent: {
+   *     type: 'EmptyStatement'
+   *   },
+   *   alternate: null
+   * };
+   * 
+   * traverse(ast, {
+   *   Identifier(path) {
+   *     if (path.node.name === 'targetNode') {
+   *       path.container === ast // => true
+   *     }
+   *   }
+   * });
+   * ```
    */
   container: Node | Node[] | null;
   /** If the node has been removed from its parent */
@@ -85,6 +179,36 @@ export class NodePath<T extends Node = Node> {
   /**
    * Starting at the parent path of this `NodePath` and going up the tree,
    * returns first parent path where `predicate` is true
+   * 
+   * Example
+   * ```
+   * const ast = {
+   *   type: 'BlockStatement',
+   *   body: [
+   *     {
+   *       type: 'BlockStatement',
+   *       body: [
+   *         {
+   *           type: 'ExpressionStatement',
+   *           expression: {
+   *             type: 'Literal',
+   *             value: 0
+   *           }
+   *         }
+   *       ]
+   *     }
+   *   ]
+   * };
+   * 
+   * traverse(ast, {
+   *   Literal(path) {
+   *     const blockParent = path.findParent(
+   *       (parent) => parent.type === 'BlockStatement'
+   *     ).node;
+   *     blockParent === ast.body[0] // => true, Notice how it is not `ast` and is `ast.body[0]`
+   *   }
+   * });
+   * ```
    */
   findParent(predicate: (path: NodePath) => boolean): NodePath | null {
     let parent = this.parentPath;
@@ -95,8 +219,27 @@ export class NodePath<T extends Node = Node> {
     return null;
   }
 
-  /** Starting from **this** `NodePath` and going up the tree,
+  /**
+   * Starting from **this** `NodePath` and going up the tree,
    * returns the first `NodePath` where `predicate` is true
+   * 
+   * Example
+   * ```
+   * const ast = {
+   *   type: 'ExpressionStatement',
+   *   expression: {
+   *     type: 'Literal',
+   *     value: 0
+   *   }
+   * };
+   * 
+   * traverse(ast, {
+   *   Literal(path) {
+   *     path.find((p) => p.type === 'Literal').node === ast.expression // => true
+   *     path.find((p) => p.type === 'ExpressionStatement').node === ast // => true
+   *   }
+   * });
+   * ```
    */
   find(predicate: (path: NodePath) => boolean): NodePath | null {
     // eslint-disable-next-line @typescript-eslint/no-this-alias
@@ -339,6 +482,7 @@ export class NodePath<T extends Node = Node> {
       this.removed = true;
     } else if (this.key != null) {
       (this.container as any as Record<string, Node | null>)[this.key] = null;
+      this[internal].pathCache.get(this.parent)?.delete(this.node);
       this.removed = true;
     }
   }
