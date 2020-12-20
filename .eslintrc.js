@@ -49,7 +49,6 @@ module.exports = {
   rules: {
     'indent': ['error', 2, { SwitchCase: 1 }],
     'quotes': ['error', 'single', { avoidEscape: true }],
-    'linebreak-style': ['error', 'windows'],
     'eqeqeq': ['error', 'smart'],
     'arrow-parens': ['error', 'always'],
     'no-var': 'error',

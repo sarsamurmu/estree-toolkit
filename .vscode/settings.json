@@ -3,8 +3,10 @@
     "endregion",
     "escodegen",
     "estree",
+    "finalizer",
     "meriyah",
-    "nodepath"
+    "nodepath",
+    "quasis"
   ],
   "files.associations": {
     "*.tsconfig.json": "jsonc"

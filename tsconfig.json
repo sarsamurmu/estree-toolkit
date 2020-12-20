@@ -8,5 +8,11 @@
   },
   "include": [
     "./src/**/*"
-  ]
+  ],
+  "ts-node": {
+    "transpileOnly": true,
+    "compilerOptions": {
+      "esModuleInterop": true
+    }
+  }
 }

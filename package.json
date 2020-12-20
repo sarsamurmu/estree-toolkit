@@ -5,6 +5,7 @@
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "scripts": {
+    "generate": "ts-node ./generator-scripts/index.ts",
     "build": "tsc",
     "build:watch": "tsc --incremental -w",
     "test": "jest --coverage",
@@ -24,6 +25,7 @@
     "typescript": "^4.1.3"
   },
   "dependencies": {
-    "@types/estree": "^0.0.45"
+    "@types/estree": "^0.0.45",
+    "ts-node": "^9.1.1"
   }
 }
