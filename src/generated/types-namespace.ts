@@ -72,7 +72,7 @@ import {
   ExportSpecifier
 } from 'estree';
 
-export type Builders = {
+export type TypesNamespace = {
   identifier(name: Identifier['name']): Identifier;
   literal(value: Literal['value']): Literal;
   program(body: Program['body']): Program;

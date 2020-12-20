@@ -1,1 +1,1 @@
-import './builder';
+import './types-namespace';
