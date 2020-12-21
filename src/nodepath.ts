@@ -210,8 +210,8 @@ export class NodePath<T extends Node = Node> {
    * });
    * ```
    */
-  findParent(predicate: (path: NodePath) => boolean): NodePath | null {
-    let parent = this.parentPath;
+  findParent<N extends Node>(predicate: (path: NodePath<N>) => boolean): NodePath<N> | null {
+    let parent: NodePath<any> | null = this.parentPath;
     while (parent != null) {
       if (predicate(parent)) return parent;
       parent = parent.parentPath;
@@ -241,9 +241,9 @@ export class NodePath<T extends Node = Node> {
    * });
    * ```
    */
-  find(predicate: (path: NodePath) => boolean): NodePath | null {
+  find<N extends Node>(predicate: (path: NodePath<N>) => boolean): NodePath<N> | null {
     // eslint-disable-next-line @typescript-eslint/no-this-alias
-    let nodePath: NodePath | null = this;
+    let nodePath: NodePath<any> | null = this;
     while (nodePath != null) {
       if (predicate(nodePath)) return nodePath;
       nodePath = nodePath.parentPath;
