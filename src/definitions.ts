@@ -1,32 +1,35 @@
 import { Node, BaseNode } from 'estree';
 
-type FieldData<N extends { type: string; }, K extends keyof N = Exclude<keyof N, keyof BaseNode>> = {
-  key: K;
-  // TODO: Make `validate` required
-  validate?: (value: any) => void;
+export type BaseFieldData<T extends {
+  key: any;
+  node: any;
+  default: any;
+} = {
+  key: string;
+  node: Node;
+  default: any;
+}> = {
+  key: T['key'];
+  validate?: (value: any) => void; // TODO: Make it required
   type?: string;
 } & ({
   optional?: undefined;
 } | {
   optional: true;
-  default: N[K] | ((node: N) => N[K]);
+  default: T['default'] | ((node: T['node']) => T['default'])
 });
+
+type FieldData<
+  N extends Node,
+  K extends keyof N = Exclude<keyof N, keyof BaseNode>
+> = BaseFieldData<{ key: K, default: N[K], node: N }>
 
 type _Definitions = {
   [K in Node as `${K['type']}`]: FieldData<K>[];
-} & {
-  [key: string]: FieldData<{
-    type: string;
-    [key: string]: any;
-  }, string>[];
-}
+};
 
 // eslint-disable-next-line @typescript-eslint/no-empty-interface
 interface Definitions extends _Definitions { }
-
-const chain = (...args: ((value: any) => void)[]) => (
-  (value: any) => args.forEach((validator) => validator(value))
-);
 
 export const definitions: Definitions = {
   Identifier: [
@@ -234,7 +237,6 @@ export const definitions: Definitions = {
     { key: 'kind' },
     { key: 'key' },
     { key: 'value' },
-    { key: 'method', optional: true, default: false },
     { key: 'computed', optional: true, default: false },
     { key: 'shorthand', optional: true, default: false }
   ],

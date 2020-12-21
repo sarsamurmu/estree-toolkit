@@ -1,29 +1,29 @@
 import { TypesNamespace } from './generated/types-namespace';
-import { definitions } from './definitions';
+import { definitions, BaseFieldData } from './definitions';
 
 export const typesNamespace: TypesNamespace = {} as any;
 
-for (const key in definitions) {
-  const definition = definitions[key];
+for (const nodeName in definitions) {
+  const fields = definitions[nodeName as keyof typeof definitions];
+  const lowerCasedNodeName = nodeName[0].toLowerCase() + nodeName.slice(1);
 
-  (typesNamespace as any)[key] = (...args: any[]) => {
-    const node: Record<string, any> = { type: key };
-    args.forEach((argValue, index) => {
-      const fieldData = definition[index];
-      const lowerCaseKey = fieldData.key[0].toLowerCase() + fieldData.key.slice(1);
+  (typesNamespace as any)[lowerCasedNodeName] = (...args: any[]) => {
+    const node: Record<string, any> = { type: nodeName };
 
-      node[lowerCaseKey] = argValue || (
-        fieldData.optional
+    fields.forEach((field: BaseFieldData, index: number) => {
+      node[field.key] = args[index] || (
+        field.optional
           ? (
-            typeof fieldData.default == 'function'
-              ? fieldData.default(node)
-              : fieldData.default
+            typeof field.default == 'function'
+              ? field.default(node)
+              : field.default
           )
-          : argValue
+          : args[index]
       );
 
-      fieldData.validate?.(argValue);
+      field.validate?.(args[index]);
     });
+
     return node;
   }
 }
