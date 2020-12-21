@@ -3,28 +3,35 @@ import path from 'path';
 
 import { definitions } from '../src/definitions';
 
-const reserved = ['arguments', 'static'];
+let content = '';
 const nodeNames = Object.keys(definitions);
-let content =
-`// Generated file. Do not modify by hands.
+
+const isReserved = (name: string) => {
+  try {
+    eval(`{let ${name}}`);
+    return false;
+  } catch (e) {
+    return true;
+  }
+}
+
+content += `// Generated file. Do not modify by hands.
 // Run "npm run generate" to re-generate this file.
 
-import {
-  ${nodeNames.join(',\n  ')}
-} from 'estree';
+import { ${nodeNames.join(', ')} } from 'estree';
 
-export type TypesNamespace = {
-`;
+export type Builders = {
+`
 
 nodeNames.forEach((nodeName) => {
   const fields = definitions[nodeName];
   const lowerCasedTypeName = nodeName[0].toLowerCase() + nodeName.slice(1);
   const parameters = fields.map(({ key, optional, type }) => {
-    return `${(reserved.includes(key) ? '_' : '') + key}${optional ? '?' : ''}: ${type || `${nodeName}['${key}']` }`
+    return `${(isReserved(key) ? '_' : '') + key}${optional ? '?' : ''}: ${type || `${nodeName}['${key}']` }`
   }).join(', ');
   content += `  ${lowerCasedTypeName}(${parameters}): ${nodeName};\n`;
 });
 
 content += '}';
 
-fs.writeFileSync(path.join(__dirname, '../src/generated/types-namespace.ts'), content);
+fs.writeFileSync(path.join(__dirname, '../src/generated/builders-type.ts'), content);

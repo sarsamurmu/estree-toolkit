@@ -1,78 +1,9 @@
 // Generated file. Do not modify by hands.
 // Run "npm run generate" to re-generate this file.
 
-import {
-  Identifier,
-  Literal,
-  Program,
-  FunctionDeclaration,
-  FunctionExpression,
-  ArrowFunctionExpression,
-  SwitchCase,
-  CatchClause,
-  VariableDeclarator,
-  ExpressionStatement,
-  BlockStatement,
-  EmptyStatement,
-  DebuggerStatement,
-  WithStatement,
-  ReturnStatement,
-  LabeledStatement,
-  BreakStatement,
-  ContinueStatement,
-  IfStatement,
-  SwitchStatement,
-  ThrowStatement,
-  TryStatement,
-  WhileStatement,
-  DoWhileStatement,
-  ForStatement,
-  ForInStatement,
-  ForOfStatement,
-  VariableDeclaration,
-  ClassDeclaration,
-  ThisExpression,
-  ArrayExpression,
-  ObjectExpression,
-  YieldExpression,
-  UnaryExpression,
-  UpdateExpression,
-  BinaryExpression,
-  AssignmentExpression,
-  LogicalExpression,
-  MemberExpression,
-  ConditionalExpression,
-  CallExpression,
-  NewExpression,
-  SequenceExpression,
-  TemplateLiteral,
-  TaggedTemplateExpression,
-  ClassExpression,
-  MetaProperty,
-  AwaitExpression,
-  ImportExpression,
-  ChainExpression,
-  Property,
-  Super,
-  TemplateElement,
-  SpreadElement,
-  ObjectPattern,
-  ArrayPattern,
-  RestElement,
-  AssignmentPattern,
-  ClassBody,
-  MethodDefinition,
-  ImportDeclaration,
-  ExportNamedDeclaration,
-  ExportDefaultDeclaration,
-  ExportAllDeclaration,
-  ImportSpecifier,
-  ImportDefaultSpecifier,
-  ImportNamespaceSpecifier,
-  ExportSpecifier
-} from 'estree';
+import { Identifier, Literal, Program, FunctionDeclaration, FunctionExpression, ArrowFunctionExpression, SwitchCase, CatchClause, VariableDeclarator, ExpressionStatement, BlockStatement, EmptyStatement, DebuggerStatement, WithStatement, ReturnStatement, LabeledStatement, BreakStatement, ContinueStatement, IfStatement, SwitchStatement, ThrowStatement, TryStatement, WhileStatement, DoWhileStatement, ForStatement, ForInStatement, ForOfStatement, VariableDeclaration, ClassDeclaration, ThisExpression, ArrayExpression, ObjectExpression, YieldExpression, UnaryExpression, UpdateExpression, BinaryExpression, AssignmentExpression, LogicalExpression, MemberExpression, ConditionalExpression, CallExpression, NewExpression, SequenceExpression, TemplateLiteral, TaggedTemplateExpression, ClassExpression, MetaProperty, AwaitExpression, ImportExpression, ChainExpression, Property, Super, TemplateElement, SpreadElement, ObjectPattern, ArrayPattern, RestElement, AssignmentPattern, ClassBody, MethodDefinition, ImportDeclaration, ExportNamedDeclaration, ExportDefaultDeclaration, ExportAllDeclaration, ImportSpecifier, ImportDefaultSpecifier, ImportNamespaceSpecifier, ExportSpecifier } from 'estree';
 
-export type TypesNamespace = {
+export type Builders = {
   identifier(name: Identifier['name']): Identifier;
   literal(value: Literal['value']): Literal;
   program(body: Program['body']): Program;
@@ -123,7 +54,7 @@ export type TypesNamespace = {
   awaitExpression(argument: AwaitExpression['argument']): AwaitExpression;
   importExpression(source: ImportExpression['source']): ImportExpression;
   chainExpression(expression: ChainExpression['expression']): ChainExpression;
-  property(kind: Property['kind'], key: Property['key'], value: Property['value'], method?: Property['method'], computed?: Property['computed'], shorthand?: Property['shorthand']): Property;
+  property(kind: Property['kind'], key: Property['key'], value: Property['value'], computed?: Property['computed'], shorthand?: Property['shorthand']): Property;
   super(): Super;
   templateElement(value: TemplateElement['value'], tail: TemplateElement['tail']): TemplateElement;
   spreadElement(argument: SpreadElement['argument']): SpreadElement;
