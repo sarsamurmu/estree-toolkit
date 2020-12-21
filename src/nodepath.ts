@@ -273,7 +273,7 @@ export class NodePath<T extends Node = Node> {
   }
 
   /** Inserts the `nodes` before the current node */
-  insertBefore(nodes: Node[]): NodePath[] {
+  insertBefore(nodes: readonly Node[]): NodePath[] {
     this.assertNotRemoved();
 
     // TODO: Handle more cases
@@ -298,7 +298,7 @@ export class NodePath<T extends Node = Node> {
   }
 
   /** Inserts the `nodes` after the current node */
-  insertAfter(nodes: Node[]): NodePath[] {
+  insertAfter(nodes: readonly Node[]): NodePath[] {
     this.assertNotRemoved();
 
     // TODO: Handle more cases
@@ -323,7 +323,7 @@ export class NodePath<T extends Node = Node> {
   }
 
   /** Insert child nodes at the start of the container */
-  unshiftContainer(listKey: string, nodes: Node[]): NodePath[] {
+  unshiftContainer(listKey: string, nodes: readonly Node[]): NodePath[] {
     this.assertNotRemoved();
 
     const firstNode = (this.node as any as Record<string, Node[]>)[listKey][0];
@@ -337,7 +337,7 @@ export class NodePath<T extends Node = Node> {
   }
 
   /** Insert the child nodes at the end of the container */
-  pushContainer(listKey: string, nodes: Node[]): NodePath[] {
+  pushContainer(listKey: string, nodes: readonly Node[]): NodePath[] {
     this.assertNotRemoved();
 
     const container = (this.node as any as Record<string, Node[]>)[listKey];
@@ -511,7 +511,7 @@ export class NodePath<T extends Node = Node> {
   }
 
   /** Removes the old node and inserts the new nodes in the old node's position */
-  replaceWithMultiple<N extends Node[]>(nodes: N): NodePath<N[number]>[] {
+  replaceWithMultiple<N extends readonly Node[]>(nodes: N): NodePath<N[number]>[] {
     if (this.container == null) {
       this.throwNoParent('replaceWith');
     }
