@@ -133,7 +133,7 @@ export class NodePath<T extends Node = Node> {
     pathCache: Map<Node | null, Map<Node | null, NodePath>>;
   }
 
-  protected static internalSymbol = internal;
+  static readonly internalKey = internal;
 
   constructor(data: {
     node: NodePath<T>['node'];
