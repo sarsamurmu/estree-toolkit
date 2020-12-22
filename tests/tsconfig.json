@@ -3,6 +3,7 @@
     "target": "ESNext",
     "module": "CommonJS",
     "outDir": "../__tests__",
+    "sourceMap": true,
     "baseUrl": "./",
     "paths": {
       "<project>*": ["../src"]
