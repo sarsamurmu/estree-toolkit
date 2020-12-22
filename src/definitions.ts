@@ -1,32 +1,28 @@
 import { Node, BaseNode } from 'estree';
 
-export type BaseFieldData<T extends {
-  key: any;
-  node: any;
-  default: any;
-} = {
-  key: string;
-  node: Node;
-  default: any;
-}> = {
-  key: T['key'];
+export type BaseFieldData<
+  KeyT = string,
+  NodeT = Node,
+  DefaultT = any
+> = Readonly<{
+  key: KeyT;
   validate?: (value: any) => void; // TODO: Make it required
   type?: string;
 } & ({
   optional?: undefined;
 } | {
   optional: true;
-  default: T['default'] | ((node: T['node']) => T['default'])
-});
+  default: DefaultT | ((node: NodeT) => DefaultT)
+})>;
 
 type FieldData<
   N extends Node,
   K extends keyof N = Exclude<keyof N, keyof BaseNode>
-> = BaseFieldData<{ key: K, default: N[K], node: N }>
+> = BaseFieldData<K, N, N[K]>;
 
-type _Definitions = {
+type _Definitions = Readonly<{
   [K in Node as `${K['type']}`]: FieldData<K>[];
-};
+}>;
 
 // eslint-disable-next-line @typescript-eslint/no-empty-interface
 interface Definitions extends _Definitions { }
