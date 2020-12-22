@@ -1,3 +1,5 @@
+/* istanbul ignore file */
+
 import { Node, BaseNode } from 'estree';
 
 export type BaseFieldData<
