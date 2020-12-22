@@ -15,13 +15,14 @@ const isReserved = (name: string) => {
   }
 }
 
-content += `// Generated file. Do not modify by hands.
+content += `
+// Generated file. Do not modify by hands.
 // Run "npm run generate" to re-generate this file.
 
 import { ${nodeNames.join(', ')} } from 'estree';
+`.trim();
 
-export type Builders = {
-`
+content += '\n\nexport type Builders = {\n';
 
 nodeNames.forEach((nodeName) => {
   const fields = definitions[nodeName];

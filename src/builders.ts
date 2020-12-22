@@ -3,12 +3,12 @@ import { definitions, BaseFieldData } from './definitions';
 
 export const builders: Builders = {} as any;
 
-for (const nodeName in definitions) {
-  const fields = definitions[nodeName as keyof typeof definitions];
-  const lowerCasedNodeName = nodeName[0].toLowerCase() + nodeName.slice(1);
+for (const nodeType in definitions) {
+  const fields = definitions[nodeType as keyof typeof definitions];
+  const lowerCasedNodeType = nodeType[0].toLowerCase() + nodeType.slice(1);
 
-  (builders as any)[lowerCasedNodeName] = (...args: any[]) => {
-    const node: Record<string, any> = { type: nodeName };
+  (builders as any)[lowerCasedNodeType] = (...args: any[]) => {
+    const node: Record<string, any> = { type: nodeType };
 
     fields.forEach((field: BaseFieldData, index: number) => {
       node[field.key] = args[index] || (

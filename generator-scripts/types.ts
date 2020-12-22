@@ -5,6 +5,9 @@ import { definitions } from '../src/definitions';
 
 const types = Object.keys(definitions);
 const content = `
+// Generated file. Do not modify by hands.
+// Run "npm run generate" to re-generate this file.
+
 import { ${types.join(', ')} } from 'estree';
 export {
   Node,
