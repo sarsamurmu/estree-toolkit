@@ -110,7 +110,7 @@ class Traverser {
   }
 }
 
-export const traverse = (node: Node, visitors: Visitors) => {
+export const traverse = (node: unknown, visitors: Visitors) => {
   const expandedVisitors: ExpandedVisitors = {};
 
   for (const keyName in visitors) {
@@ -130,7 +130,7 @@ export const traverse = (node: Node, visitors: Visitors) => {
 
   const traverser = new Traverser({ visitors: expandedVisitors });
   traverser.visitNode({
-    node,
+    node: node as Node,
     key: null,
     listKey: null,
     parentPath: null
