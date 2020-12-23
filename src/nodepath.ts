@@ -6,6 +6,8 @@ import {
   BaseNode
 } from 'estree';
 
+import { Traverser } from './traverse';
+
 
 // * Tip: Fold the regions or comments for better experience
 
@@ -14,13 +16,11 @@ const mapSet = <K, V>(map: Map<K, V>, key: K, value: V): V => {
   return value;
 }
 
-const internal = Symbol('__internal__');
-
 export class NodePath<T extends Node = Node> {
   /** The node associated with the current NodePath */
-  node: T | null;
+  readonly node: T | null;
   /** Type of the node that is associated with this NodePath */
-  type: T['type'] | null;
+  readonly type: T['type'] | null;
   /**
    * The current node's key in its parent
    * 
@@ -74,10 +74,12 @@ export class NodePath<T extends Node = Node> {
    * ```
    */
   listKey: string | null;
+  /** If the node has been removed from its parent */
+  removed: boolean;
   /** The parent path of the current NodePath */
-  parentPath: NodePath | null;
+  readonly parentPath: NodePath | null;
   /** The parent node of the current NodePath */
-  parent: Node | null;
+  readonly parent: Node | null;
   /**
    * Container of the node
    * 
@@ -125,22 +127,15 @@ export class NodePath<T extends Node = Node> {
    * });
    * ```
    */
-  container: Node | Node[] | null;
-  /** If the node has been removed from its parent */
-  removed: boolean;
-
-  protected [internal]: {
-    pathCache: Map<Node | null, Map<Node | null, NodePath>>;
-  }
-
-  static readonly internalKey = internal;
+  readonly container: Node | Node[] | null;
+  readonly traverser: Traverser;
 
   constructor(data: {
     node: NodePath<T>['node'];
     key: NodePath['key'];
     listKey: NodePath['listKey'];
     parentPath: NodePath['parentPath'];
-    internal: NodePath[typeof internal];
+    traverser: NodePath['traverser'];
   }) {
     this.node = data.node;
     this.type = this.node && this.node.type;
@@ -153,12 +148,12 @@ export class NodePath<T extends Node = Node> {
       : this.parent;
     this.removed = false;
 
-    this[internal] = data.internal;
+    this.traverser = data.traverser;
   }
 
   /** Get the cached NodePath object or create new if cache is not available */
   static for<N extends Node = Node>(data: ConstructorParameters<typeof NodePath>[0]) {
-    const pathCache = data.internal.pathCache;
+    const pathCache = data.traverser.pathCache;
     const parentNode = data.parentPath && data.parentPath.node;
     const children = pathCache.get(parentNode) || mapSet(pathCache, parentNode, new Map<Node, NodePath>());
     return (children.get(data.node) || mapSet(children, data.node, new this(data))) as NodePath<N>;
@@ -265,7 +260,7 @@ export class NodePath<T extends Node = Node> {
   //#region Modification
 
   protected updateSiblingIndex(fromIndex: number, incrementBy: number): void {
-    this[internal].pathCache.get(this.parent)?.forEach((path) => {
+    this.traverser.pathCache.get(this.parent)?.forEach((path) => {
       if ((path.key as number) >= fromIndex) {
         (path.key as number) += incrementBy;
       }
@@ -289,7 +284,7 @@ export class NodePath<T extends Node = Node> {
           key: key + idx,
           listKey: this.listKey,
           parentPath: this.parentPath,
-          internal: this[internal]
+          traverser: this.traverser
         })
       ));
     } else {
@@ -314,7 +309,7 @@ export class NodePath<T extends Node = Node> {
           key: key + idx + 1,
           listKey: this.listKey,
           parentPath: this.parentPath,
-          internal: this[internal]
+          traverser: this.traverser
         })
       ));
     } else {
@@ -332,7 +327,7 @@ export class NodePath<T extends Node = Node> {
       key: 0,
       listKey,
       parentPath: this,
-      internal: this[internal]
+      traverser: this.traverser
     }).insertBefore(nodes);
   }
 
@@ -347,7 +342,7 @@ export class NodePath<T extends Node = Node> {
       key: container.length - 1,
       listKey,
       parentPath: this,
-      internal: this[internal]
+      traverser: this.traverser
     }).insertAfter(nodes);
   }
 
@@ -383,7 +378,7 @@ export class NodePath<T extends Node = Node> {
           key: index,
           listKey: key,
           parentPath: this as any as NodePath,
-          internal: this[internal]
+          traverser: this.traverser
         })
       )) as NodePath[];
     } else if (value != null && typeof value.type == 'string') {
@@ -392,7 +387,7 @@ export class NodePath<T extends Node = Node> {
         key: key,
         listKey: null,
         parentPath: this as any as NodePath,
-        internal: this[internal]
+        traverser: this.traverser
       }) as NodePath;
     }
 
@@ -401,7 +396,7 @@ export class NodePath<T extends Node = Node> {
       key: key,
       listKey: null,
       parentPath: this as any as NodePath,
-      internal: this[internal]
+      traverser: this.traverser
     }) as NodePath;
   }
 
@@ -477,12 +472,12 @@ export class NodePath<T extends Node = Node> {
       const key = this.key as number;
       const container = this.container as Node[];
       container.splice(key, 1);
-      this[internal].pathCache.get(this.parent)?.delete(this.node);
+      this.traverser.pathCache.get(this.parent)?.delete(this.node);
       this.updateSiblingIndex(key + 1, -1);
       this.removed = true;
     } else if (this.key != null) {
       (this.container as any as Record<string, Node | null>)[this.key] = null;
-      this[internal].pathCache.get(this.parent)?.delete(this.node);
+      this.traverser.pathCache.get(this.parent)?.delete(this.node);
       this.removed = true;
     }
   }
@@ -498,7 +493,7 @@ export class NodePath<T extends Node = Node> {
     }
 
     (this.container as any as Record<string | number, Node>)[this.key!] = node;
-    this[internal].pathCache.get(this.parent)?.delete(this.node);
+    this.traverser.pathCache.get(this.parent)?.delete(this.node);
     this.removed = true;
 
     return NodePath.for({
@@ -506,7 +501,7 @@ export class NodePath<T extends Node = Node> {
       key: this.key,
       listKey: this.listKey,
       parentPath: this.parentPath,
-      internal: this[internal]
+      traverser: this.traverser
     });
   }
 

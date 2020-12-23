@@ -26,7 +26,7 @@ for (const nodeType in definitions) {
     // checking for a property is faster than `instanceof` calls
     // for `NodePath`
 
-    const node: Node | null = (nodeOrNodePath as any)[NodePath.internalKey] != null
+    const node: Node | null = (nodeOrNodePath as NodePath).traverser != null
       ? (nodeOrNodePath as NodePath).node
       : (nodeOrNodePath as Node);
     

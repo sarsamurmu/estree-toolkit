@@ -1,10 +1,9 @@
-/* eslint-disable @typescript-eslint/no-empty-interface */
 import { Node } from 'estree';
 
 import { NodePath } from './nodepath';
 
 // TODO: Work on VisitorContext
-interface VisitorContext {}
+type VisitorContext = unknown;
 
 type VisitorFn<T extends Node = Node> = (this: VisitorContext, path: NodePath<T>) => boolean | void;
 type ExpandedVisitor<T extends Node> = {
@@ -22,25 +21,21 @@ type ExpandedVisitors = {
   [type: string]: ExpandedVisitor<Node> | undefined;
 }
 
-class Traverser {
+export class Traverser {
   visitors: ExpandedVisitors;
-  internal: {
-    pathCache: Map<Node, Map<Node, NodePath>>;
-  }
+  pathCache: Map<Node | null, Map<Node | null, NodePath>>;
 
   constructor(data: {
     visitors: ExpandedVisitors;
   }) {
     this.visitors = data.visitors;
-    this.internal = {
-      pathCache: new Map<Node, Map<Node, NodePath>>()
-    }
+    this.pathCache = new Map();
   }
 
   get exports() {
     return {
       dispose: () => {
-        this.internal.pathCache.clear();
+        this.pathCache.clear();
       }
     }
   }
@@ -60,7 +55,7 @@ class Traverser {
       key: data.key,
       listKey: data.listKey,
       parentPath: data.parentPath,
-      internal: this.internal
+      traverser: this
     });
 
     if (visitor.enter != null) {
@@ -79,7 +74,7 @@ class Traverser {
             key: index,
             listKey: property,
             parentPath: nodePath,
-            internal: this.internal
+            traverser: this
           })
         ));
 
