@@ -19,8 +19,6 @@ import {
 import { NodePath } from './nodepath';
 
 export const hasBinding = (() => {
-  // ! TODO: Check in Function name and Class name
-
   const findInPattern = (node: Pattern, bindingName: string): boolean => {
     switch (node.type) {
       case 'Identifier':
@@ -35,8 +33,12 @@ export const hasBinding = (() => {
             if (property.value != null) {
               if (findInPattern(property.value, bindingName)) return true;
             } else {
-              if (property.key.type === 'Identifier') {
-                if (property.key.name === bindingName) return true;
+              if (
+                !property.computed &&
+                property.key.type === 'Identifier' &&
+                property.key.name === bindingName
+              ) {
+                return true;
               }
             }
           }
