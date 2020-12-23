@@ -9,8 +9,8 @@ export type Matcher<T extends Node> = {
 }
 
 export type Checker<T extends Node> = {
-  (node: Node, match?: Matcher<T>): node is T;
-  (nodePath: NodePath, match?: Matcher<T>): nodePath is NodePath<T>;
+  (node: Node, toMatch?: Matcher<T>): node is T;
+  (nodePath: NodePath, toMatch?: Matcher<T>): nodePath is NodePath<T>;
 }
 
 export type Is = {

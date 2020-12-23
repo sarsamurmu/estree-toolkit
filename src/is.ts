@@ -4,9 +4,9 @@ import { Is, Matcher } from './generated/is-type';
 import { definitions } from './definitions';
 import { NodePath } from './nodepath';
 
-const matches = (object: Record<string, any>, matcher: Matcher<Node>) => {
-  for (const key in matcher) {
-    const value = (matcher as any)[key];
+const matches = (object: Record<string, any>, toMatch: Matcher<Node>) => {
+  for (const key in toMatch) {
+    const value = (toMatch as any)[key];
     if (typeof value == 'function') {
       if (!value(object[key])) return false;
     } else if (value !== object[key]) {
@@ -19,7 +19,9 @@ const matches = (object: Record<string, any>, matcher: Matcher<Node>) => {
 export const is: Is = {} as any;
 
 for (const nodeType in definitions) {
-  (is as any)[nodeType] = (nodeOrNodePath: Node | NodePath, matcher?: Matcher<Node>) => {
+  const lowerCasedNodeType = nodeType[0].toLowerCase() + nodeType.slice(1);
+
+  (is as any)[lowerCasedNodeType] = (nodeOrNodePath: Node | NodePath, toMatch?: Matcher<Node>) => {
     // We shouldn't believe in micro-benchmarks but it seems that
     // checking for a property is faster than `instanceof` calls
     // for `NodePath`
@@ -30,7 +32,7 @@ for (const nodeType in definitions) {
     
     return (
       node != null && node.type === nodeType &&
-      (matcher != null ? matches(node, matcher) : true)
+      (toMatch != null ? matches(node, toMatch) : true)
     )
   }
 }
