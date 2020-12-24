@@ -21,7 +21,12 @@ const lowerCase = (str: string) => str[0].toLowerCase() + str.slice(1);
 export const is: Is = {} as any;
 
 for (const nodeType in definitions) {
-  (is as any)[lowerCase(nodeType)] = (nodeOrNodePath: Node | NodePath, toMatch?: Matcher<Node>) => {
+  (is as any)[lowerCase(nodeType)] = (
+    nodeOrNodePath: Node | NodePath | null | undefined,
+    toMatch?: Matcher<Node>
+  ) => {
+    if (nodeOrNodePath == null) return false;
+
     // We shouldn't believe in micro-benchmarks but it seems that
     // checking for a property is faster than `instanceof` calls
     // for `NodePath`
@@ -38,7 +43,12 @@ for (const nodeType in definitions) {
 }
 
 for (const aliasName in aliases) {
-  (is as any)[lowerCase(aliasName)] = (nodeOrNodePath: Node | NodePath, toMatch?: Matcher<Node>) => {
+  (is as any)[lowerCase(aliasName)] = (
+    nodeOrNodePath: Node | NodePath | null | undefined,
+    toMatch?: Matcher<Node>
+  ) => {
+    if (nodeOrNodePath == null) return false;
+
     const node: Node | null = (nodeOrNodePath as NodePath).ctx != null
       ? (nodeOrNodePath as NodePath).node
       : (nodeOrNodePath as Node);
