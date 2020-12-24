@@ -120,7 +120,7 @@ export const hasBinding = (() => {
     return false;
   }
 
-  const parentTypes: Node['type'][] = [
+  const parentTypes = [
     'BlockStatement',
     'ForStatement',
     'ForInStatement',
@@ -130,14 +130,15 @@ export const hasBinding = (() => {
     'ArrowFunctionExpression',
     'ClassDeclaration',
     'Program'
-  ];
+  ] as const;
+  type ParentMap = {
+    [N in Node as `${N['type']}`]: N['type'] extends typeof parentTypes[number] ? N : never;
+  }
+  type ParentType = ParentMap[keyof ParentMap];
+  
   const findInParent = (path: NodePath, bindingName: string): boolean => {
-    const parent = path.findParent<
-      BlockStatement | ForStatement | ForInStatement | ForOfStatement |
-      FunctionDeclaration | FunctionExpression | ArrowFunctionExpression |
-      ClassDeclaration | Program
-    >(
-      (p) => parentTypes.includes(p.type as Exclude<typeof p.type, null>)
+    const parent = path.findParent<ParentType>(
+      (p) => parentTypes.includes(p.type!)
     );
 
     if (parent != null) {
