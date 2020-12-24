@@ -82,4 +82,11 @@ export type Is = {
   importDefaultSpecifier: Checker<ImportDefaultSpecifier>;
   importNamespaceSpecifier: Checker<ImportNamespaceSpecifier>;
   exportSpecifier: Checker<ExportSpecifier>;
+
+  function: Checker<import('estree').Function>;
+  statement: Checker<import('estree').Statement>;
+  declaration: Checker<import('estree').Declaration>;
+  expression: Checker<import('estree').Expression>;
+  pattern: Checker<import('estree').Pattern>;
+  class: Checker<import('estree').Class>;
 }

@@ -1,26 +1,22 @@
 import fs from 'fs';
 import path from 'path';
 
-import { definitions } from '../src/definitions';
+import { definitions, aliases } from '../src/definitions';
 
-const types = Object.keys(definitions);
+const nodeTypes = Object.keys(definitions);
+const aliasNames = Object.keys(aliases);
+const typesToExport = [].concat(nodeTypes, aliasNames);
 const content = `
 // Generated file. Do not modify by hands.
 // Run "npm run generate" to re-generate this file.
 
-import { ${types.join(', ')} } from 'estree';
+import { ${typesToExport.join(', ')} } from 'estree';
 export {
   Node,
-  Function,
-  Statement,
-  Declaration,
-  Expression,
-  Pattern,
   SimpleLiteral,
-  RegExpLiteral,
-  Class
+  RegExpLiteral
 } from 'estree';
-export { ${types.join(', ')} }
+export { ${typesToExport.join(', ')} }
 `.trim();
 
 fs.writeFileSync(path.join(__dirname, '../src/generated/types.ts'), content);

@@ -1,7 +1,7 @@
 import { Node } from 'estree';
 
 import { Is, Matcher } from './generated/is-type';
-import { definitions } from './definitions';
+import { definitions, aliases } from './definitions';
 import { NodePath } from './nodepath';
 
 const matches = (object: Record<string, any>, toMatch: Matcher<Node>) => {
@@ -16,22 +16,35 @@ const matches = (object: Record<string, any>, toMatch: Matcher<Node>) => {
   return true;
 }
 
+const lowerCase = (str: string) => str[0].toLowerCase() + str.slice(1);
+
 export const is: Is = {} as any;
 
 for (const nodeType in definitions) {
-  const lowerCasedNodeType = nodeType[0].toLowerCase() + nodeType.slice(1);
-
-  (is as any)[lowerCasedNodeType] = (nodeOrNodePath: Node | NodePath, toMatch?: Matcher<Node>) => {
+  (is as any)[lowerCase(nodeType)] = (nodeOrNodePath: Node | NodePath, toMatch?: Matcher<Node>) => {
     // We shouldn't believe in micro-benchmarks but it seems that
     // checking for a property is faster than `instanceof` calls
     // for `NodePath`
 
-    const node: Node | null = (nodeOrNodePath as NodePath).traverser != null
+    const node: Node | null = (nodeOrNodePath as NodePath).ctx != null
       ? (nodeOrNodePath as NodePath).node
       : (nodeOrNodePath as Node);
     
     return (
       node != null && node.type === nodeType &&
+      (toMatch != null ? matches(node, toMatch) : true)
+    )
+  }
+}
+
+for (const aliasName in aliases) {
+  (is as any)[lowerCase(aliasName)] = (nodeOrNodePath: Node | NodePath, toMatch?: Matcher<Node>) => {
+    const node: Node | null = (nodeOrNodePath as NodePath).ctx != null
+      ? (nodeOrNodePath as NodePath).node
+      : (nodeOrNodePath as Node);
+
+    return (
+      node != null && (node.type in aliases[aliasName as keyof typeof aliases]) &&
       (toMatch != null ? matches(node, toMatch) : true)
     )
   }

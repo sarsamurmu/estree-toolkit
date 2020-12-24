@@ -1,16 +1,19 @@
 import fs from 'fs';
 import path from 'path';
 
-import { definitions } from '../src/definitions';
+import { definitions, aliases } from '../src/definitions';
 
 let content = '';
-const nodeNames = Object.keys(definitions);
+const nodeTypes = Object.keys(definitions);
+const aliasNames = Object.keys(aliases);
+
+const lowerCase = (str: string) => str[0].toLowerCase() + str.slice(1);
 
 content += `
 // Generated file. Do not modify by hands.
 // Run "npm run generate" to re-generate this file.
 
-import { Node, BaseNode, ${nodeNames.join(', ')} } from 'estree';
+import { Node, BaseNode, ${nodeTypes.join(', ')} } from 'estree';
 import { NodePath } from '../nodepath';
 
 export type Matcher<T extends Node> = {
@@ -25,9 +28,14 @@ export type Checker<T extends Node> = {
 
 content += '\n\nexport type Is = {\n';
 
-nodeNames.forEach((nodeName) => {
-  const lowerCasedTypeName = nodeName[0].toLowerCase() + nodeName.slice(1);
-  content += `  ${lowerCasedTypeName}: Checker<${nodeName}>;\n`;
+nodeTypes.forEach((nodeName) => {
+  content += `  ${lowerCase(nodeName)}: Checker<${nodeName}>;\n`;
+});
+
+content += '\n';
+
+aliasNames.forEach((aliasName) => {
+  content += `  ${lowerCase(aliasName)}: Checker<import('estree').${aliasName}>;\n`;
 });
 
 content += '}';
