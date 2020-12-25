@@ -131,10 +131,9 @@ export const hasBinding = (() => {
     'ClassDeclaration',
     'Program'
   ] as const;
-  type ParentMap = {
+  type ParentType = {
     [N in Node as `${N['type']}`]: N['type'] extends typeof parentTypes[number] ? N : never;
-  }
-  type ParentType = ParentMap[keyof ParentMap];
+  }[Node['type']];
   
   const findInParent = (path: NodePath, bindingName: string): boolean => {
     const parent = path.findParent<ParentType>(
