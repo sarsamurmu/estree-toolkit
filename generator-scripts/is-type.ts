@@ -22,7 +22,7 @@ export type Matcher<T extends Node> = {
 
 export type Checker<T extends Node> = {
   (node: Node | undefined | null, toMatch?: Matcher<T>): node is T;
-  (nodePath: NodePath | undefined | null, toMatch?: Matcher<T>): nodePath is NodePath<T>;
+  (path: NodePath | undefined | null, toMatch?: Matcher<T>): path is NodePath<T>;
 }
 `.trim();
 
