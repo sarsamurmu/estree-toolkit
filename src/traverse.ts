@@ -1,42 +1,38 @@
 import { Node } from 'estree';
 
-import { NodePath } from './nodepath';
+import { Context, NodePath } from './nodepath';
 
-// TODO: Work on VisitorContext
-type VisitorContext = unknown;
-
-type VisitorFn<T extends Node = Node> = (this: VisitorContext, path: NodePath<T>) => boolean | void;
-type ExpandedVisitor<T extends Node> = {
+export type VisitorFn<T extends Node = Node> = (path: NodePath<T>) => boolean | void;
+export type ExpandedVisitor<T extends Node> = {
   enter?: VisitorFn<T>;
   leave?: VisitorFn<T>;
 }
-type Visitor<T extends Node> = VisitorFn<T> | ExpandedVisitor<T>;
+export type Visitor<T extends Node> = VisitorFn<T> | ExpandedVisitor<T>;
 
-type Visitors = {
+export type Visitors = {
   [K in Node as `${K['type']}`]?: Visitor<K>;
-} & {
-  [type: string]: Visitor<Node>;
 }
-type ExpandedVisitors = {
+export type ExpandedVisitors = {
   [type: string]: ExpandedVisitor<Node> | undefined;
 }
 
+export type TraverseOptions = { scope: boolean };
+
 export class Traverser {
-  visitors: ExpandedVisitors;
-  pathCache: Map<Node | null, Map<Node | null, NodePath>>;
+  private readonly visitors: ExpandedVisitors;
+  private readonly ctx: Context;
 
   constructor(data: {
     visitors: ExpandedVisitors;
+    options?: TraverseOptions;
+    ctx?: Context;
   }) {
     this.visitors = data.visitors;
-    this.pathCache = new Map();
-  }
-
-  get exports() {
-    return {
-      dispose: () => {
-        this.pathCache.clear();
-      }
+    if (data.ctx == null) {
+      this.ctx = new Context();
+      if (data.options?.scope === false) this.ctx.makeScope = false;
+    } else {
+      this.ctx = data.ctx;
     }
   }
 
@@ -48,18 +44,16 @@ export class Traverser {
   }) {
     if (data.node == null) return;
 
-    const visitorContext = {};
     const visitor = this.visitors[data.node.type] || {};
-    const nodePath = NodePath.for({
+    const nodePath = NodePath.for(this.ctx, {
       node: data.node,
       key: data.key,
       listKey: data.listKey,
-      parentPath: data.parentPath,
-      traverser: this
-    });
+      parentPath: data.parentPath
+    }).init(this.ctx);
 
     if (visitor.enter != null) {
-      visitor.enter.call(visitorContext, nodePath);
+      visitor.enter(nodePath);
     }
 
     for (const property in data.node) {
@@ -69,13 +63,12 @@ export class Traverser {
 
       if (Array.isArray(value)) {
         const childNodePaths = value.map((node, index) => (
-          NodePath.for({
+          NodePath.for(this.ctx, {
             node,
             key: index,
             listKey: property,
-            parentPath: nodePath,
-            traverser: this
-          })
+            parentPath: nodePath
+          }).init(this.ctx)
         ));
 
         for (let i = 0; i < childNodePaths.length; i++) {
@@ -100,36 +93,50 @@ export class Traverser {
     }
 
     if (visitor.leave != null) {
-      visitor.leave.call(visitorContext, nodePath);
+      visitor.leave(nodePath);
     }
+  }
+
+  static traverseNode(data: {
+    node: Node;
+    visitors: Visitors;
+    options?: TraverseOptions;
+    ctx?: Context;
+  }) {
+    const expandedVisitors: ExpandedVisitors = {};
+
+    for (const keyName in data.visitors) {
+      // keyName can contain multiple visitors - "FunctionExpression|FunctionDeclaration"
+      const keys = keyName.split('|');
+      const visitor: VisitorFn<Node> = (data.visitors as any)[keyName];
+      if (typeof visitor === 'function') {
+        keys.forEach((key) => {
+          expandedVisitors[key] = { enter: visitor };
+        });
+      } else if (typeof visitor === 'object') {
+        keys.forEach((key) => {
+          expandedVisitors[key] = visitor;
+        });
+      }
+    }
+
+    new Traverser({
+      visitors: expandedVisitors,
+      options: data.options,
+      ctx: data.ctx
+    }).visitNode({
+      node: data.node,
+      key: null,
+      listKey: null,
+      parentPath: null
+    });
   }
 }
 
-export const traverse = (node: unknown, visitors: Visitors) => {
-  const expandedVisitors: ExpandedVisitors = {};
-
-  for (const keyName in visitors) {
-    // keyName can contain multiple visitors - "FunctionExpression|FunctionDeclaration"
-    const keys = keyName.split('|');
-    const visitor = visitors[keyName];
-    if (typeof visitor === 'function') {
-      keys.forEach((key) => {
-        expandedVisitors[key] = { enter: visitor };
-      });
-    } else if (typeof visitor === 'object') {
-      keys.forEach((key) => {
-        expandedVisitors[key] = visitor;
-      });
-    }
-  }
-
-  const traverser = new Traverser({ visitors: expandedVisitors });
-  traverser.visitNode({
+export const traverse = (node: unknown, visitors: Visitors, options?: TraverseOptions) => {
+  Traverser.traverseNode({
     node: node as Node,
-    key: null,
-    listKey: null,
-    parentPath: null
+    visitors,
+    options: options
   });
-
-  return traverser.exports;
 }

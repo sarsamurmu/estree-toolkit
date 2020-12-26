@@ -1,12 +1,9 @@
-import {
-  ArrowFunctionExpression,
-  FunctionDeclaration,
-  FunctionExpression,
-  Node,
-  BaseNode
-} from 'estree';
+import { Node, BaseNode } from 'estree';
 
-import { Traverser } from './traverse';
+import { TraverseOptions, Traverser, Visitors } from './traverse';
+import { Scope } from './scope';
+import { is } from './is';
+import * as t from './generated/types';
 
 
 // * Tip: Fold the regions or comments for better experience
@@ -16,7 +13,19 @@ const mapSet = <K, V>(map: Map<K, V>, key: K, value: V): V => {
   return value;
 }
 
-export class NodePath<T extends Node = Node> {
+export class Context {
+  pathCache = new Map<Node | null, Map<Node | null, NodePath>>();
+  makeScope = true;
+}
+
+type NodePathData<T extends Node, P extends Node> = {
+  node: NodePath<T>['node'];
+  key: NodePath['key'];
+  listKey: NodePath['listKey'];
+  parentPath: NodePath<T, P>['parentPath'];
+};
+
+export class NodePath<T extends Node = Node, P extends Node = Node> {
   /** The node associated with the current NodePath */
   readonly node: T | null;
   /** Type of the node that is associated with this NodePath */
@@ -77,9 +86,9 @@ export class NodePath<T extends Node = Node> {
   /** If the node has been removed from its parent */
   removed: boolean;
   /** The parent path of the current NodePath */
-  readonly parentPath: NodePath | null;
+  readonly parentPath: NodePath<P> | null;
   /** The parent node of the current NodePath */
-  readonly parent: Node | null;
+  readonly parent: P | null;
   /**
    * Container of the node
    * 
@@ -127,16 +136,12 @@ export class NodePath<T extends Node = Node> {
    * });
    * ```
    */
-  readonly container: Node | Node[] | null;
-  readonly traverser: Traverser;
+  readonly container: P | Node[] | null;
 
-  constructor(data: {
-    node: NodePath<T>['node'];
-    key: NodePath['key'];
-    listKey: NodePath['listKey'];
-    parentPath: NodePath['parentPath'];
-    traverser: NodePath['traverser'];
-  }) {
+  ctx: Context | undefined;
+  scope: Scope | undefined | null;
+
+  private constructor(data: NodePathData<T, P>) {
     this.node = data.node;
     this.type = this.node && this.node.type;
     this.key = data.key;
@@ -147,16 +152,32 @@ export class NodePath<T extends Node = Node> {
       ? (this.parent as any as Record<string, Node[]>)[this.listKey]
       : this.parent;
     this.removed = false;
-
-    this.traverser = data.traverser;
   }
 
   /** Get the cached NodePath object or create new if cache is not available */
-  static for<N extends Node = Node>(data: ConstructorParameters<typeof NodePath>[0]) {
-    const pathCache = data.traverser.pathCache;
+  static for<T extends Node = Node, P extends Node = Node>(ctx: Context | undefined, data: NodePathData<T, P>) {
+    if (ctx == null) {
+      NodePath.throwNullCtx();
+    }
+
+    const pathCache = ctx.pathCache;
     const parentNode = data.parentPath && data.parentPath.node;
     const children = pathCache.get(parentNode) || mapSet(pathCache, parentNode, new Map<Node, NodePath>());
-    return (children.get(data.node) || mapSet(children, data.node, new this(data))) as NodePath<N>;
+    return (children.get(data.node) || mapSet(children, data.node, new this(data))) as NodePath<T, P>;
+  }
+
+  init(ctx: Context | undefined) {
+    if (ctx == null) {
+      NodePath.throwNullCtx();
+    }
+
+    this.ctx = ctx;
+    this.scope = ctx.makeScope ? Scope.for(this, this.parentPath?.scope || null) : null;
+    return this;
+  }
+
+  protected static throwNullCtx(): never {
+    throw new Error('The provided `Context` is null or undefined');
   }
 
   protected throwNoParent(methodName: string): never {
@@ -167,6 +188,18 @@ export class NodePath<T extends Node = Node> {
     if (this.removed) {
       throw new Error('Path is removed and it is now read-only');
     }
+  }
+
+  traverse(visitors: Visitors, options?: TraverseOptions) {
+    if (this.node == null) {
+      throw new Error('Can not use method `traverse` on a null NodePath');
+    }
+
+    Traverser.traverseNode({
+      node: this.node,
+      visitors,
+      options
+    });
   }
 
   //#region Ancestry
@@ -247,12 +280,8 @@ export class NodePath<T extends Node = Node> {
   }
 
   /** Get the closest function parent */
-  getFunctionParent(): NodePath<FunctionDeclaration | FunctionExpression | ArrowFunctionExpression> | null {
-    return this.findParent(({ type }) => (
-      type === 'FunctionDeclaration' ||
-      type === 'FunctionExpression' ||
-      type === 'ArrowFunctionExpression'
-    )) as NodePath<FunctionDeclaration | FunctionExpression | ArrowFunctionExpression>;
+  getFunctionParent(): NodePath<t.Function> | null {
+    return this.findParent((p) => is.function(p));
   }
 
   //#endregion
@@ -260,7 +289,9 @@ export class NodePath<T extends Node = Node> {
   //#region Modification
 
   protected updateSiblingIndex(fromIndex: number, incrementBy: number): void {
-    this.traverser.pathCache.get(this.parent)?.forEach((path) => {
+    if ((this.container as any[]).length === 0) return;
+
+    this.ctx!.pathCache.get(this.parent)?.forEach((path) => {
       if ((path.key as number) >= fromIndex) {
         (path.key as number) += incrementBy;
       }
@@ -279,13 +310,12 @@ export class NodePath<T extends Node = Node> {
       this.updateSiblingIndex(key, nodes.length);
 
       return nodes.map((node, idx) => (
-        NodePath.for({
+        NodePath.for(this.ctx, {
           node,
           key: key + idx,
           listKey: this.listKey,
-          parentPath: this.parentPath,
-          traverser: this.traverser
-        })
+          parentPath: this.parentPath
+        }).init(this.ctx)
       ));
     } else {
       throw new Error('Can not insert before a node where `container` is not an Array');
@@ -304,13 +334,12 @@ export class NodePath<T extends Node = Node> {
       this.updateSiblingIndex(key + 1, nodes.length);
       
       return nodes.map((node, idx) => (
-        NodePath.for({
+        NodePath.for(this.ctx, {
           node,
           key: key + idx + 1,
           listKey: this.listKey,
-          parentPath: this.parentPath,
-          traverser: this.traverser
-        })
+          parentPath: this.parentPath
+        }).init(this.ctx)
       ));
     } else {
       throw new Error('Can not insert after a node where `container` is not an Array');
@@ -322,12 +351,12 @@ export class NodePath<T extends Node = Node> {
     this.assertNotRemoved();
 
     const firstNode = (this.node as any as Record<string, Node[]>)[listKey][0];
-    return NodePath.for({
+    // Create a virtual NodePath
+    return NodePath.for(this.ctx, {
       node: firstNode,
       key: 0,
       listKey,
       parentPath: this,
-      traverser: this.traverser
     }).insertBefore(nodes);
   }
 
@@ -337,12 +366,12 @@ export class NodePath<T extends Node = Node> {
 
     const container = (this.node as any as Record<string, Node[]>)[listKey];
     const lastNode = container[container.length - 1];
-    return NodePath.for({
+    // Create a virtual NodePath
+    return NodePath.for(this.ctx, {
       node: lastNode,
       key: container.length - 1,
       listKey,
-      parentPath: this,
-      traverser: this.traverser
+      parentPath: this
     }).insertAfter(nodes);
   }
 
@@ -373,31 +402,28 @@ export class NodePath<T extends Node = Node> {
 
     if (Array.isArray(value)) {
       return value.map((node, index) => (
-        NodePath.for({
+        NodePath.for(this.ctx, {
           node,
           key: index,
           listKey: key,
-          parentPath: this as any as NodePath,
-          traverser: this.traverser
-        })
+          parentPath: this as any as NodePath
+        }).init(this.ctx)
       )) as NodePath[];
     } else if (value != null && typeof value.type == 'string') {
-      return NodePath.for({
+      return NodePath.for(this.ctx, {
         node: value as any as Node,
         key: key,
         listKey: null,
-        parentPath: this as any as NodePath,
-        traverser: this.traverser
-      }) as NodePath;
+        parentPath: this as any as NodePath
+      }).init(this.ctx) as NodePath;
     }
 
-    return NodePath.for({
+    return NodePath.for(this.ctx, {
       node: null,
       key: key,
       listKey: null,
-      parentPath: this as any as NodePath,
-      traverser: this.traverser
-    }) as NodePath;
+      parentPath: this as any as NodePath
+    }).init(this.ctx) as NodePath;
   }
 
   /** Get the NodePath of its sibling for which the key is `key` */
@@ -472,12 +498,12 @@ export class NodePath<T extends Node = Node> {
       const key = this.key as number;
       const container = this.container as Node[];
       container.splice(key, 1);
-      this.traverser.pathCache.get(this.parent)?.delete(this.node);
+      this.ctx!.pathCache.get(this.parent)?.delete(this.node);
       this.updateSiblingIndex(key + 1, -1);
       this.removed = true;
     } else if (this.key != null) {
       (this.container as any as Record<string, Node | null>)[this.key] = null;
-      this.traverser.pathCache.get(this.parent)?.delete(this.node);
+      this.ctx!.pathCache.get(this.parent)?.delete(this.node);
       this.removed = true;
     }
   }
@@ -493,16 +519,15 @@ export class NodePath<T extends Node = Node> {
     }
 
     (this.container as any as Record<string | number, Node>)[this.key!] = node;
-    this.traverser.pathCache.get(this.parent)?.delete(this.node);
+    this.ctx!.pathCache.get(this.parent)?.delete(this.node);
     this.removed = true;
 
-    return NodePath.for({
+    return NodePath.for(this.ctx, {
       node,
       key: this.key,
       listKey: this.listKey,
-      parentPath: this.parentPath,
-      traverser: this.traverser
-    });
+      parentPath: this.parentPath
+    }).init(this.ctx);
   }
 
   /** Removes the old node and inserts the new nodes in the old node's position */
