@@ -2,18 +2,18 @@ import { Node } from 'estree';
 
 import { Context, NodePath } from './nodepath';
 
-export type VisitorFn<T extends Node = Node> = (path: NodePath<T>) => boolean | void;
-export type ExpandedVisitor<T extends Node> = {
-  enter?: VisitorFn<T>;
-  leave?: VisitorFn<T>;
+export type VisitorFn<T extends Node = Node, S = unknown> = (path: NodePath<T>, state: S) => boolean | void;
+export type ExpandedVisitor<T extends Node, S> = {
+  enter?: VisitorFn<T, S>;
+  leave?: VisitorFn<T, S>;
 }
-export type Visitor<T extends Node> = VisitorFn<T> | ExpandedVisitor<T>;
+export type Visitor<T extends Node = Node, S = unknown> = VisitorFn<T, S> | ExpandedVisitor<T, S>;
 
-export type Visitors = {
-  [K in Node as `${K['type']}`]?: Visitor<K>;
+export type Visitors<S> = {
+  [K in Node as `${K['type']}`]?: Visitor<K, S>;
 }
-export type ExpandedVisitors = {
-  [type: string]: ExpandedVisitor<Node> | undefined;
+export type ExpandedVisitors<S = unknown> = {
+  [type: string]: ExpandedVisitor<Node, S> | undefined;
 }
 
 export type TraverseOptions = { scope: boolean };
@@ -36,24 +36,35 @@ export class Traverser {
     }
   }
 
-  visitNode(data: {
+  visitNode<S>(data: {
     node: Node | null;
     key: string | number | null;
     listKey: string | null;
     parentPath: NodePath | null;
+    state: S | undefined;
+    onlyChildren?: boolean;
   }) {
     if (data.node == null) return;
 
     const visitor = this.visitors[data.node.type] || {};
-    const nodePath = NodePath.for(this.ctx, {
+    const nodePath = NodePath.for({
       node: data.node,
       key: data.key,
       listKey: data.listKey,
-      parentPath: data.parentPath
-    }).init(this.ctx);
+      parentPath: data.parentPath,
+      ctx: this.ctx
+    });
 
-    if (visitor.enter != null) {
-      visitor.enter(nodePath);
+    if (!data.onlyChildren) {
+      nodePath.init();
+
+      if (this.ctx.shouldSkip(nodePath)) return;
+
+      if (visitor.enter != null) {
+        visitor.enter(nodePath, data.state);
+      }
+
+      if (this.ctx.shouldSkip(nodePath)) return;
     }
 
     for (const property in data.node) {
@@ -63,12 +74,13 @@ export class Traverser {
 
       if (Array.isArray(value)) {
         const childNodePaths = value.map((node, index) => (
-          NodePath.for(this.ctx, {
+          NodePath.for({
             node,
             key: index,
             listKey: property,
-            parentPath: nodePath
-          }).init(this.ctx)
+            parentPath: nodePath,
+            ctx: this.ctx
+          }).init()
         ));
 
         for (let i = 0; i < childNodePaths.length; i++) {
@@ -79,6 +91,7 @@ export class Traverser {
               key: childNodePath.key,
               listKey: childNodePath.listKey,
               parentPath: childNodePath.parentPath,
+              state: data.state
             });
           }
         }
@@ -87,21 +100,25 @@ export class Traverser {
           node: value,
           key: property,
           listKey: null,
-          parentPath: nodePath
+          parentPath: nodePath,
+          state: data.state
         });
       }
     }
 
-    if (visitor.leave != null) {
-      visitor.leave(nodePath);
+    if (!data.onlyChildren && visitor.leave != null) {
+      visitor.leave(nodePath, data.state);
     }
   }
 
-  static traverseNode(data: {
+  static traverseNode<S = unknown>(data: {
     node: Node;
-    visitors: Visitors;
+    parentPath: NodePath | null;
+    visitors: Visitors<S>;
+    state: S | undefined;
     options?: TraverseOptions;
     ctx?: Context;
+    onlyChildren?: boolean;
   }) {
     const expandedVisitors: ExpandedVisitors = {};
 
@@ -128,15 +145,19 @@ export class Traverser {
       node: data.node,
       key: null,
       listKey: null,
-      parentPath: null
+      parentPath: data.parentPath,
+      state: data.state,
+      onlyChildren: data.onlyChildren
     });
   }
 }
 
-export const traverse = (node: unknown, visitors: Visitors, options?: TraverseOptions) => {
+export const traverse = <N, S>(node: N, visitors: Visitors<S> & { $: TraverseOptions }, state?: S) => {
   Traverser.traverseNode({
-    node: node as Node,
+    node: node as unknown as Node,
+    parentPath: null,
     visitors,
-    options: options
+    state,
+    options: visitors.$
   });
 }

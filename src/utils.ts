@@ -1,22 +1,16 @@
 import {
   Node,
-  BlockStatement,
-  ForInStatement,
-  ForOfStatement,
-  ForStatement,
   Pattern,
   VariableDeclaration,
-  FunctionDeclaration,
-  FunctionExpression,
-  ArrowFunctionExpression,
-  Program,
   ImportDeclaration,
-  ClassDeclaration,
   Statement,
   ModuleDeclaration
 } from 'estree';
 
 import { NodePath } from './nodepath';
+
+export type NodeMap = { [N in Node as `${N['type']}`]: N; }
+export type NodeT<N extends keyof NodeMap> = NodeMap[N];
 
 export const hasBinding = (() => {
   const findInPattern = (node: Pattern, bindingName: string): boolean => {

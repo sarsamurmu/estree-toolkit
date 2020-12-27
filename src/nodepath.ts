@@ -15,7 +15,36 @@ const mapSet = <K, V>(map: Map<K, V>, key: K, value: V): V => {
 
 export class Context {
   pathCache = new Map<Node | null, Map<Node | null, NodePath>>();
+  scopeCache = new Map<NodePath, Scope>();
   makeScope = true;
+  private currentSkipPaths = new Set<NodePath>();
+  private readonly skipPathSetStack = [this.currentSkipPaths];
+
+  setSkipped(path: NodePath) {
+    this.currentSkipPaths.add(path);
+  }
+
+  setNotSkipped(path: NodePath) {
+    this.currentSkipPaths.delete(path);
+  }
+
+  shouldSkip(path: NodePath) {
+    return this.currentSkipPaths.has(path);
+  }
+
+  private updateCurrentSkipPaths() {
+    this.currentSkipPaths = this.skipPathSetStack[this.skipPathSetStack.length - 1];
+  }
+
+  newSkipPathStack() {
+    this.skipPathSetStack.push(new Set());
+    this.updateCurrentSkipPaths();
+  }
+
+  restorePrevSkipPathStack() {
+    this.skipPathSetStack.pop();
+    this.updateCurrentSkipPaths();
+  }
 }
 
 type NodePathData<T extends Node, P extends Node> = {
@@ -23,6 +52,7 @@ type NodePathData<T extends Node, P extends Node> = {
   key: NodePath['key'];
   listKey: NodePath['listKey'];
   parentPath: NodePath<T, P>['parentPath'];
+  ctx: Context;
 };
 
 export class NodePath<T extends Node = Node, P extends Node = Node> {
@@ -138,7 +168,7 @@ export class NodePath<T extends Node = Node, P extends Node = Node> {
    */
   readonly container: P | Node[] | null;
 
-  ctx: Context | undefined;
+  readonly ctx: Context;
   scope: Scope | undefined | null;
 
   private constructor(data: NodePathData<T, P>) {
@@ -152,32 +182,22 @@ export class NodePath<T extends Node = Node, P extends Node = Node> {
       ? (this.parent as any as Record<string, Node[]>)[this.listKey]
       : this.parent;
     this.removed = false;
+
+    this.ctx = data.ctx;
   }
 
   /** Get the cached NodePath object or create new if cache is not available */
-  static for<T extends Node = Node, P extends Node = Node>(ctx: Context | undefined, data: NodePathData<T, P>) {
-    if (ctx == null) {
-      NodePath.throwNullCtx();
-    }
-
-    const pathCache = ctx.pathCache;
+  static for<T extends Node = Node, P extends Node = Node>(data: NodePathData<T, P>) {
+    const pathCache = data.ctx.pathCache;
     const parentNode = data.parentPath && data.parentPath.node;
     const children = pathCache.get(parentNode) || mapSet(pathCache, parentNode, new Map<Node, NodePath>());
     return (children.get(data.node) || mapSet(children, data.node, new this(data))) as NodePath<T, P>;
   }
 
-  init(ctx: Context | undefined) {
-    if (ctx == null) {
-      NodePath.throwNullCtx();
-    }
-
-    this.ctx = ctx;
-    this.scope = ctx.makeScope ? Scope.for(this, this.parentPath?.scope || null) : null;
+  init() {
+    this.scope = this.ctx.makeScope ? Scope.for(this, this.parentPath?.scope || null) : null;
+    if (this.scope != null) this.scope.init();
     return this;
-  }
-
-  protected static throwNullCtx(): never {
-    throw new Error('The provided `Context` is null or undefined');
   }
 
   protected throwNoParent(methodName: string): never {
@@ -190,17 +210,27 @@ export class NodePath<T extends Node = Node, P extends Node = Node> {
     }
   }
 
-  traverse(visitors: Visitors, options?: TraverseOptions) {
+  //#region Traversal
+
+  skip() {
+    this.ctx.setSkipped(this);
+  }
+
+  traverse<S>(visitors: Visitors<S> & { $: TraverseOptions }, state?: S) {
     if (this.node == null) {
       throw new Error('Can not use method `traverse` on a null NodePath');
     }
 
     Traverser.traverseNode({
       node: this.node,
+      parentPath: this.parentPath,
       visitors,
-      options
+      options: visitors.$,
+      state
     });
   }
+
+  //#endregion
 
   //#region Ancestry
 
@@ -291,7 +321,7 @@ export class NodePath<T extends Node = Node, P extends Node = Node> {
   protected updateSiblingIndex(fromIndex: number, incrementBy: number): void {
     if ((this.container as any[]).length === 0) return;
 
-    this.ctx!.pathCache.get(this.parent)?.forEach((path) => {
+    this.ctx.pathCache.get(this.parent)?.forEach((path) => {
       if ((path.key as number) >= fromIndex) {
         (path.key as number) += incrementBy;
       }
@@ -310,12 +340,13 @@ export class NodePath<T extends Node = Node, P extends Node = Node> {
       this.updateSiblingIndex(key, nodes.length);
 
       return nodes.map((node, idx) => (
-        NodePath.for(this.ctx, {
+        NodePath.for({
           node,
           key: key + idx,
           listKey: this.listKey,
-          parentPath: this.parentPath
-        }).init(this.ctx)
+          parentPath: this.parentPath,
+          ctx: this.ctx
+        }).init()
       ));
     } else {
       throw new Error('Can not insert before a node where `container` is not an Array');
@@ -334,12 +365,13 @@ export class NodePath<T extends Node = Node, P extends Node = Node> {
       this.updateSiblingIndex(key + 1, nodes.length);
       
       return nodes.map((node, idx) => (
-        NodePath.for(this.ctx, {
+        NodePath.for({
           node,
           key: key + idx + 1,
           listKey: this.listKey,
-          parentPath: this.parentPath
-        }).init(this.ctx)
+          parentPath: this.parentPath,
+          ctx: this.ctx
+        }).init()
       ));
     } else {
       throw new Error('Can not insert after a node where `container` is not an Array');
@@ -352,11 +384,12 @@ export class NodePath<T extends Node = Node, P extends Node = Node> {
 
     const firstNode = (this.node as any as Record<string, Node[]>)[listKey][0];
     // Create a virtual NodePath
-    return NodePath.for(this.ctx, {
+    return NodePath.for({
       node: firstNode,
       key: 0,
       listKey,
       parentPath: this,
+      ctx: this.ctx
     }).insertBefore(nodes);
   }
 
@@ -367,11 +400,12 @@ export class NodePath<T extends Node = Node, P extends Node = Node> {
     const container = (this.node as any as Record<string, Node[]>)[listKey];
     const lastNode = container[container.length - 1];
     // Create a virtual NodePath
-    return NodePath.for(this.ctx, {
+    return NodePath.for({
       node: lastNode,
       key: container.length - 1,
       listKey,
-      parentPath: this
+      parentPath: this,
+      ctx: this.ctx
     }).insertAfter(nodes);
   }
 
@@ -402,28 +436,31 @@ export class NodePath<T extends Node = Node, P extends Node = Node> {
 
     if (Array.isArray(value)) {
       return value.map((node, index) => (
-        NodePath.for(this.ctx, {
+        NodePath.for({
           node,
           key: index,
           listKey: key,
-          parentPath: this as any as NodePath
-        }).init(this.ctx)
+          parentPath: this as any as NodePath,
+          ctx: this.ctx
+        }).init()
       )) as NodePath[];
     } else if (value != null && typeof value.type == 'string') {
-      return NodePath.for(this.ctx, {
+      return NodePath.for({
         node: value as any as Node,
         key: key,
         listKey: null,
-        parentPath: this as any as NodePath
-      }).init(this.ctx) as NodePath;
+        parentPath: this as any as NodePath,
+        ctx: this.ctx
+      }).init() as NodePath;
     }
 
-    return NodePath.for(this.ctx, {
+    return NodePath.for({
       node: null,
       key: key,
       listKey: null,
-      parentPath: this as any as NodePath
-    }).init(this.ctx) as NodePath;
+      parentPath: this as any as NodePath,
+      ctx: this.ctx
+    }).init() as NodePath;
   }
 
   /** Get the NodePath of its sibling for which the key is `key` */
@@ -498,12 +535,12 @@ export class NodePath<T extends Node = Node, P extends Node = Node> {
       const key = this.key as number;
       const container = this.container as Node[];
       container.splice(key, 1);
-      this.ctx!.pathCache.get(this.parent)?.delete(this.node);
+      this.ctx.pathCache.get(this.parent)?.delete(this.node);
       this.updateSiblingIndex(key + 1, -1);
       this.removed = true;
     } else if (this.key != null) {
       (this.container as any as Record<string, Node | null>)[this.key] = null;
-      this.ctx!.pathCache.get(this.parent)?.delete(this.node);
+      this.ctx.pathCache.get(this.parent)?.delete(this.node);
       this.removed = true;
     }
   }
@@ -519,15 +556,16 @@ export class NodePath<T extends Node = Node, P extends Node = Node> {
     }
 
     (this.container as any as Record<string | number, Node>)[this.key!] = node;
-    this.ctx!.pathCache.get(this.parent)?.delete(this.node);
+    this.ctx.pathCache.get(this.parent)?.delete(this.node);
     this.removed = true;
 
-    return NodePath.for(this.ctx, {
+    return NodePath.for({
       node,
       key: this.key,
       listKey: this.listKey,
-      parentPath: this.parentPath
-    }).init(this.ctx);
+      parentPath: this.parentPath,
+      ctx: this.ctx
+    }).init();
   }
 
   /** Removes the old node and inserts the new nodes in the old node's position */
