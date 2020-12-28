@@ -5,13 +5,13 @@ import { traverse, utils as u } from '<project>';
 describe('hasBinding', () => {
   test('variable declaration', () => {
     const ast = parseModule(`
-    let a;
-    const { b: [c, { d }], e, f = 0, ...g } = a;
+      let a;
+      const { b: [c, { d }], e, f = 0, ...g } = a;
 
-    {
-      targetNode
-    }
-  `);
+      {
+        targetNode
+      }
+    `);
 
     traverse(ast, {
       Identifier(path) {
@@ -31,26 +31,26 @@ describe('hasBinding', () => {
 
   test('function parameters', () => {
     const ast = parseModule(`
-    {
-      function fn(a, { b: [c, { d }], e }, f = 0, ...g) {
-        targetNode;
-      }
-    }
-
-    {
-      ({
-        fn(a, { b: [c, { d }], e }, f = 0, ...g) {
+      {
+        function fn(a, { b: [c, { d }], e }, f = 0, ...g) {
           targetNode;
         }
-      })
-    }
-
-    {
-      (a, { b: [c, { d }], e }, f = 0, ...g) => {
-        targetNode;
       }
-    }
-  `);
+
+      {
+        ({
+          fn(a, { b: [c, { d }], e }, f = 0, ...g) {
+            targetNode;
+          }
+        })
+      }
+
+      {
+        (a, { b: [c, { d }], e }, f = 0, ...g) => {
+          targetNode;
+        }
+      }
+    `);
 
     traverse(ast, {
       Identifier(path) {
@@ -70,17 +70,17 @@ describe('hasBinding', () => {
 
   test('function declaration', () => {
     const ast = parseModule(`
-    {
-      function a() {
+      {
+        function a() {
+          targetNode;
+        }
+      }
+
+      {
+        function a() {}
         targetNode;
       }
-    }
-
-    {
-      function a() {}
-      targetNode;
-    }
-  `);
+    `);
 
     traverse(ast, {
       Identifier(path) {
@@ -94,19 +94,19 @@ describe('hasBinding', () => {
 
   test('class declaration', () => {
     const ast = parseModule(`
-    {
-      class a {
-        method() {
-          targetNode;
+      {
+        class a {
+          method() {
+            targetNode;
+          }
         }
       }
-    }
 
-    {
-      class a {}
-      targetNode;
-    }
-  `);
+      {
+        class a {}
+        targetNode;
+      }
+    `);
 
     traverse(ast, {
       Identifier(path) {
@@ -120,11 +120,11 @@ describe('hasBinding', () => {
 
   test('import declaration', () => {
     const ast = parseModule(`
-    import a, { b, c as d } from '';
-    import * as e from '';
+      import a, { b, c as d } from '';
+      import * as e from '';
 
-    targetNode;
-  `);
+      targetNode;
+    `);
 
     traverse(ast, {
       Identifier(path) {
@@ -142,10 +142,10 @@ describe('hasBinding', () => {
 
   test('for statement', () => {
     const ast = parseModule(`
-    for (let a = 0, b = 0;;) {
-      targetNode;
-    }
-  `);
+      for (let a = 0, b = 0;;) {
+        targetNode;
+      }
+    `);
 
     traverse(ast, {
       Identifier(path) {
@@ -160,14 +160,14 @@ describe('hasBinding', () => {
 
   test('for-in and for-of statement', () => {
     const ast = parseModule(`
-    for (const { a: [b, { c }], d, e = 0, ...f } in o) {
-      targetNode;
-    }
+      for (const { a: [b, { c }], d, e = 0, ...f } in o) {
+        targetNode;
+      }
 
-    for (const { a: [b, { c }], d, e = 0, ...f } of o) {
-      targetNode;
-    }
-  `);
+      for (const { a: [b, { c }], d, e = 0, ...f } of o) {
+        targetNode;
+      }
+    `);
 
     traverse(ast, {
       Identifier(path) {

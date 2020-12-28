@@ -216,7 +216,7 @@ export class NodePath<T extends Node = Node, P extends Node = Node> {
     this.ctx.setSkipped(this);
   }
 
-  traverse<S>(visitors: Visitors<S> & { $: TraverseOptions }, state?: S) {
+  traverse<S>(visitors: Visitors<S> & { $?: TraverseOptions }, state?: S) {
     if (this.node == null) {
       throw new Error('Can not use method `traverse` on a null NodePath');
     }

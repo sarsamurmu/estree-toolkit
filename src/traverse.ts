@@ -152,7 +152,7 @@ export class Traverser {
   }
 }
 
-export const traverse = <N, S>(node: N, visitors: Visitors<S> & { $: TraverseOptions }, state?: S) => {
+export const traverse = <N, S>(node: N, visitors: Visitors<S> & { $?: TraverseOptions }, state?: S) => {
   Traverser.traverseNode({
     node: node as unknown as Node,
     parentPath: null,
