@@ -500,9 +500,10 @@ const findDeclaringPathsInPattern = (
               !propertyNode.computed &&
               propertyNode.key.type === 'Identifier'
             ) {
-              result.push(path);
+              const keyPath = (property as NodePath<NodeT<'Property'>>).get('key');
+              result.push(keyPath);
               // Already crawled, skip it
-              path.skip();
+              keyPath.skip();
             }
             break;
         }
@@ -537,8 +538,8 @@ const registerVariableDeclaration = (path: NodePath<NodeT<'VariableDeclaration'>
   const declarators = path.get('declarations');
   for (let i = 0; i < declarators.length; i++) {
     const identifierPaths: NodePath<NodeT<'Identifier'>>[] = [];
-    findDeclaringPathsInPattern(declarators[i].get('init'), identifierPaths);
-    for (let j = 0; j < identifierPaths.length; i++) {
+    findDeclaringPathsInPattern(declarators[i].get('id'), identifierPaths);
+    for (let j = 0; j < identifierPaths.length; j++) {
       scope.registerBinding(kind, identifierPaths[j], declarators[i]);
     }
   }
