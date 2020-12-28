@@ -519,6 +519,22 @@ export class NodePath<T extends Node = Node, P extends Node = Node> {
 
   //#endregion
 
+  //#region Introspection
+
+  has(key: Exclude<keyof T, keyof BaseNode>): boolean {
+    const value = this.node?.[key];
+    if (value != null && Array.isArray(value) && value.length === 0) {
+      return false;
+    }
+    return !!value;
+  }
+
+  is(key: Exclude<keyof T, keyof BaseNode>): boolean {
+    return !!this.node?.[key];
+  }
+
+  //#endregion
+
   //#region Removal
 
   /** Remove the node from its parent */
