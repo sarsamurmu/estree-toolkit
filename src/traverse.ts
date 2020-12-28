@@ -62,9 +62,9 @@ export class Traverser {
 
       if (visitor.enter != null) {
         visitor.enter(nodePath, data.state);
-      }
 
-      if (this.ctx.shouldSkip(nodePath)) return;
+        if (this.ctx.shouldSkip(nodePath)) return;
+      }
     }
 
     for (const property in data.node) {

@@ -22,7 +22,7 @@ export const hasBinding = (() => {
         for (let i = 0; i < node.properties.length; i++) {
           const property = node.properties[i];
           if (property.type === 'RestElement') {
-            return findInPattern(property.argument, bindingName);
+            if (findInPattern(property.argument, bindingName)) return true;
           } else {
             if (property.value != null) {
               if (findInPattern(property.value, bindingName)) return true;
