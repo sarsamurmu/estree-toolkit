@@ -1,10 +1,17 @@
-import { Node, Pattern } from 'estree';
+import { Identifier, Node, Pattern } from 'estree';
 
 import { NodePath } from './nodepath';
-import { Traverser, Visitor } from './traverse';
+import { Traverser, ExpandedVisitor, ExpandedVisitors } from './traverse';
 import { NodeMap, NodeT } from './utils';
 import { Binding, BindingKind, BindingPathT, GlobalBinding } from './binding';
 
+/**
+ * Causes a compiler error if a switch is not exhaustive
+ * or you can say causes a compiler error if all possible switch cases
+ * are not covered
+ * 
+ * This function would never get called in reality, if your code is correct
+*/
 const assertNever = (x: never) => x;
 
 type ParentsOf<N extends keyof NodeMap> = {
@@ -18,17 +25,73 @@ type IdentifierParent = ParentsOf<'Identifier'>;
 type IdentifierKeyInParent<P extends keyof NodeMap> = KeyInParent<'Identifier', P>;
 
 type CrawlerState = {
-  references: NodePath<NodeT<'Identifier'>>[];
-  constantViolations: NodePath<NodeT<'Identifier'>>[];
-  labelReferences: NodePath<NodeT<'Identifier'>>[];
+  references: NodePath<Identifier>[];
+  constantViolations: NodePath<Identifier>[];
+  labelReferences: NodePath<Identifier, NodeT<'BreakStatement' | 'ContinueStatement'>>[];
   scope: Scope;
   childScopedPaths: NodePath<NodeT<ScopedNode>>[];
 }
 
-const ParentCrawlFn: {
+const scopedNodeTypes = [
+  'ArrowFunctionExpression',
+  'BlockStatement',
+  'CatchClause',
+  'ClassDeclaration',
+  'ClassExpression',
+  'DoWhileStatement',
+  'ForInStatement',
+  'ForOfStatement',
+  'ForStatement',
+  'FunctionDeclaration',
+  'FunctionExpression',
+  'Program',
+  'SwitchStatement',
+  'WhileStatement'
+] as const;
+type ScopedNode = typeof scopedNodeTypes[number];
+
+const scopedNodesTypesSet = new Set<Node['type']>(scopedNodeTypes);
+
+const shouldBlockStatementMakeScope = (parent: Node | null) => {
+  // Don't create new scope if `BlockStatement` is placed in these places
+  // - for (let x in f) {}    -- ForInStatement -> BlockStatement
+  // - () => {}               -- ArrowFunctionExpression -> BlockStatement
+  // - function () {}         -- FunctionExpression -> BlockStatement
+  // - while (x) {}           -- WhileStatement -> BlockStatement
+  // - ...
+  // But not in these cases
+  // - { let x; { let x; } }  -- BlockStatement -> BlockStatement
+  // - { }                    -- Program -> BlockStatement
+
+  if (
+    parent != null &&
+    parent.type !== 'BlockStatement' &&
+    parent.type !== 'Program' &&
+    scopedNodesTypesSet.has(parent.type)
+  ) {
+    return false;
+  }
+
+  return true;
+}
+
+const shouldMakeScope = (path: NodePath): boolean => {
+  if (path.node == null) return false;
+
+  if (
+    path.node.type === 'BlockStatement' &&
+    !shouldBlockStatementMakeScope(path.parent)
+  ) {
+    return false;
+  }
+
+  return scopedNodesTypesSet.has(path.node.type);
+}
+
+const identifierParentCrawlers: {
   [K in IdentifierParent['type']]: (
     key: IdentifierKeyInParent<K>,
-    path: NodePath<NodeT<'Identifier'>, NodeT<K>>,
+    path: NodePath<Identifier, NodeT<K>>,
     state: CrawlerState
   ) => void;
 } = {
@@ -63,7 +126,7 @@ const ParentCrawlFn: {
         //
         // `a = 0` is AssignmentPattern
         // I don't think this would ever get called
-        throw new Error('`ParentCrawlFn.AssignmentPattern` is unimplemented');
+        throw new Error('`identifierParentCrawlers.AssignmentPattern` is not implemented');
       case 'right':
         state.references.push(path);
         break;
@@ -109,10 +172,8 @@ const ParentCrawlFn: {
   },
   VariableDeclarator(key, path, state) {
     switch (key) {
-      case 'id': {
-        // Declare
-        break;
-      }
+      case 'id':
+        throw new Error('This should be handled by `scopePathCrawlers.VariableDeclarator`');
       case 'init':
         state.references.push(path);
         break;
@@ -143,30 +204,23 @@ const ParentCrawlFn: {
       default: assertNever(key);
     }
   },
-  LabeledStatement(key, path, state) {
-    switch (key) {
-      case 'label': {
-        state.scope.registerLabel(path);
-        break;
-      }
-      default: assertNever(key);
-    }
+  LabeledStatement() {
+    // Do nothing as it is handled by
+    // `scopePathCrawlers.{BlockStatement,ForStatement,ForInStatement,ForOfStatement}`
   },
   BreakStatement(key, path, state) {
     switch (key) {
-      case 'label': {
+      case 'label':
         state.labelReferences.push(path);
         break;
-      }
       default: assertNever(key);
     }
   },
   ContinueStatement(key, path, state) {
     switch (key) {
-      case 'label': {
+      case 'label':
         state.labelReferences.push(path);
         break;
-      }
       default: assertNever(key);
     }
   },
@@ -446,29 +500,11 @@ const ParentCrawlFn: {
   }
 }
 
-const scopedNodeTypes = [
-  'ArrowFunctionExpression',
-  'BlockStatement',
-  'CatchClause',
-  'ClassDeclaration',
-  'ClassExpression',
-  'DoWhileStatement',
-  'ForInStatement',
-  'ForOfStatement',
-  'ForStatement',
-  'FunctionDeclaration',
-  'FunctionExpression',
-  'Program',
-  'SwitchStatement',
-  'WhileStatement'
-] as const;
-type ScopedNode = typeof scopedNodeTypes[number];
-
 // From -
 //  const { a, b: [c, { d }], e: f, ...g } = x;
 // Returns paths to
 // - a, c, d, f, g
-const findDeclaringPathsInPattern = (
+const findVisiblePathsInPattern = (
   path: NodePath<Pattern>,
   result: NodePath[]
 ) => {
@@ -487,12 +523,12 @@ const findDeclaringPathsInPattern = (
 
         switch (propertyNode.type) {
           case 'RestElement':
-            findDeclaringPathsInPattern(property as NodePath<NodeT<'RestElement'>>, result);
+            findVisiblePathsInPattern(property as NodePath<NodeT<'RestElement'>>, result);
             break;
 
           case 'Property':
             if (propertyNode.value != null) {
-              findDeclaringPathsInPattern(
+              findVisiblePathsInPattern(
                 (property as NodePath<NodeT<'Property'>>).get('value') as NodePath<Pattern>,
                 result
               );
@@ -514,17 +550,17 @@ const findDeclaringPathsInPattern = (
     case 'ArrayPattern': {
       const elementPaths = (path as NodePath<NodeT<'ArrayPattern'>>).get('elements');
       for (let i = 0; i < elementPaths.length; i++) {
-        findDeclaringPathsInPattern(elementPaths[i], result);
+        findVisiblePathsInPattern(elementPaths[i], result);
       }
       break;
     }
 
     case 'RestElement':
-      findDeclaringPathsInPattern((path as NodePath<NodeT<'RestElement'>>).get('argument'), result);
+      findVisiblePathsInPattern((path as NodePath<NodeT<'RestElement'>>).get('argument'), result);
       break;
 
     case 'AssignmentPattern':
-      findDeclaringPathsInPattern((path as NodePath<NodeT<'AssignmentPattern'>>).get('left'), result);
+      findVisiblePathsInPattern((path as NodePath<NodeT<'AssignmentPattern'>>).get('left'), result);
       break;
 
     case 'MemberExpression': break;
@@ -537,8 +573,8 @@ const registerVariableDeclaration = (path: NodePath<NodeT<'VariableDeclaration'>
   const kind = path.node!.kind;
   const declarators = path.get('declarations');
   for (let i = 0; i < declarators.length; i++) {
-    const identifierPaths: NodePath<NodeT<'Identifier'>>[] = [];
-    findDeclaringPathsInPattern(declarators[i].get('id'), identifierPaths);
+    const identifierPaths: NodePath<Identifier>[] = [];
+    findVisiblePathsInPattern(declarators[i].get('id'), identifierPaths);
     for (let j = 0; j < identifierPaths.length; j++) {
       scope.registerBinding(kind, identifierPaths[j], declarators[i]);
     }
@@ -546,37 +582,65 @@ const registerVariableDeclaration = (path: NodePath<NodeT<'VariableDeclaration'>
 }
 
 const crawlerVisitor: {
-  Identifier: Visitor<NodeT<'Identifier'>, CrawlerState>;
-  VariableDeclaration: Visitor<NodeT<'VariableDeclaration'>, CrawlerState>;
+  [K in 'Identifier' | 'AssignmentExpression' | 'VariableDeclaration']: (
+    ExpandedVisitor<NodeT<K>, CrawlerState>
+  );
 } = {
-  Identifier(path, state) {
-    const parentType = path.parentPath!.node?.type as IdentifierParent['type'];
-    const crawlFn = ParentCrawlFn[parentType] || (() => 0);
-
-    crawlFn(
-      path.key as never,
-      path as NodePath<NodeT<'Identifier'>, any>,
-      state
-    );
+  Identifier: {
+    enter(path, state) {
+      const parentType = path.parentPath!.node?.type as IdentifierParent['type'];
+      const crawler = identifierParentCrawlers[parentType];
+      if (crawler != null) crawler(
+        path.key as never,
+        path as NodePath<Identifier, any>,
+        state
+      );
+    }
   },
-  VariableDeclaration(path, state) {
-    registerVariableDeclaration(path, state.scope);
+  AssignmentExpression: {
+    enter(path, state) {
+      const identifierPaths: NodePath<Identifier>[] = [];
+      findVisiblePathsInPattern(path.get('left'), identifierPaths);
+      state.constantViolations.push(...identifierPaths);
+    }
+  },
+  VariableDeclaration: {
+    enter(path, state) {
+      registerVariableDeclaration(path, state.scope);
+    }
   }
 };
 
-for (let i = 0; i < scopedNodeTypes.length; i++) {
-  type VisitorType = Visitor<NodeMap[ScopedNode], CrawlerState>;
-  (crawlerVisitor as Record<string, VisitorType>)[scopedNodeTypes[i]] = (path, state) => {
-    // Stop crawling whenever a scoped node is found
-    // children will handle the further crawling
-    state.childScopedPaths.push(path);
-    path.skip();
+{
+  type VisitorType = ExpandedVisitor<NodeMap[ScopedNode], CrawlerState>;
+  type CrawlerVisitors = Record<ScopedNode, VisitorType>;
+  const cVisitors = crawlerVisitor as any as CrawlerVisitors;
+
+  for (let i = 0; i < scopedNodeTypes.length; i++) {
+    cVisitors[scopedNodeTypes[i]] = {
+      enter(path, state) {
+        // Stop crawling whenever a scoped node is found
+        // children will handle the further crawling
+        state.childScopedPaths.push(path);
+        path.skip();
+      }
+    }
+  }
+
+  // But things are kind of different for `BlockStatement`
+  //                - (see the comments of `shouldBlockStatementMakeScope` function)
+  // This is the workaround for the case
+  const defaultEnterFn = cVisitors.BlockStatement.enter!;
+  cVisitors.BlockStatement.enter = (path, state) => {
+    if (shouldBlockStatementMakeScope(path.parent)) {
+      defaultEnterFn(path, state);
+    }
   }
 }
 
 const registerParam = (path: NodePath<Pattern>, scope: Scope, kind: BindingKind = 'param') => {
-  const identifierPaths: NodePath<NodeT<'Identifier'>>[] = [];
-  findDeclaringPathsInPattern(path, identifierPaths);
+  const identifierPaths: NodePath<Identifier>[] = [];
+  findVisiblePathsInPattern(path, identifierPaths);
   for (let i = 0; i < identifierPaths.length; i++) {
     scope.registerBinding(kind, identifierPaths[i], path as NodePath<any>);
   }
@@ -635,53 +699,46 @@ const scopePathCrawlers: {
   CatchClause(path, scope) {
     registerParam(path.get('param'), scope, 'let');
   },
-  BlockStatement: null,
+  BlockStatement(path, scope) {
+    if (path.parent != null && path.parent.type === 'LabeledStatement') {
+      scope.registerLabel((path.parentPath as NodePath<NodeT<'LabeledStatement'>>).get('label'));
+    }
+  },
   SwitchStatement: null,
   WhileStatement: null,
   DoWhileStatement: null,
   ForStatement(path, scope) {
+    if (path.parent != null && path.parent.type === 'LabeledStatement') {
+      scope.registerLabel((path.parentPath as NodePath<NodeT<'LabeledStatement'>>).get('label'));
+    }
+
     if (path.node!.init != null && path.node!.init.type === 'VariableDeclaration') {
       registerVariableDeclaration(path.get('init'), scope);
     }
   },
   ForInStatement(path, scope) {
+    if (path.parent != null && path.parent.type === 'LabeledStatement') {
+      scope.registerLabel((path.parentPath as NodePath<NodeT<'LabeledStatement'>>).get('label'));
+    }
+
     if (path.node!.left.type === 'VariableDeclaration') {
       registerVariableDeclaration(path.get('left') as NodePath<NodeT<'VariableDeclaration'>>, scope);
     }
   },
   ForOfStatement(path, scope) {
+    if (path.parent != null && path.parent.type === 'LabeledStatement') {
+      scope.registerLabel((path.parentPath as NodePath<NodeT<'LabeledStatement'>>).get('label'));
+    }
+
     if (path.node!.left.type === 'VariableDeclaration') {
       registerVariableDeclaration(path.get('left') as NodePath<NodeT<'VariableDeclaration'>>, scope);
     }
   },
 }
 
-const scopedNodesTypesSet = new Set<Node['type']>(scopedNodeTypes);
-
-const shouldMakeScope = (path: NodePath): boolean => {
-  if (path.node == null) return false;
-
-  // Don't create scope if `BlockStatement` is placed in these places
-  // - for (let x in f) {}    -- ForInStatement -> BlockStatement
-  // - () => {}               -- ArrowFunctionExpression -> BlockStatement
-  // - function () {}         -- FunctionExpression -> BlockStatement
-  // - while (x) {}           -- WhileStatement -> BlockStatement
-  // - ...
-  // But not in these cases
-  // - { let x; { let x; } }  -- BlockStatement -> BlockStatement
-  // - { }                    -- Program -> BlockStatement
-
-  if (
-    path.node.type === 'BlockStatement' &&
-    path.parent != null &&
-    path.parent.type !== 'BlockStatement' &&
-    path.parent.type !== 'Program' &&
-    scopedNodesTypesSet.has(path.parent.type)
-  ) {
-    return false;
-  }
-
-  return scopedNodesTypesSet.has(path.node.type);
+export type Label = {
+  path: NodePath<Identifier, NodeT<'LabeledStatement'>>;
+  references: NodePath<Identifier, NodeT<'BreakStatement' | 'ContinueStatement'>>[];
 }
 
 export class Scope {
@@ -689,8 +746,9 @@ export class Scope {
   readonly parent: Scope | null;
   readonly children: Scope[] = [];
   private initialized = false;
-  bindings: Record<string, Binding | undefined> = {};
-  globalBindings: Record<string, GlobalBinding | undefined> = {};
+  bindings: Record<string, Binding | undefined> = Object.create(null);
+  globalBindings: Record<string, GlobalBinding | undefined> = Object.create(null);
+  labels: Record<string, Label | undefined> = Object.create(null);
 
   private constructor(path: NodePath, parentScope: Scope | null) {
     this.path = path as NodePath<NodeT<ScopedNode>>;
@@ -720,8 +778,9 @@ export class Scope {
   crawl(): void {
     if (this.path.node == null) return;
 
-    this.bindings = {};
-    this.globalBindings = {};
+    this.bindings = Object.create(null);
+    this.globalBindings = Object.create(null);
+    this.labels = Object.create(null);
 
     const state: CrawlerState = {
       references: [],
@@ -746,39 +805,66 @@ export class Scope {
       parentPath: this.path.parentPath,
       ctx: this.path.ctx,
       state,
-      visitors: crawlerVisitor,
+      visitors: crawlerVisitor as ExpandedVisitors<CrawlerState>,
+      expand: false,
       onlyChildren: true
     });
 
     this.path.ctx.makeScope = true;
     this.path.ctx.restorePrevSkipPathStack();
 
-    for (let i = 0; i < state.references.length; i++) {
-      const path = state.references[i];
-      const binding = this.getBinding(path.node!.name);
-      if (binding) {
-        binding.addReference(path);
-      } else {
-        this
-          .getGlobalBinding(path.node!.name, true)
-          .addReference(path);
+    {
+      const memoizedBindings: Record<string, Binding | undefined> = Object.create(null);
+      const { globalBindings } = this.getProgramScope();
+
+      for (let i = 0; i < state.references.length; i++) {
+        const path = state.references[i];
+        const bindingName = path.node!.name;
+        const binding = bindingName in memoizedBindings
+          ? memoizedBindings[bindingName]
+          : (memoizedBindings[bindingName] = this.getBinding(bindingName));
+
+        if (binding) {
+          binding.addReference(path);
+        } else {
+          (
+            globalBindings[bindingName] ||
+            (globalBindings[bindingName] = new GlobalBinding({ name: bindingName }))
+          ).addReference(path);
+        }
+      }
+
+      for (let i = 0; i < state.constantViolations.length; i++) {
+        const path = state.constantViolations[i];
+        const bindingName = path.node!.name;
+        const binding = bindingName in memoizedBindings
+          ? memoizedBindings[bindingName]
+          : (memoizedBindings[bindingName] = this.getBinding(bindingName));
+        
+        if (binding) {
+          binding.addConstantViolation(path);
+        } else {
+          (
+            globalBindings[bindingName] ||
+            (globalBindings[bindingName] = new GlobalBinding({ name: bindingName }))
+          ).addConstantViolation(path);
+        }
       }
     }
 
-    for (let i = 0; i < state.constantViolations.length; i++) {
-      const path = state.constantViolations[i];
-      const binding = this.getBinding(path.node!.name);
-      if (binding) {
-        binding.addConstantViolation(path);
-      } else {
-        this
-          .getGlobalBinding(path.node!.name, true)
-          .addConstantViolation(path);
-      }
-    }
+    {
+      const memoizedLabels: Record<string, Label | undefined> = Object.create(null);
+      for (let i = 0; i < state.labelReferences.length; i++) {
+        const path = state.labelReferences[i];
+        const labelName = path.node!.name;
+        const label = labelName in memoizedLabels
+          ? memoizedLabels[labelName]
+          : (memoizedLabels[labelName] = this.getLabel(labelName));
 
-    for (let i = 0; i < state.labelReferences.length; i++) {
-      // TODO: Reference labels
+        if (label != null) {
+          label.references.push(path);
+        }
+      }
     }
 
     this.initialized = true;
@@ -790,15 +876,21 @@ export class Scope {
 
   registerBinding<T extends BindingKind>(
     kind: T,
-    identifierPath: NodePath<NodeT<'Identifier'>>,
+    identifierPath: NodePath<Identifier>,
     bindingPath: BindingPathT<T>
   ): void;
   registerBinding(
     kind: string,
-    identifierPath: NodePath<NodeT<'Identifier'>>,
+    identifierPath: NodePath<Identifier>,
     bindingPath: NodePath<any>
-  ) {
+  ): void {
     const bindingName = identifierPath.node!.name;
+    const binding = this.getOwnBinding(bindingName);
+
+    if (binding) {
+      binding.constantViolations.push(identifierPath);
+      return;
+    }
 
     this.bindings[bindingName] = new Binding({
       kind: kind as Binding['kind'],
@@ -810,7 +902,7 @@ export class Scope {
   }
 
   hasOwnBinding(name: string): boolean {
-    return Object.prototype.hasOwnProperty.call(this.bindings, name);
+    return name in this.bindings;
   }
 
   getOwnBinding(name: string): Binding | undefined {
@@ -837,19 +929,48 @@ export class Scope {
   }
 
   hasGlobalBinding(name: string): boolean {
-    return Object.prototype.hasOwnProperty.call(this.globalBindings, name);
+    return name in this.globalBindings;
   }
 
-  getGlobalBinding<C extends boolean>(name: string, create?: C): true extends C ? GlobalBinding : GlobalBinding | undefined {
-    const programScope = this.getProgramScope();
-    let globalBinding = programScope.globalBindings[name];
-    if (create === true && globalBinding == null) {
-      globalBinding = programScope.globalBindings[name] = new GlobalBinding({ name });
+  getGlobalBinding(name: string): GlobalBinding | undefined {
+    return this.getProgramScope().globalBindings[name];
+  }
+
+  registerLabel(path: NodePath<Identifier, NodeT<'LabeledStatement'>>): void {
+    const labelName = path.node!.name;
+
+    if (this.hasLabel(labelName)) {
+      // ! Label has already been declared
+      // TODO: Handle things
+      return;
     }
-    return globalBinding as any;
+
+    this.labels[labelName] = {
+      path,
+      references: []
+    }
   }
 
-  registerLabel(path: NodePath<NodeT<'Identifier'>>) {
-    // TODO: Implement method
+  hasLabel(name: string): boolean {
+    // eslint-disable-next-line @typescript-eslint/no-this-alias
+    let scope: Scope | null = this;
+    while (scope) {
+      if (scope.labels[name] != null) {
+        return true;
+      }
+      scope = scope.parent;
+    }
+    return false;
+  }
+
+  getLabel(name: string): Label | undefined {
+    // eslint-disable-next-line @typescript-eslint/no-this-alias
+    let scope: Scope | null = this;
+    while (scope) {
+      if (scope.labels[name] != null) {
+        return scope.labels[name];
+      }
+      scope = scope.parent;
+    }
   }
 }
