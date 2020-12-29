@@ -5,7 +5,6 @@ import { Scope } from './scope';
 import { is } from './is';
 import * as t from './generated/types';
 
-
 // * Tip: Fold the regions or comments for better experience
 
 const mapSet = <K, V>(map: Map<K, V>, key: K, value: V): V => {
@@ -187,11 +186,16 @@ export class NodePath<T extends Node = Node, P extends Node = Node> {
   }
 
   /** Get the cached NodePath object or create new if cache is not available */
-  static for<T extends Node = Node, P extends Node = Node>(data: NodePathData<T, P>) {
+  static for<T extends Node = Node, P extends Node = Node>(data: NodePathData<T, P>): NodePath<T, P> {
+    if (data.node == null) {
+      // Don't cache a null NodePath
+      return new this(data);
+    }
+
     const pathCache = data.ctx.pathCache;
     const parentNode = data.parentPath && data.parentPath.node;
     const children = pathCache.get(parentNode) || mapSet(pathCache, parentNode, new Map<Node, NodePath>());
-    return (children.get(data.node) || mapSet(children, data.node, new this(data))) as NodePath<T, P>;
+    return (children.get(data.node) || mapSet(children, data.node, new NodePath<any, any>(data)));
   }
 
   init() {
@@ -225,8 +229,9 @@ export class NodePath<T extends Node = Node, P extends Node = Node> {
       node: this.node,
       parentPath: this.parentPath,
       visitors,
-      options: visitors.$,
-      state
+      state,
+      expand: true,
+      options: visitors.$
     });
   }
 
@@ -417,8 +422,8 @@ export class NodePath<T extends Node = Node, P extends Node = Node> {
   get<K extends Exclude<keyof T, keyof BaseNode>>(
     key: K
   ): T[K] extends Node[]
-    ? NodePath<T[K][number]>[]
-    : T[K] extends Node ? NodePath<T[K]> : NodePath<never>;
+    ? NodePath<T[K][number], T>[]
+    : T[K] extends Node ? NodePath<T[K], T> : NodePath<never, T>;
   get<N extends Node | Node[] | null = null>(
     key: string
   ): null extends N

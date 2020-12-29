@@ -23,7 +23,7 @@ export class Traverser {
   private readonly ctx: Context;
 
   constructor(data: {
-    visitors: ExpandedVisitors;
+    visitors: ExpandedVisitors<any>;
     options?: TraverseOptions;
     ctx?: Context;
   }) {
@@ -111,34 +111,42 @@ export class Traverser {
     }
   }
 
+  static expandVisitors<S = unknown>(visitors: Visitors<S>): ExpandedVisitors<S> {
+    const expandedVisitors: ExpandedVisitors = {};
+
+    for (const keyName in visitors) {
+      const keys = keyName.split('|');
+      const visitor: VisitorFn<Node> = (visitors as any)[keyName];
+      if (typeof visitor == 'function') {
+        for (let i = 0; i < keys.length; i++) {
+          expandedVisitors[keys[i]] = { enter: visitor };
+        }
+      } else if (typeof visitor == 'object') {
+        for (let i = 0; i < keys.length; i++) {
+          expandedVisitors[keys[i]] = visitor;
+        }
+      }
+    }
+
+    return expandedVisitors;
+  }
+
   static traverseNode<S = unknown>(data: {
     node: Node;
     parentPath: NodePath | null;
-    visitors: Visitors<S>;
     state: S | undefined;
     options?: TraverseOptions;
     ctx?: Context;
     onlyChildren?: boolean;
-  }) {
-    const expandedVisitors: ExpandedVisitors = {};
-
-    for (const keyName in data.visitors) {
-      // keyName can contain multiple visitors - "FunctionExpression|FunctionDeclaration"
-      const keys = keyName.split('|');
-      const visitor: VisitorFn<Node> = (data.visitors as any)[keyName];
-      if (typeof visitor === 'function') {
-        keys.forEach((key) => {
-          expandedVisitors[key] = { enter: visitor };
-        });
-      } else if (typeof visitor === 'object') {
-        keys.forEach((key) => {
-          expandedVisitors[key] = visitor;
-        });
-      }
-    }
-
+  } & ({
+    expand: true;
+    visitors: Visitors<S>;
+  } | {
+    expand: false;
+    visitors: ExpandedVisitors<S>;
+  })) {
     new Traverser({
-      visitors: expandedVisitors,
+      visitors: data.expand ? this.expandVisitors(data.visitors) : data.visitors,
       options: data.options,
       ctx: data.ctx
     }).visitNode({
@@ -158,6 +166,7 @@ export const traverse = <N, S>(node: N, visitors: Visitors<S> & { $?: TraverseOp
     parentPath: null,
     visitors,
     state,
+    expand: true,
     options: visitors.$
   });
 }
