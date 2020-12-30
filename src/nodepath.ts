@@ -214,6 +214,10 @@ export class NodePath<T extends Node = Node, P extends Node = Node> {
     }
   }
 
+  get parentKey(): string | null {
+    return this.listKey != null ? this.listKey : (this.key as string);
+  }
+
   //#region Traversal
 
   skip() {

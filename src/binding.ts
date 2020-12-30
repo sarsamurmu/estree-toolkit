@@ -1,18 +1,29 @@
-import { Pattern } from 'estree';
+import {
+  CatchClause,
+  ClassDeclaration,
+  ClassExpression,
+  FunctionDeclaration,
+  FunctionExpression,
+  Identifier,
+  ImportDefaultSpecifier,
+  ImportNamespaceSpecifier,
+  ImportSpecifier,
+  Pattern,
+  VariableDeclarator
+} from 'estree';
 
 import { NodePath } from './nodepath';
 import { Scope } from './scope';
-import { NodeT } from './utils';
 
 class BaseBinding {
-  readonly references: NodePath<NodeT<'Identifier'>>[] = [];
-  readonly constantViolations: NodePath<NodeT<'Identifier'>>[] = [];
+  readonly references: NodePath<Identifier>[] = [];
+  readonly constantViolations: NodePath<Identifier>[] = [];
 
-  addReference(path: NodePath<NodeT<'Identifier'>>) {
+  addReference(path: NodePath<Identifier>) {
     this.references.push(path);
   }
 
-  addConstantViolation(path: NodePath<NodeT<'Identifier'>>) {
+  addConstantViolation(path: NodePath<Identifier>) {
     this.constantViolations.push(path);
   }
 }
@@ -20,14 +31,14 @@ class BaseBinding {
 export type BindingKind = 'var' | 'let' | 'const' | 'param' | 'unknown' | 'hoisted' | 'local' | 'module';
 export type BindingPathT<T extends BindingKind> = (
   {
-    hoisted: NodePath<NodeT<'FunctionDeclaration' | 'ClassDeclaration'>>;
-    local: NodePath<NodeT<'FunctionExpression' | 'ClassExpression'>>;
-    module: NodePath<NodeT<'ImportSpecifier' | 'ImportDefaultSpecifier' | 'ImportNamespaceSpecifier'>>;
-    let: NodePath<NodeT<'VariableDeclarator'>> | NodePath<NodeT<'CatchClause'>>;
+    hoisted: NodePath<FunctionDeclaration | ClassDeclaration>;
+    local: NodePath<FunctionExpression | ClassExpression>;
+    module: NodePath<ImportSpecifier | ImportDefaultSpecifier | ImportNamespaceSpecifier>;
+    let: NodePath<VariableDeclarator> | NodePath<CatchClause>;
     param: NodePath<Pattern>;
-    unknown: NodePath<NodeT<'FunctionDeclaration' | 'ClassDeclaration'>>;
+    unknown: NodePath<FunctionDeclaration | ClassDeclaration>;
   } & {
-    [_ in 'var' | 'const']: NodePath<NodeT<'VariableDeclarator'>>;
+    [_ in 'var' | 'const']: NodePath<VariableDeclarator>;
   }
 )[T];
 
@@ -35,7 +46,7 @@ export class Binding<T extends BindingKind = BindingKind> extends BaseBinding {
   readonly kind: BindingKind;
   readonly name: string;
   readonly scope: Scope;
-  readonly identifierPath: NodePath<NodeT<'Identifier'>>;
+  readonly identifierPath: NodePath<Identifier>;
   readonly path: BindingPathT<T>;
 
   constructor(data: {
