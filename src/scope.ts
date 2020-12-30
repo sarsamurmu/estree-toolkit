@@ -113,22 +113,25 @@ const identifierCrawlers: {
       case 'body':
         state.references.push(path);
         break;
+      /* istanbul ignore next */
       default: assertNever(key);
     }
   },
   AssignmentExpression(key, path, state) {
     switch (key) {
+      /* istanbul ignore next */
       case 'left':
-        state.constantViolations.push(path);
-        break;
+        throw new Error('This should be handled by `crawlerVisitor.AssignmentExpression`');
       case 'right':
         state.references.push(path);
         break;
+      /* istanbul ignore next */
       default: assertNever(key);
     }
   },
   AssignmentPattern(key, path, state) {
     switch (key) {
+      /* istanbul ignore next */
       case 'left':
         // TODO
         // ? IDK what to do
@@ -143,6 +146,7 @@ const identifierCrawlers: {
       case 'right':
         state.references.push(path);
         break;
+      /* istanbul ignore next */
       default: assertNever(key);
     }
   },
@@ -151,9 +155,11 @@ const identifierCrawlers: {
       case 'argument':
         state.references.push(path);
         break;
+      /* istanbul ignore next */
       default: assertNever(key);
     }
   },
+  /* istanbul ignore next */
   FunctionDeclaration(key) {
     switch (key) {
       case 'id':
@@ -161,6 +167,7 @@ const identifierCrawlers: {
       default: assertNever(key);
     }
   },
+  /* istanbul ignore next */
   FunctionExpression(key) {
     switch (key) {
       case 'id':
@@ -173,9 +180,11 @@ const identifierCrawlers: {
       case 'test':
         state.references.push(path);
         break;
+      /* istanbul ignore next */
       default: assertNever(key)
     }
   },
+  /* istanbul ignore next */
   CatchClause(key) {
     switch (key) {
       case 'param':
@@ -185,11 +194,13 @@ const identifierCrawlers: {
   },
   VariableDeclarator(key, path, state) {
     switch (key) {
+      /* istanbul ignore next */
       case 'id':
         throw new Error('This should be handled by `scopePathCrawlers.VariableDeclarator`');
       case 'init':
         state.references.push(path);
         break;
+      /* istanbul ignore next */
       default: assertNever(key);
     }
   },
@@ -198,9 +209,11 @@ const identifierCrawlers: {
       case 'expression':
         state.references.push(path);
         break;
+      /* istanbul ignore next */
       default: assertNever(key);
     }
   },
+  /* istanbul ignore next */
   WithStatement(key, path, state) {
     switch (key) {
       case 'object':
@@ -214,6 +227,7 @@ const identifierCrawlers: {
       case 'argument':
         state.references.push(path);
         break;
+      /* istanbul ignore next */
       default: assertNever(key);
     }
   },
@@ -226,6 +240,7 @@ const identifierCrawlers: {
       case 'label':
         state.labelReferences.push(path);
         break;
+      /* istanbul ignore next */
       default: assertNever(key);
     }
   },
@@ -234,6 +249,7 @@ const identifierCrawlers: {
       case 'label':
         state.labelReferences.push(path);
         break;
+      /* istanbul ignore next */
       default: assertNever(key);
     }
   },
@@ -242,6 +258,7 @@ const identifierCrawlers: {
       case 'test':
         state.references.push(path);
         break;
+      /* istanbul ignore next */
       default: assertNever(key);
     }
   },
@@ -250,6 +267,7 @@ const identifierCrawlers: {
       case 'discriminant':
         state.references.push(path);
         break;
+      /* istanbul ignore next */
       default: assertNever(key);
     }
   },
@@ -258,6 +276,7 @@ const identifierCrawlers: {
       case 'argument':
         state.references.push(path);
         break;
+      /* istanbul ignore next */
       default: assertNever(key);
     }
   },
@@ -266,6 +285,7 @@ const identifierCrawlers: {
       case 'test':
         state.references.push(path);
         break;
+      /* istanbul ignore next */
       default: assertNever(key);
     }
   },
@@ -274,6 +294,7 @@ const identifierCrawlers: {
       case 'test':
         state.references.push(path);
         break;
+      /* istanbul ignore next */
       default: assertNever(key);
     }
   },
@@ -284,38 +305,43 @@ const identifierCrawlers: {
       case 'update':
         state.references.push(path);
         break;
+      /* istanbul ignore next */
       default: assertNever(key);
     }
   },
   ForInStatement(key, path, state) {
     switch (key) {
+      /* istanbul ignore next */
       case 'left':
-        state.constantViolations.push(path);
-        break;
+        throw new Error('This should be handled by `scopePathCrawlers.ForInStatement`');
       case 'right':
         state.references.push(path);
         break;
+      /* istanbul ignore next */
       default: assertNever(key);
     }
   },
   ForOfStatement(key, path, state) {
     switch (key) {
+      /* istanbul ignore next */
       case 'left':
-        state.constantViolations.push(path);
-        break;
+        throw new Error('This should be handled by `scopePathCrawlers.ForOfStatement`');
       case 'right':
         state.references.push(path);
         break;
+      /* istanbul ignore next */
       default: assertNever(key);
     }
   },
   ClassDeclaration(key, path, state) {
     switch (key) {
+      /* istanbul ignore next */
       case 'id':
         throw new Error('This should be handled by `scopePathCrawlers.ClassDeclaration`');
       case 'superClass':
         state.references.push(path);
         break;
+      /* istanbul ignore next */
       default: assertNever(key);
     }
   },
@@ -324,6 +350,7 @@ const identifierCrawlers: {
       case 'argument':
         state.references.push(path);
         break;
+      /* istanbul ignore next */
       default: assertNever(key);
     }
   },
@@ -332,6 +359,7 @@ const identifierCrawlers: {
       case 'argument':
         state.references.push(path);
         break;
+      /* istanbul ignore next */
       default: assertNever(key);
     }
   },
@@ -340,6 +368,7 @@ const identifierCrawlers: {
       case 'argument':
         state.constantViolations.push(path);
         break;
+      /* istanbul ignore next */
       default: assertNever(key);
     }
   },
@@ -349,6 +378,7 @@ const identifierCrawlers: {
       case 'right':
         state.references.push(path);
         break;
+      /* istanbul ignore next */
       default: assertNever(key);
     }
   },
@@ -358,6 +388,7 @@ const identifierCrawlers: {
       case 'right':
         state.references.push(path);
         break;
+      /* istanbul ignore next */
       default: assertNever(key);
     }
   },
@@ -367,6 +398,7 @@ const identifierCrawlers: {
         state.references.push(path);
         break;
       case 'property': break;
+      /* istanbul ignore next */
       default: assertNever(key);
     }
   },
@@ -377,6 +409,7 @@ const identifierCrawlers: {
       case 'alternate':
         state.references.push(path);
         break;
+      /* istanbul ignore next */
       default: assertNever(key);
     }
   },
@@ -385,6 +418,7 @@ const identifierCrawlers: {
       case 'callee':
         state.references.push(path);
         break;
+      /* istanbul ignore next */
       default: assertNever(key);
     }
   },
@@ -393,6 +427,7 @@ const identifierCrawlers: {
       case 'callee':
         state.references.push(path);
         break;
+      /* istanbul ignore next */
       default: assertNever(key);
     }
   },
@@ -401,16 +436,19 @@ const identifierCrawlers: {
       case 'tag':
         state.references.push(path);
         break;
+      /* istanbul ignore next */
       default: assertNever(key);
     }
   },
   ClassExpression(key, path, state) {
     switch (key) {
+      /* istanbul ignore next */
       case 'id':
         throw new Error('This should be handled by `scopePathCrawlers.ClassExpression`');
       case 'superClass':
         state.references.push(path);
         break;
+      /* istanbul ignore next */
       default: assertNever(key);
     }
   },
@@ -418,6 +456,7 @@ const identifierCrawlers: {
     switch (key) {
       case 'meta':
       case 'property': break;
+      /* istanbul ignore next */
       default: assertNever(key);
     }
   },
@@ -426,20 +465,21 @@ const identifierCrawlers: {
       case 'source':
         state.references.push(path);
         break;
+      /* istanbul ignore next */
       default: assertNever(key);
     }
   },
   Property(key, path, state) {
     switch (key) {
-      case 'key': {
+      case 'key':
         if ((path.parent as NodeT<'Property'>).computed) {
           state.references.push(path);
         }
         break;
-      }
       case 'value':
         state.references.push(path);
         break;
+      /* istanbul ignore next */
       default: assertNever(key);
     }
   },
@@ -448,20 +488,22 @@ const identifierCrawlers: {
       case 'argument':
         state.references.push(path);
         break;
+      /* istanbul ignore next */
       default: assertNever(key);
     }
   },
-  RestElement(key, path, state) {
+  /* istanbul ignore next */
+  RestElement(key) {
     switch (key) {
       case 'argument':
-        state.references.push(path);
-        break;
+        throw new Error('This should be handled by `findVisiblePathsInPattern`');
       default: assertNever(key);
     }
   },
   MethodDefinition(key) {
     switch (key) {
       case 'key': break;
+      /* istanbul ignore next */
       default: assertNever(key);
     }
   },
@@ -470,6 +512,7 @@ const identifierCrawlers: {
       case 'declaration':
         state.references.push(path);
         break;
+      /* istanbul ignore next */
       default: assertNever(key);
     }
   },
@@ -483,6 +526,7 @@ const identifierCrawlers: {
       case 'local':
         state.scope.registerBinding('module', path, path.parentPath!);
         break;
+      /* istanbul ignore next */
       default: assertNever(key);
     }
   },
@@ -491,6 +535,7 @@ const identifierCrawlers: {
       case 'local':
         state.scope.registerBinding('module', path, path.parentPath!);
         break;
+      /* istanbul ignore next */
       default: assertNever(key);
     }
   },
@@ -499,6 +544,7 @@ const identifierCrawlers: {
       case 'local':
         state.scope.registerBinding('module', path, path.parentPath!);
         break;
+      /* istanbul ignore next */
       default: assertNever(key);
     }
   },
@@ -508,6 +554,7 @@ const identifierCrawlers: {
         state.references.push(path);
         break;
       case 'exported': break;
+      /* istanbul ignore next */
       default: assertNever(key);
     }
   }
@@ -526,7 +573,7 @@ const identifierCrawlers: {
 - PATH: The NodePath of the identifier
 - CRAWLER_STATE: The state object of crawler
 */
-const inListIdentifierCrawler: {
+const inListIdentifierCrawlers: {
   [Parent in ParentsOf<Identifier[]> as `${Parent['type']}`]: (
     listKey: KeyInParent<Identifier[], Parent>,
     path: NodePath<Identifier>,
@@ -538,6 +585,7 @@ const inListIdentifierCrawler: {
       case 'elements':
         state.references.push(path);
         break;
+      /* istanbul ignore next */
       default: assertNever(listKey);
     }
   },
@@ -546,6 +594,7 @@ const inListIdentifierCrawler: {
       case 'arguments':
         state.references.push(path);
         break;
+      /* istanbul ignore next */
       default: assertNever(listKey);
     }
   },
@@ -554,6 +603,7 @@ const inListIdentifierCrawler: {
       case 'arguments':
         state.references.push(path);
         break;
+      /* istanbul ignore next */
       default: assertNever(listKey);
     }
   },
@@ -562,6 +612,7 @@ const inListIdentifierCrawler: {
       case 'expressions':
         state.references.push(path);
         break;
+      /* istanbul ignore next */
       default: assertNever(listKey);
     }
   },
@@ -570,9 +621,11 @@ const inListIdentifierCrawler: {
       case 'expressions':
         state.references.push(path);
         break;
+      /* istanbul ignore next */
       default: assertNever(listKey);
     }
   },
+  /* istanbul ignore next */
   ArrayPattern(listKey) {
     switch (listKey) {
       case 'elements':
@@ -581,6 +634,7 @@ const inListIdentifierCrawler: {
       default: assertNever(listKey);
     }
   },
+  /* istanbul ignore next */
   FunctionDeclaration(listKey) {
     switch (listKey) {
       case 'params':
@@ -588,6 +642,7 @@ const inListIdentifierCrawler: {
       default: assertNever(listKey);
     }
   },
+  /* istanbul ignore next */
   FunctionExpression(listKey) {
     switch (listKey) {
       case 'params':
@@ -595,6 +650,7 @@ const inListIdentifierCrawler: {
       default: assertNever(listKey);
     }
   },
+  /* istanbul ignore next */
   ArrowFunctionExpression(listKey) {
     switch (listKey) {
       case 'params':
@@ -605,7 +661,7 @@ const inListIdentifierCrawler: {
 }
 
 // From -
-//  const { a, b: [c, { d }], e: f, ...g } = x;
+//  const { a, b: [c, { d }], e: f = 0, ...g } = x;
 // Returns paths to
 // - a, c, d, f, g
 const findVisiblePathsInPattern = (
@@ -667,8 +723,9 @@ const findVisiblePathsInPattern = (
       findVisiblePathsInPattern((path as NodePath<NodeT<'AssignmentPattern'>>).get('left'), result);
       break;
 
+    /* istanbul ignore next */
     case 'MemberExpression': break;
-
+    /* istanbul ignore next */
     default: assertNever(path.node!.type);
   }
 }
@@ -703,7 +760,7 @@ const crawlerVisitor: {
       const parentType = path.parentPath!.node?.type;
 
       if (path.listKey != null) {
-        const crawler = inListIdentifierCrawler[parentType as ParentsOf<Identifier[]>['type']];
+        const crawler = inListIdentifierCrawlers[parentType as ParentsOf<Identifier[]>['type']];
         if (crawler != null) {
           crawler(path.listKey as never, path, state);
         }
