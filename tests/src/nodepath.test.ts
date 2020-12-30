@@ -765,6 +765,64 @@ describe('Methods', () => {
 
   //#endregion
 
+  //#region Introspection
+
+  test('has', () => {
+    const ast: Node = {
+      type: 'IfStatement',
+      test: {
+        type: 'Identifier',
+        name: 'x'
+      },
+      consequent: {
+        type: 'BlockStatement',
+        body: []
+      },
+      alternate: null
+    };
+
+    traverse(ast, {
+      IfStatement(path) {
+        expect(path.has('consequent')).toBe(true);
+        expect(path.has('alternate')).toBe(false);
+      },
+      BlockStatement(path) {
+        expect(path.has('body')).toBe(false);
+      }
+    });
+
+    expect.assertions(3);
+  });
+
+  test('is', () => {
+    const ast: Node = {
+      type: 'Property',
+      key: {
+        type: 'Identifier',
+        name: 'x'
+      },
+      value: {
+        type: 'Identifier',
+        name: 'x'
+      },
+      kind: 'init',
+      computed: false,
+      method: false,
+      shorthand: true
+    };
+
+    traverse(ast, {
+      Property(path) {
+        expect(path.is('computed')).toBe(false);
+        expect(path.is('shorthand')).toBe(true);
+      }
+    });
+
+    expect.assertions(2);
+  });
+
+  //#endregion
+
   //#region Removal
 
   test('remove', () => {
