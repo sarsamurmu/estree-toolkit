@@ -19,6 +19,12 @@ export class Context {
   private currentSkipPaths = new Set<NodePath>();
   private readonly skipPathSetStack = [this.currentSkipPaths];
 
+  constructor(options?: TraverseOptions) {
+    if (options?.scope === false) {
+      this.makeScope = false;
+    }
+  }
+
   setSkipped(path: NodePath) {
     this.currentSkipPaths.add(path);
   }
@@ -224,7 +230,7 @@ export class NodePath<T extends Node = Node, P extends Node = Node> {
     this.ctx.setSkipped(this);
   }
 
-  traverse<S>(visitors: Visitors<S> & { $?: TraverseOptions }, state?: S) {
+  traverse<S>(visitors: Visitors<S>, state?: S) {
     if (this.node == null) {
       throw new Error('Can not use method `traverse` on a null NodePath');
     }
@@ -234,8 +240,8 @@ export class NodePath<T extends Node = Node, P extends Node = Node> {
       parentPath: this.parentPath,
       visitors,
       state,
-      expand: true,
-      options: visitors.$
+      ctx: this.ctx,
+      expand: true
     });
   }
 

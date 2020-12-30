@@ -16,7 +16,7 @@ export type ExpandedVisitors<S = unknown> = {
   [type: string]: ExpandedVisitor<Node, S> | undefined;
 }
 
-export type TraverseOptions = { scope: boolean };
+export type TraverseOptions = { scope?: boolean };
 
 export class Traverser {
   private readonly visitors: ExpandedVisitors;
@@ -24,16 +24,10 @@ export class Traverser {
 
   constructor(data: {
     visitors: ExpandedVisitors<any>;
-    options?: TraverseOptions;
-    ctx?: Context;
+    ctx: Context;
   }) {
     this.visitors = data.visitors;
-    if (data.ctx == null) {
-      this.ctx = new Context();
-      if (data.options?.scope === false) this.ctx.makeScope = false;
-    } else {
-      this.ctx = data.ctx;
-    }
+    this.ctx = data.ctx;
   }
 
   visitNode<S>(data: {
@@ -135,8 +129,7 @@ export class Traverser {
     node: Node;
     parentPath: NodePath | null;
     state: S | undefined;
-    options?: TraverseOptions;
-    ctx?: Context;
+    ctx: Context;
     onlyChildren?: boolean;
   } & ({
     expand: true;
@@ -147,7 +140,6 @@ export class Traverser {
   })) {
     new Traverser({
       visitors: data.expand ? this.expandVisitors(data.visitors) : data.visitors,
-      options: data.options,
       ctx: data.ctx
     }).visitNode({
       node: data.node,
@@ -161,12 +153,18 @@ export class Traverser {
 }
 
 export const traverse = <N, S>(node: N, visitors: Visitors<S> & { $?: TraverseOptions }, state?: S) => {
+  const ctx = new Context(visitors.$);
+
+  if ((node as unknown as Node).type !== 'Program') {
+    ctx.makeScope = false;
+  }
+
   Traverser.traverseNode({
     node: node as unknown as Node,
     parentPath: null,
     visitors,
     state,
+    ctx,
     expand: true,
-    options: visitors.$
   });
 }
