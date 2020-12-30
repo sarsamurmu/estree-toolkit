@@ -6,7 +6,7 @@
     "sourceMap": true,
     "baseUrl": "./",
     "paths": {
-      "<project>*": ["../src"]
+      "<project>": ["../src"]
     }
   },
   "include": [
