@@ -349,23 +349,23 @@ export class NodePath<T extends Node = Node, P extends Node = Node> {
 
     // TODO: Handle more cases
 
-    if (Array.isArray(this.container)) {
-      const key = this.key as number;
-      this.container.splice(key, 0, ...nodes);
-      this.updateSiblingIndex(key, nodes.length);
-
-      return nodes.map((node, idx) => (
-        NodePath.for({
-          node,
-          key: key + idx,
-          listKey: this.listKey,
-          parentPath: this.parentPath,
-          ctx: this.ctx
-        }).init()
-      ));
-    } else {
+    if (!Array.isArray(this.container)) {
       throw new Error('Can not insert before a node where `container` is not an Array');
     }
+
+    const key = this.key as number;
+    this.container.splice(key, 0, ...nodes);
+    this.updateSiblingIndex(key, nodes.length);
+
+    return nodes.map((node, idx) => (
+      NodePath.for({
+        node,
+        key: key + idx,
+        listKey: this.listKey,
+        parentPath: this.parentPath,
+        ctx: this.ctx
+      }).init()
+    ));
   }
 
   /** Inserts the `nodes` after the current node */
@@ -374,23 +374,23 @@ export class NodePath<T extends Node = Node, P extends Node = Node> {
 
     // TODO: Handle more cases
 
-    if (Array.isArray(this.container)) {
-      const key = this.key as number;
-      this.container.splice(key + 1, 0, ...nodes);
-      this.updateSiblingIndex(key + 1, nodes.length);
-      
-      return nodes.map((node, idx) => (
-        NodePath.for({
-          node,
-          key: key + idx + 1,
-          listKey: this.listKey,
-          parentPath: this.parentPath,
-          ctx: this.ctx
-        }).init()
-      ));
-    } else {
+    if (!Array.isArray(this.container)) {
       throw new Error('Can not insert after a node where `container` is not an Array');
     }
+
+    const key = this.key as number;
+    this.container.splice(key + 1, 0, ...nodes);
+    this.updateSiblingIndex(key + 1, nodes.length);
+
+    return nodes.map((node, idx) => (
+      NodePath.for({
+        node,
+        key: key + idx + 1,
+        listKey: this.listKey,
+        parentPath: this.parentPath,
+        ctx: this.ctx
+      }).init()
+    ));
   }
 
   /** Insert child nodes at the start of the container */
