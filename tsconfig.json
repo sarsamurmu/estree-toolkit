@@ -4,7 +4,8 @@
     "module": "CommonJS",
     "target": "ES2018",
     "strict": true,
-    "declaration": true
+    "declaration": true,
+    "lib": ["es2018"]
   },
   "include": [
     "./src/**/*"
