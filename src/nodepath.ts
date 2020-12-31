@@ -4,8 +4,9 @@ import { TraverseOptions, Traverser, Visitors } from './traverse';
 import { Scope } from './scope';
 import { is } from './is';
 import * as t from './generated/types';
+import { NodePathDocs } from './nodepath-doc';
 
-// * Tip: Fold the regions or comments for better experience
+// * Tip: Fold the regions for better experience
 
 const mapSet = <K, V>(map: Map<K, V>, key: K, value: V): V => {
   map.set(key, value);
@@ -60,117 +61,14 @@ type NodePathData<T extends Node, P extends Node> = {
   ctx: Context;
 };
 
-export class NodePath<T extends Node = Node, P extends Node = Node> {
-  /** The node associated with the current NodePath */
+export class NodePath<T extends Node = Node, P extends Node = Node> implements NodePathDocs {
   readonly node: T | null;
-  /** Type of the node that is associated with this NodePath */
   readonly type: T['type'] | null;
-  /**
-   * The current node's key in its parent
-   * 
-   * Example
-   * ```
-   * const ast = {
-   *   type: 'IfStatement',
-   *   test: {
-   *     type: 'Identifier',
-   *     name: 'targetNode'
-   *   },
-   *   consequent: {
-   *     type: 'EmptyStatement'
-   *   },
-   *   alternate: null
-   * };
-   *
-   * traverse(ast, {
-   *   Identifier(path) {
-   *     if (path.node.name === 'targetNode') {
-   *       path.key === 'test' // => true
-   *     }
-   *   }
-   * });
-   * ```
-   */
   key: string | number | null;
-  /**
-   * If this node is part of an array, `listKey` is the key of the array in its parent
-   * 
-   * Example
-   * ```
-   * const ast = {
-   *   type: 'ArrayExpression',
-   *   elements: [
-   *     {
-   *       type: 'Identifier',
-   *       name: 'targetNode'
-   *     }
-   *   ]
-   * };
-   * 
-   * traverse(ast, {
-   *   Identifier(path) {
-   *     if (path.node.name === 'targetNode') {
-   *       path.listKey === 'elements' // => true
-   *       path.key === 0 // => true
-   *     }
-   *   }
-   * });
-   * ```
-   */
   listKey: string | null;
-  /** If the node has been removed from its parent */
   removed: boolean;
-  /** The parent path of the current NodePath */
   readonly parentPath: NodePath<P> | null;
-  /** The parent node of the current NodePath */
   readonly parent: P | null;
-  /**
-   * Container of the node
-   * 
-   * Example - 1
-   * ```
-   * const ast = {
-   *   type: 'ArrayExpression',
-   *   elements: [
-   *     {
-   *       type: 'Identifier',
-   *       name: 'targetNode'
-   *     }
-   *   ]
-   * };
-   * 
-   * traverse(ast, {
-   *   Identifier(path) {
-   *     if (path.node.name === 'targetNode') {
-   *       path.container === ast.elements // => true
-   *     }
-   *   }
-   * });
-   * ```
-   * 
-   * Example - 2
-   * ```
-   * const ast = {
-   *   type: 'IfStatement',
-   *   test: {
-   *     type: 'Identifier',
-   *     name: 'targetNode'
-   *   },
-   *   consequent: {
-   *     type: 'EmptyStatement'
-   *   },
-   *   alternate: null
-   * };
-   * 
-   * traverse(ast, {
-   *   Identifier(path) {
-   *     if (path.node.name === 'targetNode') {
-   *       path.container === ast // => true
-   *     }
-   *   }
-   * });
-   * ```
-   */
   readonly container: P | Node[] | null;
 
   readonly ctx: Context;
@@ -249,40 +147,6 @@ export class NodePath<T extends Node = Node, P extends Node = Node> {
 
   //#region Ancestry
 
-  /**
-   * Starting at the parent path of this `NodePath` and going up the tree,
-   * returns first parent path where `predicate` is true
-   * 
-   * Example
-   * ```
-   * const ast = {
-   *   type: 'BlockStatement',
-   *   body: [
-   *     {
-   *       type: 'BlockStatement',
-   *       body: [
-   *         {
-   *           type: 'ExpressionStatement',
-   *           expression: {
-   *             type: 'Literal',
-   *             value: 0
-   *           }
-   *         }
-   *       ]
-   *     }
-   *   ]
-   * };
-   * 
-   * traverse(ast, {
-   *   Literal(path) {
-   *     const blockParent = path.findParent(
-   *       (parent) => parent.type === 'BlockStatement'
-   *     ).node;
-   *     blockParent === ast.body[0] // => true, Notice how it is not `ast` and is `ast.body[0]`
-   *   }
-   * });
-   * ```
-   */
   findParent<N extends Node>(predicate: (path: NodePath<N>) => boolean): NodePath<N> | null {
     let parent: NodePath<any> | null = this.parentPath;
     while (parent != null) {
@@ -292,28 +156,6 @@ export class NodePath<T extends Node = Node, P extends Node = Node> {
     return null;
   }
 
-  /**
-   * Starting from **this** `NodePath` and going up the tree,
-   * returns the first `NodePath` where `predicate` is true
-   * 
-   * Example
-   * ```
-   * const ast = {
-   *   type: 'ExpressionStatement',
-   *   expression: {
-   *     type: 'Literal',
-   *     value: 0
-   *   }
-   * };
-   * 
-   * traverse(ast, {
-   *   Literal(path) {
-   *     path.find((p) => p.type === 'Literal').node === ast.expression // => true
-   *     path.find((p) => p.type === 'ExpressionStatement').node === ast // => true
-   *   }
-   * });
-   * ```
-   */
   find<N extends Node>(predicate: (path: NodePath<N>) => boolean): NodePath<N> | null {
     // eslint-disable-next-line @typescript-eslint/no-this-alias
     let nodePath: NodePath<any> | null = this;
@@ -343,7 +185,6 @@ export class NodePath<T extends Node = Node, P extends Node = Node> {
     });
   }
 
-  /** Inserts the `nodes` before the current node */
   insertBefore(nodes: readonly Node[]): NodePath[] {
     this.assertNotRemoved();
 
@@ -368,7 +209,6 @@ export class NodePath<T extends Node = Node, P extends Node = Node> {
     ));
   }
 
-  /** Inserts the `nodes` after the current node */
   insertAfter(nodes: readonly Node[]): NodePath[] {
     this.assertNotRemoved();
 
@@ -393,7 +233,6 @@ export class NodePath<T extends Node = Node, P extends Node = Node> {
     ));
   }
 
-  /** Insert child nodes at the start of the container */
   unshiftContainer(listKey: string, nodes: readonly Node[]): NodePath[] {
     this.assertNotRemoved();
 
@@ -408,7 +247,6 @@ export class NodePath<T extends Node = Node, P extends Node = Node> {
     }).insertBefore(nodes);
   }
 
-  /** Insert the child nodes at the end of the container */
   pushContainer(listKey: string, nodes: readonly Node[]): NodePath[] {
     this.assertNotRemoved();
 
@@ -427,8 +265,7 @@ export class NodePath<T extends Node = Node, P extends Node = Node> {
   //#endregion
 
   //#region Family
-
-  /** Get the children NodePath for which the key is `key` */
+  
   get<K extends Exclude<keyof T, keyof BaseNode>>(
     key: K
   ): T[K] extends Node[]
@@ -478,7 +315,6 @@ export class NodePath<T extends Node = Node, P extends Node = Node> {
     }).init() as NodePath;
   }
 
-  /** Get the NodePath of its sibling for which the key is `key` */
   getSibling<N extends Node = Node>(key: string | number): NodePath<N> | undefined | never {
     if (this.parentPath == null) {
       this.throwNoParent('getSibling');
@@ -491,7 +327,6 @@ export class NodePath<T extends Node = Node, P extends Node = Node> {
     }
   }
 
-  /** Get the opposite NodePath */
   getOpposite() {
     switch (this.key) {
       case 'left': return this.getSibling('right');
@@ -499,17 +334,14 @@ export class NodePath<T extends Node = Node, P extends Node = Node> {
     }
   }
 
-  /** The the previous sibling of the current node */
   getPrevSibling(): NodePath | undefined | never {
     return this.getSibling((this.key as number) - 1);
   }
 
-  /** The the next sibling of the current node */
   getNextSibling(): NodePath | undefined | never {
     return this.getSibling((this.key as number) + 1);
   }
 
-  /** Get all previous siblings of the current node */
   getAllPrevSiblings(): NodePath[] | undefined | never {
     if (this.parentPath == null) {
       this.throwNoParent('getAllPrevSiblings');
@@ -521,7 +353,6 @@ export class NodePath<T extends Node = Node, P extends Node = Node> {
       .reverse();
   }
 
-  /** Get all next siblings of the current node */
   getAllNextSiblings(): NodePath[] | undefined | never {
     if (this.parentPath == null) {
       this.throwNoParent('getAllNextSiblings');
@@ -552,7 +383,6 @@ export class NodePath<T extends Node = Node, P extends Node = Node> {
 
   //#region Removal
 
-  /** Remove the node from its parent */
   remove(): void {
     if (this.removed) {
       throw new Error('Node is already removed');
@@ -580,7 +410,6 @@ export class NodePath<T extends Node = Node, P extends Node = Node> {
 
   //#region Replacement
 
-  /** Removes the old node and inserts the new node in the old node's position */
   replaceWith<N extends Node = Node>(node: N): NodePath<N> {
     if (this.container == null) {
       this.throwNoParent('replaceWith');
@@ -599,7 +428,6 @@ export class NodePath<T extends Node = Node, P extends Node = Node> {
     }).init();
   }
 
-  /** Removes the old node and inserts the new nodes in the old node's position */
   replaceWithMultiple<N extends readonly Node[]>(nodes: N): NodePath<N[number]>[] {
     if (this.container == null) {
       this.throwNoParent('replaceWith');
