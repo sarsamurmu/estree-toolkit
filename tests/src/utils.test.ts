@@ -118,6 +118,37 @@ describe('hasBinding', () => {
     expect.assertions(2 * 1);
   });
 
+  test('function and class expression', () => {
+    const ast = parseModule(`
+      {
+        ({
+          fn: function a() {
+            targetNode;
+          }
+        })
+      }
+
+      {
+        ({
+          _class: class a {
+            constructor() {
+              targetNode;
+            }
+          }
+        })
+      }
+    `);
+
+    traverse(ast, {
+      Identifier(path) {
+        if (path.node.name !== 'targetNode') return;
+        expect(u.hasBinding(path, 'a')).toBe(true);
+      }
+    });
+
+    expect.assertions(1 * 2);
+  });
+
   test('import declaration', () => {
     const ast = parseModule(`
       import a, { b, c as d } from '';
@@ -158,7 +189,7 @@ describe('hasBinding', () => {
     expect.assertions(2);
   });
 
-  test('for-in and for-of statement', () => {
+  test('for..in and for..of statement', () => {
     const ast = parseModule(`
       for (const { a: [b, { c }], d, e = 0, ...f } in o) {
         targetNode;

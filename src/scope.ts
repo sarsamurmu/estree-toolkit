@@ -2,18 +2,9 @@ import { Identifier, Node, Pattern } from 'estree';
 
 import { NodePath } from './nodepath';
 import { Traverser, ExpandedVisitor, ExpandedVisitors } from './traverse';
-import { NodeMap, NodeT } from './utils';
+import { assertNever, NodeMap, NodeT } from './internal-utils';
 import { Binding, BindingKind, BindingPathT, GlobalBinding } from './binding';
 import { is } from './is';
-
-/**
- * Causes a compiler error if a switch is not exhaustive
- * or you can say causes a compiler error if all possible switch cases
- * are not covered
- * 
- * This function would never get called in reality, if your code is correct
-*/
-const assertNever = (x: never) => x;
 
 type ParentsOf<N extends Node | Node[]> = {
   [K in keyof NodeMap]: N extends NodeMap[K][keyof NodeMap[K]] ? NodeMap[K] : never;

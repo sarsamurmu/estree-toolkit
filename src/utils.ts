@@ -1,16 +1,13 @@
 import {
-  Node,
   Pattern,
   VariableDeclaration,
   ImportDeclaration,
   Statement,
   ModuleDeclaration
 } from 'estree';
+import { NodeMap } from './internal-utils';
 
 import { NodePath } from './nodepath';
-
-export type NodeMap = { [N in Node as `${N['type']}`]: N; }
-export type NodeT<N extends keyof NodeMap> = NodeMap[N];
 
 export const hasBinding = (() => {
   const findInPattern = (node: Pattern, bindingName: string): boolean => {
@@ -123,20 +120,22 @@ export const hasBinding = (() => {
     'FunctionExpression',
     'ArrowFunctionExpression',
     'ClassDeclaration',
+    'ClassExpression',
     'Program'
   ] as const;
   type ParentType = {
-    [N in Node as `${N['type']}`]: N['type'] extends typeof parentTypes[number] ? N : never;
-  }[Node['type']];
+    [K in keyof NodeMap]: K extends typeof parentTypes[number] ? NodeMap[K] : never;
+  }[keyof NodeMap];
   
   const findInParent = (path: NodePath, bindingName: string): boolean => {
     const parent = path.findParent<ParentType>(
       (p) => parentTypes.includes(p.type!)
     );
 
-    if (parent != null) {
+    if (parent != null && parent.node != null) {
       const { node } = parent;
-      switch (node?.type) {
+
+      switch (node.type) {
         case 'BlockStatement': {
           if (findInStatements(node.body, bindingName)) {
             return true;
@@ -167,7 +166,7 @@ export const hasBinding = (() => {
         case 'FunctionExpression':
         case 'ArrowFunctionExpression': {
           if (
-            node.type === 'FunctionDeclaration' &&
+            node.type !== 'ArrowFunctionExpression' &&
             node.id?.name === bindingName
           ) return true;
 
@@ -179,6 +178,7 @@ export const hasBinding = (() => {
           break;
         }
 
+        case 'ClassExpression':
         case 'ClassDeclaration': {
           if (node.id?.name === bindingName) return true;
           break;
