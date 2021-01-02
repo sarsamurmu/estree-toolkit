@@ -59,14 +59,103 @@ test('reference collection', () => {
       const bindingNames = Object.keys(path.scope.globalBindings);
       expect(bindingNames).toEqual(expect.arrayContaining(referencedIdentifiers));
       expect(bindingNames).not.toEqual(expect.arrayContaining(['import']));
+      expect(
+        Object.values(path.scope.globalBindings).map((b) => b.kind)
+      ).toEqual(Array(bindingNames.length).fill('global'));
     }
   });
 
-  expect.assertions(2);
+  expect.assertions(3);
+});
+
+describe('label', () => {
+  describe('registration', () => {
+    test('for..in and for..of statement', () => {
+      const ast = parseModule(`
+        forOf: for (i of x);
+        forIn: for (i in x);
+      `);
+
+      traverse(ast, {
+        ForOfStatement(path) {
+          expect(path.scope.labels.forOf).toBeTruthy();
+          expect(path.scope.labels.forIn).toBe(undefined);
+        },
+        ForInStatement(path) {
+          expect(path.scope.labels.forIn).toBeTruthy();
+          expect(path.scope.labels.forOf).toBe(undefined);
+        }
+      });
+
+      expect.assertions(2 * 2);
+    });
+
+    test('block statement', () => {
+      const ast = parseModule(`
+        blockLabel: {
+          undefined
+        }
+      `);
+
+      traverse(ast, {
+        BlockStatement(path) {
+          expect(path.scope.labels.blockLabel).toBeTruthy();
+        }
+      });
+
+      expect.assertions(1);
+    });
+  });
+
+  test('reference', () => {
+    const ast = parseModule(`
+      block: {
+        break block;
+      }
+      forS: for (;;) {
+        break forS;
+        continue forS;
+      }
+      forOf: for (x of o) {
+        break forOf;
+        continue forOf;
+      }
+      forIn: for (x in o) {
+        break forIn;
+        continue forIn;
+      }
+    `);
+
+    traverse(ast, {
+      BlockStatement(path) {
+        if (path.parent.type !== 'LabeledStatement') return;
+        const { references } = path.scope.labels.block;
+        expect(references).toHaveLength(1);
+        expect(references[0].parent.type).toBe('BreakStatement');
+      },
+      ForStatement(path) {
+        const { references } = path.scope.labels.forS;
+        expect(references).toHaveLength(2);
+        expect(references.map((ref) => ref.parent.type)).toEqual(['BreakStatement', 'ContinueStatement']);
+      },
+      ForOfStatement(path) {
+        const { references } = path.scope.labels.forOf;
+        expect(references).toHaveLength(2);
+        expect(references.map((ref) => ref.parent.type)).toEqual(['BreakStatement', 'ContinueStatement']);
+      },
+      ForInStatement(path) {
+        const { references } = path.scope.labels.forIn;
+        expect(references).toHaveLength(2);
+        expect(references.map((ref) => ref.parent.type)).toEqual(['BreakStatement', 'ContinueStatement']);
+      }
+    });
+
+    expect.assertions(4 * 2);
+  });
 });
 
 describe('binding registration from variable declaration', () => {
-  test('normal', () => {
+  test('variable declaration', () => {
     const ast = parseModule(`
       const { a, b: [c, { d }], e: f = 0, ...g } = x;
     `);
@@ -76,32 +165,48 @@ describe('binding registration from variable declaration', () => {
         const bindingNames = Object.keys(path.scope.bindings);
         expect(bindingNames).toHaveLength(5);
         expect(bindingNames).toEqual(expect.arrayContaining(['a', 'c', 'd', 'f', 'g']));
+        expect(Object.values(path.scope.bindings).map((b) => b.kind)).toEqual(Array(5).fill('const'));
       }
     });
 
-    expect.assertions(2);
+    expect.assertions(3);
   });
 
-  test('in `for..in` and `for..of` statement', () => {
+  test('in for, for..in and for..of statement', () => {
     const ast = parseModule(`
-      for (const { a, b: [c, { d }], e: f = 0, ...g } in x);
-      for (const { a, b: [c, { d }], e: f = 0, ...g } of x);
+      for (var { a, b: [c, { d }], e: f = 0, ...g } = x;;);
+      for (let { h, i: [j, { k }], l: m = 0, ...n } in x);
+      for (const { o, p: [q, { r }], s: t = 0, ...u } of x);
     `);
 
     traverse(ast, {
-      ForInStatement(path) {
+      ForStatement(path) {
         const bindingNames = Object.keys(path.scope.bindings);
         expect(bindingNames).toHaveLength(5);
         expect(bindingNames).toEqual(expect.arrayContaining(['a', 'c', 'd', 'f', 'g']));
+        expect(
+          Object.values(path.scope.bindings).map((b) => b.kind)
+        ).toEqual(Array(bindingNames.length).fill('var'));
+      },
+      ForInStatement(path) {
+        const bindingNames = Object.keys(path.scope.bindings);
+        expect(bindingNames).toHaveLength(5);
+        expect(bindingNames).toEqual(expect.arrayContaining(['h', 'j', 'k', 'm', 'n']));
+        expect(
+          Object.values(path.scope.bindings).map((b) => b.kind)
+        ).toEqual(Array(bindingNames.length).fill('let'));
       },
       ForOfStatement(path) {
         const bindingNames = Object.keys(path.scope.bindings);
         expect(bindingNames).toHaveLength(5);
-        expect(bindingNames).toEqual(expect.arrayContaining(['a', 'c', 'd', 'f', 'g']));
+        expect(bindingNames).toEqual(expect.arrayContaining(['o', 'q', 'r', 't', 'u']));
+        expect(
+          Object.values(path.scope.bindings).map((b) => b.kind)
+        ).toEqual(Array(bindingNames.length).fill('const'));
       }
     });
 
-    expect.assertions(2 * 2);
+    expect.assertions(3 * 3);
   });
 });
 
@@ -130,7 +235,7 @@ describe('constant violations', () => {
     expect.assertions(2 + 6);
   });
 
-  test('in `for..in` and `for..of` statement', () => {
+  test('in for..in and for..of statement', () => {
     const ast = parseModule(`
       for ({ a, b: [c, { d }], e: f = 0, ...g } in x);
       for ({ a, b: [c, { d }], e: f = 0, ...g } of x);
