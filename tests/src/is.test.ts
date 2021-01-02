@@ -20,6 +20,11 @@ describe('node type', () => {
     expect.assertions(2);
   });
 
+  test('returns false if null or undefined', () => {
+    expect(is.function(null)).toBe(false);
+    expect(is.ifStatement(undefined)).toBe(false);
+  });
+
   describe('matcher', () => {
     test('primitive value', () => {
       const identifier: t.Node = { type: 'Identifier', name: 'x' };
@@ -53,6 +58,11 @@ describe('alias', () => {
     });
 
     expect.assertions(2);
+  });
+
+  test('returns false if null or undefined', () => {
+    expect(is.function(null)).toBe(false);
+    expect(is.ifStatement(undefined)).toBe(false);
   });
 
   describe('matcher', () => {
