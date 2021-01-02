@@ -154,8 +154,8 @@ describe('label', () => {
   });
 });
 
-describe('binding registration from variable declaration', () => {
-  test('variable declaration', () => {
+describe('binding registration', () => {
+  test('from variable declaration', () => {
     const ast = parseModule(`
       const { a, b: [c, { d }], e: f = 0, ...g } = x;
     `);
@@ -172,7 +172,62 @@ describe('binding registration from variable declaration', () => {
     expect.assertions(3);
   });
 
-  test('in for, for..in and for..of statement', () => {
+  test('from ImportSpecifier', () => {
+    const ast = parseModule(`
+      import { a as b } from '';
+    `);
+
+    traverse(ast, {
+      Program(path) {
+        const { a: aBinding, b: bBinding } = path.scope.bindings;
+        expect(aBinding).toBeUndefined();
+        expect(bBinding.kind).toBe('module');
+        expect(bBinding.identifierPath.type).toBe('Identifier');
+        expect(bBinding.identifierPath.node.name).toBe('b');
+        expect(bBinding.path.type).toBe('ImportSpecifier');
+      }
+    });
+
+    expect.assertions(5);
+  });
+
+  test('from ImportDefaultSpecifier', () => {
+    const ast = parseModule(`
+      import a from '';
+    `);
+
+    traverse(ast, {
+      Program(path) {
+        const binding = path.scope.bindings.a;
+        expect(binding.kind).toBe('module');
+        expect(binding.identifierPath.type).toBe('Identifier');
+        expect(binding.identifierPath.node.name).toBe('a');
+        expect(binding.path.type).toBe('ImportDefaultSpecifier');
+      }
+    });
+
+    expect.assertions(4);
+  });
+
+  test('from ImportNamespaceSpecifier', () => {
+    const ast = parseModule(`
+      import * as a from '';
+    `);
+
+    traverse(ast, {
+      Program(path) {
+        const binding = path.scope.bindings.a;
+        expect(binding.kind).toBe('module');
+        expect(binding.identifierPath.type).toBe('Identifier');
+        expect(binding.identifierPath.node.name).toBe('a');
+        expect(binding.path.type).toBe('ImportNamespaceSpecifier');
+      }
+    });
+
+    expect.assertions(4);
+  });
+
+  test('from for, for..in and for..of statement', () => {
     const ast = parseModule(`
       for (var { a, b: [c, { d }], e: f = 0, ...g } = x;;);
       for (let { h, i: [j, { k }], l: m = 0, ...n } in x);
@@ -207,6 +262,98 @@ describe('binding registration from variable declaration', () => {
     });
 
     expect.assertions(3 * 3);
+  });
+
+  test('from FunctionDeclaration', () => {
+    const ast = parseModule(`
+      {
+        function fnDec() {}
+      }
+    `);
+
+    traverse(ast, {
+      BlockStatement(path) {
+        if (path.parent.type !== 'Program') return;
+        const fnBinding = path.scope.bindings.fnDec;
+        expect(fnBinding.kind).toBe('hoisted');
+        expect(fnBinding.identifierPath.type).toBe('Identifier');
+        expect(fnBinding.identifierPath.node.name).toBe('fnDec');
+        expect(fnBinding.path.type).toBe('FunctionDeclaration');
+      }
+    });
+
+    expect.assertions(4);
+  });
+
+  test('from ClassDeclaration', () => {
+    const ast = parseModule(`
+      {
+        class classDec {}
+      }
+    `);
+
+    traverse(ast, {
+      BlockStatement(path) {
+        if (path.parent.type !== 'Program') return;
+        const classBinding = path.scope.bindings.classDec;
+        expect(classBinding.kind).toBe('hoisted');
+        expect(classBinding.identifierPath.type).toBe('Identifier');
+        expect(classBinding.identifierPath.node.name).toBe('classDec');
+        expect(classBinding.path.type).toBe('ClassDeclaration');
+      }
+    });
+
+    expect.assertions(4);
+  });
+
+  test('from FunctionExpression', () => {
+    const ast = parseModule(`
+      {
+        ({ prop: function fnExp() {} })
+      }
+    `);
+
+    traverse(ast, {
+      BlockStatement(path) {
+        if (path.parent.type !== 'Program') return;
+        const fnBinding = path.scope.bindings.fnExp;
+        expect(fnBinding).toBeUndefined();
+      },
+      FunctionExpression(path) {
+        const fnBinding = path.scope.bindings.fnExp;
+        expect(fnBinding.kind).toBe('local');
+        expect(fnBinding.identifierPath.type).toBe('Identifier');
+        expect(fnBinding.identifierPath.node.name).toBe('fnExp');
+        expect(fnBinding.path.type).toBe('FunctionExpression');
+      }
+    });
+
+    expect.assertions(5);
+  });
+
+  test('from ClassExpression', () => {
+    const ast = parseModule(`
+      {
+        ({ prop: class classExp {} })
+      }
+    `);
+
+    traverse(ast, {
+      BlockStatement(path) {
+        if (path.parent.type !== 'Program') return;
+        const classBinding = path.scope.bindings.fn;
+        expect(classBinding).toBeUndefined();
+      },
+      ClassExpression(path) {
+        const classBinding = path.scope.bindings.classExp;
+        expect(classBinding.kind).toBe('local');
+        expect(classBinding.identifierPath.type).toBe('Identifier');
+        expect(classBinding.identifierPath.node.name).toBe('classExp');
+        expect(classBinding.path.type).toBe('ClassExpression');
+      }
+    });
+
+    expect.assertions(5);
   });
 });
 
