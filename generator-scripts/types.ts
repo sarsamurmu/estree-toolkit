@@ -10,13 +10,12 @@ const content = `
 // Generated file. Do not modify by hands.
 // Run "npm run generate" to re-generate this file.
 
-import { ${typesToExport.join(', ')} } from 'estree';
 export {
   Node,
   SimpleLiteral,
   RegExpLiteral
 } from 'estree';
-export { ${typesToExport.join(', ')} }
+export { ${typesToExport.join(', ')} } from 'estree';
 `.trim();
 
 fs.writeFileSync(path.join(__dirname, '../src/generated/types.ts'), content);
