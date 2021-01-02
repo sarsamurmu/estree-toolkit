@@ -7,6 +7,7 @@ import { Node } from 'estree';
  * 
  * This function would never get called in reality, if your code is correct
 */
+/* istanbul ignore next */
 export const assertNever = (x: never) => x;
 
 export type NodeMap = { [N in Node as `${N['type']}`]: N; }
