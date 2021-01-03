@@ -721,15 +721,16 @@ const findVisiblePathsInPattern = (
   }
 }
 
-const registerVariableDeclaration = (path: NodePath<NodeT<'VariableDeclaration'>>, scope: Scope) => {
-  const kind = path.node!.kind;
-  const declarators = path.get('declarations');
-  for (let i = 0; i < declarators.length; i++) {
-    const identifierPaths: NodePath<Identifier>[] = [];
-    findVisiblePathsInPattern(declarators[i].get('id'), identifierPaths);
-    for (let j = 0; j < identifierPaths.length; j++) {
-      scope.registerBinding(kind, identifierPaths[j], declarators[i]);
-    }
+const registerBindingFromPattern = <T extends BindingKind>(
+  path: NodePath<Pattern>,
+  scope: Scope,
+  kind: T,
+  bindingPath: BindingPathT<T>
+) => {
+  const identifierPaths: NodePath<Identifier>[] = [];
+  findVisiblePathsInPattern(path, identifierPaths);
+  for (let i = 0; i < identifierPaths.length; i++) {
+    scope.registerBinding(kind, identifierPaths[i], bindingPath);
   }
 }
 
@@ -738,6 +739,15 @@ const registerConstantViolationFromPattern = (path: NodePath<Pattern>, state: Cr
   findVisiblePathsInPattern(path, identifierPaths);
   for (let i = 0; i < identifierPaths.length; i++) {
     state.constantViolations.push(identifierPaths[i]);
+  }
+}
+
+const registerVariableDeclaration = (path: NodePath<NodeT<'VariableDeclaration'>>, scope: Scope) => {
+  const kind = path.node!.kind;
+  const declarators = path.get('declarations');
+  for (let i = 0; i < declarators.length; i++) {
+    const declarator = declarators[i];
+    registerBindingFromPattern(declarator.get('id'), scope, kind, declarator);
   }
 }
 
@@ -802,17 +812,10 @@ const crawlerVisitor: {
   }
 }
 
-const registerParam = (path: NodePath<Pattern>, scope: Scope, kind: BindingKind = 'param') => {
-  const identifierPaths: NodePath<Identifier>[] = [];
-  findVisiblePathsInPattern(path, identifierPaths);
-  for (let i = 0; i < identifierPaths.length; i++) {
-    scope.registerBinding(kind, identifierPaths[i], path as NodePath<any>);
-  }
-}
-
-const registerParams = (paths: NodePath<Pattern>[], scope: Scope) => {
+const registerFunctionParams = (paths: NodePath<Pattern>[], scope: Scope) => {
   for (let i = 0; i < paths.length; i++) {
-    registerParam(paths[i], scope);
+    const path = paths[i];
+    registerBindingFromPattern(path, scope, 'param', path);
   }
 }
 
@@ -833,7 +836,7 @@ const scopePathCrawlers: {
       // Skip it as we have already gathered information from it
       id.skip();
     }
-    registerParams(path.get('params'), scope);
+    registerFunctionParams(path.get('params'), scope);
   },
   ClassDeclaration(path, { scope }) {
     // ? Register `unknown` binding if `id` is null
@@ -850,7 +853,7 @@ const scopePathCrawlers: {
       scope.registerBinding('local', id, path);
       id.skip();
     }
-    registerParams(path.get('params'), scope);
+    registerFunctionParams(path.get('params'), scope);
   },
   ClassExpression(path, { scope }) {
     if (path.node!.id != null) {
@@ -860,10 +863,10 @@ const scopePathCrawlers: {
     }
   },
   ArrowFunctionExpression(path, { scope }) {
-    registerParams(path.get('params'), scope);
+    registerFunctionParams(path.get('params'), scope);
   },
   CatchClause(path, { scope }) {
-    registerParam(path.get('param'), scope, 'let');
+    registerBindingFromPattern(path.get('param'), scope, 'let', path);
   },
   BlockStatement(path, { scope }) {
     if (path.parent != null && path.parent.type === 'LabeledStatement') {

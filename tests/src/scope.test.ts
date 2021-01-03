@@ -308,14 +308,11 @@ describe('binding registration', () => {
 
   test('from FunctionExpression', () => {
     const ast = parseModule(`
-      {
-        ({ prop: function fnExp() {} })
-      }
+      (function fnExp() {})
     `);
 
     traverse(ast, {
-      BlockStatement(path) {
-        if (path.parent.type !== 'Program') return;
+      Program(path) {
         const fnBinding = path.scope.bindings.fnExp;
         expect(fnBinding).toBeUndefined();
       },
@@ -333,14 +330,11 @@ describe('binding registration', () => {
 
   test('from ClassExpression', () => {
     const ast = parseModule(`
-      {
-        ({ prop: class classExp {} })
-      }
+      (class classExp {})
     `);
 
     traverse(ast, {
-      BlockStatement(path) {
-        if (path.parent.type !== 'Program') return;
+      Program(path) {
         const classBinding = path.scope.bindings.fn;
         expect(classBinding).toBeUndefined();
       },
@@ -354,6 +348,53 @@ describe('binding registration', () => {
     });
 
     expect.assertions(5);
+  });
+
+  test('from function parameters', () => {
+    const ast = parseModule(`
+      function fn({ a, b: c }, [d, e], f = 0, ...g) {}
+
+      (function ({ h, i: j }, [k, l], m = 0, ...n) {})
+    `);
+
+    traverse(ast, {
+      FunctionDeclaration(path) {
+        const bindingNames = Object.keys(path.scope.bindings);
+        expect(bindingNames).toHaveLength(6);
+        expect(bindingNames).toEqual(expect.arrayContaining(['a', 'c', 'd', 'e', 'f', 'g']));
+        expect(
+          Object.values(path.scope.bindings).map((b) => b.kind)
+        ).toEqual(Array(bindingNames.length).fill('param'));
+      },
+      FunctionExpression(path) {
+        const bindingNames = Object.keys(path.scope.bindings);
+        expect(bindingNames).toHaveLength(6);
+        expect(bindingNames).toEqual(expect.arrayContaining(['h', 'j', 'k', 'l', 'm', 'n']));
+        expect(
+          Object.values(path.scope.bindings).map((b) => b.kind)
+        ).toEqual(Array(bindingNames.length).fill('param'));
+      }
+    });
+
+    expect.assertions(2 * 3);
+  });
+
+  test('from CatchClause', () => {
+    const ast = parseModule(`
+      try {} catch ({ message }) {}
+    `);
+
+    traverse(ast, {
+      CatchClause(path) {
+        const binding = path.scope.bindings.message;
+        expect(binding.kind).toBe('let');
+        expect(binding.identifierPath.type).toBe('Identifier');
+        expect(binding.identifierPath.node.name).toBe('message');
+        expect(binding.path.type).toBe('CatchClause');
+      }
+    });
+
+    expect.assertions(4);
   });
 });
 
