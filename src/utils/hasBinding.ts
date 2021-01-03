@@ -5,9 +5,9 @@ import {
   Statement,
   ModuleDeclaration
 } from 'estree';
-import { NodeMap } from './internal-utils';
+import { NodeMap } from '../internal-utils';
 
-import { NodePath } from './nodepath';
+import { NodePath } from '../nodepath';
 
 export const hasBinding = (() => {
   const findInPattern = (node: Pattern, bindingName: string): boolean => {
