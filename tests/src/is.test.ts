@@ -21,7 +21,7 @@ describe('node type', () => {
   });
 
   test('returns false if null or undefined', () => {
-    expect(is.function(null)).toBe(false);
+    expect(is.literal(null)).toBe(false);
     expect(is.ifStatement(undefined)).toBe(false);
   });
 
@@ -62,7 +62,7 @@ describe('alias', () => {
 
   test('returns false if null or undefined', () => {
     expect(is.function(null)).toBe(false);
-    expect(is.ifStatement(undefined)).toBe(false);
+    expect(is.pattern(undefined)).toBe(false);
   });
 
   describe('matcher', () => {
