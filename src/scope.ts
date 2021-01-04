@@ -154,7 +154,9 @@ const identifierCrawlers: {
   FunctionDeclaration(key) {
     switch (key) {
       case 'id':
-        throw new Error('This should be handled by `scopePathCrawlers.FunctionDeclaration`');
+        // Handled by `crawlerVisitor.ClassDeclaration`
+        // Do nothing
+        break;
       default: assertNever(key);
     }
   },
@@ -328,7 +330,9 @@ const identifierCrawlers: {
     switch (key) {
       /* istanbul ignore next */
       case 'id':
-        throw new Error('This should be handled by `scopePathCrawlers.ClassDeclaration`');
+        // Handled by `crawlerVisitor.ClassDeclaration`
+        // Do nothing
+        break;
       case 'superClass':
         state.references.push(path);
         break;
@@ -787,27 +791,60 @@ const crawlerVisitor: {
 
 {
   type VisitorType = ExpandedVisitor<NodeMap[ScopedNode], CrawlerState>;
-  type CrawlerVisitors = Record<ScopedNode, VisitorType>;
+  type CrawlerVisitors = {
+    [K in ScopedNode]: ExpandedVisitor<NodeT<K>, CrawlerState>;
+  }
   const cVisitors = crawlerVisitor as any as CrawlerVisitors;
+  const visitor: VisitorType = {
+    enter(path, state) {
+      // Stop crawling whenever a scoped node is found
+      // children will handle the further crawling
+      state.childScopedPaths.push(path);
+      path.skip();
+    }
+  };
 
   for (let i = 0; i < scopedNodeTypes.length; i++) {
-    cVisitors[scopedNodeTypes[i]] = {
-      enter(path, state) {
-        // Stop crawling whenever a scoped node is found
-        // children will handle the further crawling
-        state.childScopedPaths.push(path);
-        path.skip();
+    cVisitors[scopedNodeTypes[i]] = visitor;
+  }
+
+  // `crawlerVisitor` stops whenever it founds `FunctionDeclaration`
+  // so it never gets the chance to register the function declaration
+  // We are making an exception to handle the case
+  cVisitors.FunctionDeclaration = {
+    enter(path, state) {
+      // ? Register `unknown` binding if `id` is null
+      if (path.node!.id != null) {
+        const id = path.get('id');
+        state.scope.registerBinding('hoisted', id, path);
+        // Skip it as we have already gathered information from it
+        id.skip();
       }
+      visitor.enter!(path, state);
+    }
+  }
+
+  // See `FunctionDeclaration`s comments
+  cVisitors.ClassDeclaration = {
+    enter(path, state) {
+      // ? Register `unknown` binding if `id` is null
+      if (path.node!.id != null) {
+        const id = path.get('id');
+        state.scope.registerBinding('hoisted', id, path);
+        id.skip();
+      }
+      visitor.enter!(path, state);
     }
   }
 
   // But things are kind of different for `BlockStatement`
   //                - (see the comments of `shouldBlockStatementMakeScope` function)
   // This is the workaround for the case
-  const defaultEnterFn = cVisitors.BlockStatement.enter!;
-  cVisitors.BlockStatement.enter = (path, state) => {
-    if (shouldBlockStatementMakeScope(path.parent)) {
-      defaultEnterFn(path, state);
+  cVisitors.BlockStatement = {
+    enter(path, state) {
+      if (shouldBlockStatementMakeScope(path.parent)) {
+        visitor.enter!(path, state);
+      }
     }
   }
 }
@@ -826,27 +863,9 @@ const scopePathCrawlers: {
 } = {
   Program: null,
   FunctionDeclaration(path, { scope }) {
-    // ? Register `unknown` binding if `id` is null
-    if (path.node!.id != null) {
-      const id = path.get('id');
-      // `crawlerVisitor` stops whenever it founds `FunctionDeclaration`
-      // so it never gets the chance to register the function declaration
-      // Register it to the parent
-      scope.parent!.registerBinding('hoisted', id, path);
-      // Skip it as we have already gathered information from it
-      id.skip();
-    }
     registerFunctionParams(path.get('params'), scope);
   },
-  ClassDeclaration(path, { scope }) {
-    // ? Register `unknown` binding if `id` is null
-    if (path.node!.id != null) {
-      const id = path.get('id');
-      // See `FunctionDeclaration`s comments
-      scope.parent!.registerBinding('hoisted', id, path);
-      id.skip();
-    }
-  },
+  ClassDeclaration: null,
   FunctionExpression(path, { scope }) {
     if (path.node!.id != null) {
       const id = path.get('id');
