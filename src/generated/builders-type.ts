@@ -6,7 +6,7 @@ import { Identifier, Literal, Program, FunctionDeclaration, FunctionExpression, 
 export type Builders = {
   identifier(name: Identifier['name']): Identifier;
   literal(value: Literal['value']): Literal;
-  program(body: Program['body']): Program;
+  program(body: Program['body'], sourceType?: Program['sourceType'], comments?: Program['comments']): Program;
   functionDeclaration(id: FunctionDeclaration['id'], params: FunctionDeclaration['params'], body: FunctionDeclaration['body'], generator?: FunctionDeclaration['generator'], async?: FunctionDeclaration['async']): FunctionDeclaration;
   functionExpression(id: FunctionExpression['id'], params: FunctionExpression['params'], body: FunctionExpression['body'], generator?: FunctionExpression['generator'], async?: FunctionExpression['async']): FunctionExpression;
   arrowFunctionExpression(params: ArrowFunctionExpression['params'], body: ArrowFunctionExpression['body'], expression?: ArrowFunctionExpression['expression'], async?: ArrowFunctionExpression['async']): ArrowFunctionExpression;
@@ -30,7 +30,7 @@ export type Builders = {
   doWhileStatement(test: DoWhileStatement['test'], body: DoWhileStatement['body']): DoWhileStatement;
   forStatement(init: ForStatement['init'], test: ForStatement['test'], update: ForStatement['update'], body: ForStatement['body']): ForStatement;
   forInStatement(left: ForInStatement['left'], right: ForInStatement['right'], body: ForInStatement['body']): ForInStatement;
-  forOfStatement(left: ForOfStatement['left'], right: ForOfStatement['right'], body: ForOfStatement['body']): ForOfStatement;
+  forOfStatement(left: ForOfStatement['left'], right: ForOfStatement['right'], body: ForOfStatement['body'], await: ForOfStatement['await']): ForOfStatement;
   variableDeclaration(kind: VariableDeclaration['kind'], declarations: VariableDeclaration['declarations']): VariableDeclaration;
   classDeclaration(id: ClassDeclaration['id'], body: ClassDeclaration['body'], superClass?: ClassDeclaration['superClass']): ClassDeclaration;
   thisExpression(): ThisExpression;

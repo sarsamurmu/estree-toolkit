@@ -1,7 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 
-import { definitions } from '../src/definitions';
+import { Definition, DefinitionField, definitions, getFieldsOf } from '../src/definitions';
 
 let content = '';
 const nodeNames = Object.keys(definitions);
@@ -24,12 +24,17 @@ import { ${nodeNames.join(', ')} } from 'estree';
 
 content += '\n\nexport type Builders = {\n';
 
+const defaultKey: keyof DefinitionField<any, any> = 'default';
 nodeNames.forEach((nodeName) => {
-  const fields = definitions[nodeName];
+  const definition: Definition = definitions[nodeName];
   const lowerCasedTypeName = nodeName[0].toLowerCase() + nodeName.slice(1);
-  const parameters = fields.map(({ key, optional, type }) => {
-    return `${(isReserved(key) ? '_' : '') + key}${optional ? '?' : ''}: ${type || `${nodeName}['${key}']` }`
+  const parameters = getFieldsOf(definition, 'builder').map((fieldName) => {
+    const field: DefinitionField<any, any> = definition.fields[fieldName];
+    const optional = defaultKey in field;
+
+    return `${(isReserved(fieldName) ? '_' : '') + fieldName}${optional ? '?' : ''}: ${field.type || `${nodeName}['${fieldName}']` }`
   }).join(', ');
+
   content += `  ${lowerCasedTypeName}(${parameters}): ${nodeName};\n`;
 });
 

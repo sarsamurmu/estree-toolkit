@@ -2,303 +2,746 @@
 
 import { Node, BaseNode } from 'estree';
 
-export type BaseFieldData<
-  KeyT = string,
-  NodeT = Node,
-  DefaultT = any
-> = Readonly<{
-  key: KeyT;
-  validate?: (value: any) => void; // TODO: Make it required
+type NodeKeys<N> = Exclude<keyof N, keyof BaseNode>;
+
+export type DefinitionIndex<T> = T extends true
+  ? number | [builderIndex: number | false, visitIndex: number | false]
+  : false | [builderIndex: number | false, visitIndex: false];
+
+export type DefinitionField<N, V> = {
+  validate?: (value: V) => boolean; // Make it required
+  default?: V | ((node: N) => V);
   type?: string;
-} & ({
-  optional?: undefined;
-} | {
-  optional: true;
-  default: DefaultT | ((node: NodeT) => DefaultT)
-})>;
-
-type FieldData<
-  N extends Node,
-  K extends keyof N = Exclude<keyof N, keyof BaseNode>
-> = BaseFieldData<K, N, N[K]>;
-
-type _Definitions = Readonly<{
-  [K in Node as `${K['type']}`]: FieldData<K>[];
-}>;
-
-// eslint-disable-next-line @typescript-eslint/no-empty-interface
-interface Definitions extends _Definitions { }
-
-export const definitions: Definitions = {
-  Identifier: [
-    { key: 'name' }
-  ],
-  Literal: [
-    { key: 'value' }
-  ],
-  Program: [
-    { key: 'body' }
-  ],
-  FunctionDeclaration: [
-    { key: 'id' },
-    { key: 'params' },
-    { key: 'body' },
-    { key: 'generator', optional: true, default: false },
-    { key: 'async', optional: true, default: false }
-  ],
-  FunctionExpression: [
-    { key: 'id' },
-    { key: 'params' },
-    { key: 'body' },
-    { key: 'generator', optional: true, default: false },
-    { key: 'async', optional: true, default: false }
-  ],
-  ArrowFunctionExpression: [
-    { key: 'params' },
-    { key: 'body' },
-    { key: 'expression', optional: true, default: false },
-    { key: 'async', optional: true, default: false }
-  ],
-  SwitchCase: [
-    { key: 'test' },
-    { key: 'consequent' }
-  ],
-  CatchClause: [
-    { key: 'param' },
-    { key: 'body' }
-  ],
-  VariableDeclarator: [
-    { key: 'id' },
-    { key: 'init', optional: true, default: null }
-  ],
-  ExpressionStatement: [
-    { key: 'expression' }
-  ],
-  BlockStatement: [
-    { key: 'body' }
-  ],
-  EmptyStatement: [],
-  DebuggerStatement: [],
-  WithStatement: [
-    { key: 'object' },
-    { key: 'body' }
-  ],
-  ReturnStatement: [
-    { key: 'argument', optional: true, default: null }
-  ],
-  LabeledStatement: [
-    { key: 'label' },
-    { key: 'body' }
-  ],
-  BreakStatement: [
-    { key: 'label', optional: true, default: null }
-  ],
-  ContinueStatement: [
-    { key: 'label', optional: true, default: null }
-  ],
-  IfStatement: [
-    { key: 'test' },
-    { key: 'consequent' },
-    { key: 'alternate', optional: true, default: null }
-  ],
-  SwitchStatement: [
-    { key: 'discriminant' },
-    { key: 'cases' }
-  ],
-  ThrowStatement: [
-    { key: 'argument' }
-  ],
-  TryStatement: [
-    { key: 'block' },
-    { key: 'handler' },
-    { key: 'finalizer', optional: true, default: null }
-  ],
-  WhileStatement: [
-    { key: 'test' },
-    { key: 'body' }
-  ],
-  DoWhileStatement: [
-    { key: 'test' },
-    { key: 'body' }
-  ],
-  ForStatement: [
-    { key: 'init' },
-    { key: 'test' },
-    { key: 'update' },
-    { key: 'body' }
-  ],
-  ForInStatement: [
-    { key: 'left' },
-    { key: 'right' },
-    { key: 'body' }
-  ],
-  ForOfStatement: [
-    { key: 'left' },
-    { key: 'right' },
-    { key: 'body' }
-  ],
-  VariableDeclaration: [
-    { key: 'kind' },
-    { key: 'declarations' }
-  ],
-  ClassDeclaration: [
-    { key: 'id' },
-    { key: 'body' },
-    { key: 'superClass', optional: true, default: null }
-  ],
-  ThisExpression: [],
-  ArrayExpression: [
-    { key: 'elements' }
-  ],
-  ObjectExpression: [
-    { key: 'properties' }
-  ],
-  YieldExpression: [
-    { key: 'argument' },
-    { key: 'delegate', optional: true, default: false }
-  ],
-  UnaryExpression: [
-    { key: 'operator' },
-    { key: 'argument' },
-    { key: 'prefix', optional: true, default: true }
-  ],
-  UpdateExpression: [
-    { key: 'operator' },
-    { key: 'argument' },
-    { key: 'prefix' }
-  ],
-  BinaryExpression: [
-    { key: 'operator' },
-    { key: 'left' },
-    { key: 'right' }
-  ],
-  AssignmentExpression: [
-    { key: 'operator' },
-    { key: 'left' },
-    { key: 'right' }
-  ],
-  LogicalExpression: [
-    { key: 'operator' },
-    { key: 'left' },
-    { key: 'right' }
-  ],
-  MemberExpression: [
-    { key: 'object' },
-    { key: 'property' },
-    { key: 'computed', optional: true, default: false },
-    { key: 'optional', optional: true, default: false }
-  ],
-  ConditionalExpression: [
-    { key: 'test' },
-    { key: 'consequent' },
-    { key: 'alternate' }
-  ],
-  CallExpression: [
-    { key: 'callee' },
-    { key: 'arguments' },
-    { key: 'optional', optional: true, default: false, type: 'boolean' }
-  ],
-  NewExpression: [
-    { key: 'callee' },
-    { key: 'arguments' }
-  ],
-  SequenceExpression: [
-    { key: 'expressions' }
-  ],
-  TemplateLiteral: [
-    { key: 'quasis' },
-    { key: 'expressions' }
-  ],
-  TaggedTemplateExpression: [
-    { key: 'tag' },
-    { key: 'quasi' }
-  ],
-  ClassExpression: [
-    { key: 'id' },
-    { key: 'body' },
-    { key: 'superClass', optional: true, default: null }
-  ],
-  MetaProperty: [
-    { key: 'meta' },
-    { key: 'property' }
-  ],
-  AwaitExpression: [
-    { key: 'argument' }
-  ],
-  ImportExpression: [
-    { key: 'source' }
-  ],
-  ChainExpression: [
-    { key: 'expression' }
-  ],
-  Property: [
-    { key: 'kind' },
-    { key: 'key' },
-    { key: 'value' },
-    { key: 'computed', optional: true, default: false },
-    { key: 'shorthand', optional: true, default: false }
-  ],
-  Super: [],
-  TemplateElement: [
-    { key: 'value' },
-    { key: 'tail' }
-  ],
-  SpreadElement: [
-    { key: 'argument' }
-  ],
-  ObjectPattern: [
-    { key: 'properties' }
-  ],
-  ArrayPattern: [
-    { key: 'elements' }
-  ],
-  RestElement: [
-    { key: 'argument' }
-  ],
-  AssignmentPattern: [
-    { key: 'left' },
-    { key: 'right' }
-  ],
-  ClassBody: [
-    { key: 'body' }
-  ],
-  MethodDefinition: [
-    { key: 'kind' },
-    { key: 'key' },
-    { key: 'value' },
-    { key: 'computed', optional: true, default: false },
-    { key: 'static', optional: true, default: false }
-  ],
-  ImportDeclaration: [
-    { key: 'specifiers' },
-    { key: 'source' }
-  ],
-  ExportNamedDeclaration: [
-    { key: 'declaration' },
-    { key: 'specifiers', optional: true, default: [] },
-    { key: 'source', optional: true, default: null }
-  ],
-  ExportDefaultDeclaration: [
-    { key: 'declaration' }
-  ],
-  ExportAllDeclaration: [
-    { key: 'source' }
-  ],
-  ImportSpecifier: [
-    { key: 'imported' },
-    { key: 'local', optional: true, default: (node) => node.imported }
-  ],
-  ImportDefaultSpecifier: [
-    { key: 'local' }
-  ],
-  ImportNamespaceSpecifier: [
-    { key: 'local' }
-  ],
-  ExportSpecifier: [
-    { key: 'local' },
-    { key: 'exported', optional: true, default: (node) => node.local }
-  ]
 };
+
+export type Definition<N extends Node = Node> = {
+  indices: {
+    [K in NodeKeys<N>]: DefinitionIndex<N[K] extends Node | Node[] | undefined | null ? true : false>;
+  };
+  fields: {
+    [F in NodeKeys<N>]: DefinitionField<N, N[F]>;
+  };
+};
+
+export type Definitions = {
+  [N in Node as `${N['type']}`]: Definition<N>;
+}
+
+/** Creates a clean object without any prototype */
+const clean = <T>(obj: T): T => Object.assign(Object.create(null), obj);
+
+export const definitions: Definitions = clean<Definitions>({
+  Identifier: {
+    indices: {
+      name: [0, false]
+    },
+    fields: {
+      name: {}
+    }
+  },
+  Literal: {
+    indices: {
+      value: [0, false],
+      raw: false
+    },
+    fields: {
+      value: {},
+      raw: {}
+    }
+  },
+  Program: {
+    indices: {
+      body: 0,
+      sourceType: [1, false],
+      comments: [2, false]
+    },
+    fields: {
+      body: {},
+      sourceType: { default: 'module' },
+      comments: { default: [] }
+    }
+  },
+  FunctionDeclaration: {
+    indices: {
+      id: 0,
+      params: 1,
+      body: 2,
+      generator: [3, false],
+      async: [4, false]
+    },
+    fields: {
+      id: {},
+      params: {},
+      body: {},
+      generator: { default: false },
+      async: { default: false }
+    }
+  },
+  FunctionExpression: {
+    indices: {
+      id: 0,
+      params: 1,
+      body: 2,
+      generator: [3, false],
+      async: [4, false]
+    },
+    fields: {
+      id: {},
+      params: {},
+      body: {},
+      generator: { default: false },
+      async: { default: false }
+    }
+  },
+  ArrowFunctionExpression: {
+    indices: {
+      params: 0,
+      body: 1,
+      expression: [2, false],
+      async: [3, false],
+      generator: false
+    },
+    fields: {
+      params: {},
+      body: {},
+      expression: { default: false },
+      async: { default: false },
+      generator: {}
+    }
+  },
+  SwitchCase: {
+    indices: {
+      test: 0,
+      consequent: 1
+    },
+    fields: {
+      test: {},
+      consequent: {}
+    }
+  },
+  CatchClause: {
+    indices: {
+      param: 0,
+      body: 1
+    },
+    fields: {
+      param: {},
+      body: {}
+    }
+  },
+  VariableDeclarator: {
+    indices: {
+      id: 0,
+      init: 1
+    },
+    fields: {
+      id: {},
+      init: { default: null }
+    }
+  },
+  ExpressionStatement: {
+    indices: {
+      expression: 0
+    },
+    fields: {
+      expression: {}
+    }
+  },
+  BlockStatement: {
+    indices: {
+      body: 0,
+      innerComments: false
+    },
+    fields: {
+      body: {},
+      innerComments: {}
+    }
+  },
+  EmptyStatement: {
+    indices: {},
+    fields: {}
+  },
+  DebuggerStatement: {
+    indices: {},
+    fields: {}
+  },
+  WithStatement: {
+    indices: {
+      object: 0,
+      body: 1
+    },
+    fields: {
+      object: {},
+      body: {}
+    }
+  },
+  ReturnStatement: {
+    indices: {
+      argument: 0
+    },
+    fields: {
+      argument: { default: null }
+    }
+  },
+  LabeledStatement: {
+    indices: {
+      label: 0,
+      body: 1
+    },
+    fields: {
+      label: {},
+      body: {}
+    }
+  },
+  BreakStatement: {
+    indices: {
+      label: 0
+    },
+    fields: {
+      label: { default: null }
+    }
+  },
+  ContinueStatement: {
+    indices: {
+      label: 0
+    },
+    fields: {
+      label: { default: null }
+    }
+  },
+  IfStatement: {
+    indices: {
+      test: 0,
+      consequent: 1,
+      alternate: 2
+    },
+    fields: {
+      test: {},
+      consequent: {},
+      alternate: { default: null }
+    }
+  },
+  SwitchStatement: {
+    indices: {
+      discriminant: 0,
+      cases: 1
+    },
+    fields: {
+      discriminant: {},
+      cases: {}
+    }
+  },
+  ThrowStatement: {
+    indices: {
+      argument: 0
+    },
+    fields: {
+      argument: {}
+    }
+  },
+  TryStatement: {
+    indices: {
+      block: 0,
+      handler: 1,
+      finalizer: 2
+    },
+    fields: {
+      block: {},
+      handler: {},
+      finalizer: { default: null }
+    }
+  },
+  WhileStatement: {
+    indices: {
+      test: 0,
+      body: 1
+    },
+    fields: {
+      test: {},
+      body: {}
+    }
+  },
+  DoWhileStatement: {
+    indices: {
+      test: 0,
+      body: 1
+    },
+    fields: {
+      test: {},
+      body: {}
+    }
+  },
+  ForStatement: {
+    indices: {
+      init: 0,
+      test: 1,
+      update: 2,
+      body: 3
+    },
+    fields: {
+      init: {},
+      test: {},
+      update: {},
+      body: {}
+    }
+  },
+  ForInStatement: {
+    indices: {
+      left: 0,
+      right: 1,
+      body: 2
+    },
+    fields: {
+      left: {},
+      right: {},
+      body: {}
+    }
+  },
+  ForOfStatement: {
+    indices: {
+      left: 0,
+      right: 1,
+      body: 2,
+      await: [3, false]
+    },
+    fields: {
+      left: {},
+      right: {},
+      body: {},
+      await: {}
+    }
+  },
+  VariableDeclaration: {
+    indices: {
+      kind: [0, false],
+      declarations: 1
+    },
+    fields: {
+      kind: {},
+      declarations: {}
+    }
+  },
+  ClassDeclaration: {
+    indices: {
+      id: 0,
+      body: 2,
+      superClass: [3, 1]
+    },
+    fields: {
+      id: {},
+      body: {},
+      superClass: { default: null }
+    }
+  },
+  ThisExpression: {
+    indices: {},
+    fields: {}
+  },
+  ArrayExpression: {
+    indices: {
+      elements: 0
+    },
+    fields: {
+      elements: {}
+    }
+  },
+  ObjectExpression: {
+    indices: {
+      properties: 0
+    },
+    fields: {
+      properties: {}
+    }
+  },
+  YieldExpression: {
+    indices: {
+      argument: 0,
+      delegate: [1, false]
+    },
+    fields: {
+      argument: {},
+      delegate: { default: false }
+    }
+  },
+  UnaryExpression: {
+    indices: {
+      operator: [0, false],
+      argument: 1,
+      prefix: [2, false]
+    },
+    fields: {
+      operator: {},
+      argument: {},
+      prefix: { default: true }
+    }
+  },
+  UpdateExpression: {
+    indices: {
+      operator: [0, false],
+      argument: 1,
+      prefix: [2, false]
+    },
+    fields: {
+      operator: {},
+      argument: {},
+      prefix: {}
+    }
+  },
+  BinaryExpression: {
+    indices: {
+      operator: [0, false],
+      left: 1,
+      right: 2
+    },
+    fields: {
+      operator: {},
+      left: {},
+      right: {}
+    }
+  },
+  AssignmentExpression: {
+    indices: {
+      operator: [0, false],
+      left: 1,
+      right: 2
+    },
+    fields: {
+      operator: {},
+      left: {},
+      right: {}
+    }
+  },
+  LogicalExpression: {
+    indices: {
+      operator: [0, false],
+      left: 1,
+      right: 2
+    },
+    fields: {
+      operator: {},
+      left: {},
+      right: {}
+    }
+  },
+  MemberExpression: {
+    indices: {
+      object: 0,
+      property: 1,
+      computed: [2, false],
+      optional: [3, false]
+    },
+    fields: {
+      object: {},
+      property: {},
+      computed: { default: false },
+      optional: { default: false }
+    }
+  },
+  ConditionalExpression: {
+    indices: {
+      test: 0,
+      consequent: 1,
+      alternate: 2
+    },
+    fields: {
+      test: {},
+      consequent: {},
+      alternate: {}
+    }
+  },
+  CallExpression: {
+    indices: {
+      callee: 0,
+      arguments: 1,
+      optional: [2, false]
+    },
+    fields: {
+      callee: {},
+      arguments: {},
+      optional: { type: 'boolean', default: false }
+    }
+  },
+  NewExpression: {
+    indices: {
+      callee: 0,
+      arguments: 1
+    },
+    fields: {
+      callee: {},
+      arguments: {}
+    }
+  },
+  SequenceExpression: {
+    indices: {
+      expressions: 0
+    },
+    fields: {
+      expressions: {}
+    }
+  },
+  TemplateLiteral: {
+    indices: {
+      quasis: 0,
+      expressions: 1
+    },
+    fields: {
+      quasis: {},
+      expressions: {}
+    }
+  },
+  TaggedTemplateExpression: {
+    indices: {
+      tag: 0,
+      quasi: 1
+    },
+    fields: {
+      tag: {},
+      quasi: {}
+    }
+  },
+  ClassExpression: {
+    indices: {
+      id: 0,
+      body: 2,
+      superClass: [3, 1]
+    },
+    fields: {
+      id: {},
+      body: {},
+      superClass: { default: null }
+    }
+  },
+  MetaProperty: {
+    indices: {
+      meta: 0,
+      property: 1
+    },
+    fields: {
+      meta: {},
+      property: {}
+    }
+  },
+  AwaitExpression: {
+    indices: {
+      argument: 0
+    },
+    fields: {
+      argument: {}
+    }
+  },
+  ImportExpression: {
+    indices: {
+      source: 0
+    },
+    fields: {
+      source: {}
+    }
+  },
+  ChainExpression: {
+    indices: {
+      expression: 0
+    },
+    fields: {
+      expression: {}
+    }
+  },
+  Property: {
+    indices: {
+      kind: [0, false],
+      key: 1,
+      value: 2,
+      computed: [3, false],
+      shorthand: [4, false],
+      method: false
+    },
+    fields: {
+      kind: {},
+      key: {},
+      value: {},
+      computed: { default: false },
+      shorthand: { default: false },
+      method: {}
+    }
+  },
+  Super: {
+    indices: {},
+    fields: {}
+  },
+  TemplateElement: {
+    indices: {
+      value: [0, false],
+      tail: [1, false]
+    },
+    fields: {
+      value: {},
+      tail: {}
+    }
+  },
+  SpreadElement: {
+    indices: {
+      argument: 0
+    },
+    fields: {
+      argument: {}
+    }
+  },
+  ObjectPattern: {
+    indices: {
+      properties: 0
+    },
+    fields: {
+      properties: {}
+    }
+  },
+  ArrayPattern: {
+    indices: {
+      elements: 0
+    },
+    fields: {
+      elements: {}
+    }
+  },
+  RestElement: {
+    indices: {
+      argument: 0
+    },
+    fields: {
+      argument: {}
+    }
+  },
+  AssignmentPattern: {
+    indices: {
+      left: 0,
+      right: 1
+    },
+    fields: {
+      left: {},
+      right: {}
+    }
+  },
+  ClassBody: {
+    indices: {
+      body: 0
+    },
+    fields: {
+      body: {}
+    }
+  },
+  MethodDefinition: {
+    indices: {
+      kind: [0, false],
+      key: 1,
+      value: 2,
+      computed: [3, false],
+      static: [4, false]
+    },
+    fields: {
+      kind: {},
+      key: {},
+      value: {},
+      computed: { default: false },
+      static: { default: false }
+    }
+  },
+  ImportDeclaration: {
+    indices: {
+      specifiers: 0,
+      source: 1
+    },
+    fields: {
+      specifiers: {},
+      source: {}
+    }
+  },
+  ExportNamedDeclaration: {
+    indices: {
+      declaration: 0,
+      specifiers: 1,
+      source: 2
+    },
+    fields: {
+      declaration: {},
+      specifiers: { default: [] },
+      source: { default: null }
+    }
+  },
+  ExportDefaultDeclaration: {
+    indices: {
+      declaration: 0
+    },
+    fields: {
+      declaration: {}
+    }
+  },
+  ExportAllDeclaration: {
+    indices: {
+      source: 0
+    },
+    fields: {
+      source: {}
+    }
+  },
+  ImportSpecifier: {
+    indices: {
+      imported: 0,
+      local: 1
+    },
+    fields: {
+      imported: {},
+      local: {
+        default: (node) => node.imported
+      }
+    }
+  },
+  ImportDefaultSpecifier: {
+    indices: {
+      local: 0
+    },
+    fields: {
+      local: {}
+    }
+  },
+  ImportNamespaceSpecifier: {
+    indices: {
+      local: 0
+    },
+    fields: {
+      local: {}
+    }
+  },
+  ExportSpecifier: {
+    indices: {
+      local: 0,
+      exported: 1
+    },
+    fields: {
+      local: {},
+      exported: {
+        default: (node) => node.local
+      }
+    }
+  }
+});
+
+export const getFieldsOf = ({ indices }: Definition, type: 'builder' | 'visitor'): string[] => {
+  const fields: { name: string, index: number }[] = [];
+
+  Object.keys(indices).forEach((fieldName) => {
+    const indexValue: DefinitionIndex<true | false> = (indices as any)[fieldName];
+    if (indexValue === false) return;
+    switch (typeof indexValue) {
+      case 'number':
+        return fields.push({ name: fieldName, index: indexValue });
+      case 'object': {
+        const index = indexValue[type === 'builder' ? 0 : 1];
+        if (index === false) return;
+        return fields.push({ name: fieldName, index: index });
+      }
+    }
+  });
+
+  return fields.sort((a, b) => a.index - b.index).map(({ name }) => name);
+}
 
 type AliasMap = {
   Function: import('estree').Function;
@@ -313,13 +756,13 @@ export const aliases: {
   [K in keyof AliasMap]: {
     [X in AliasMap[K]['type']]: 0;
   }
-} = {
-  Function: {
+} = clean({
+  Function: clean({
     FunctionDeclaration: 0,
     FunctionExpression: 0,
     ArrowFunctionExpression: 0
-  },
-  Statement: {
+  }),
+  Statement: clean({
     FunctionDeclaration: 0,
     ExpressionStatement: 0,
     BlockStatement: 0,
@@ -341,13 +784,13 @@ export const aliases: {
     ForOfStatement: 0,
     VariableDeclaration: 0,
     ClassDeclaration: 0
-  },
-  Declaration: {
+  }),
+  Declaration: clean({
     FunctionDeclaration: 0,
     VariableDeclaration: 0,
     ClassDeclaration: 0
-  },
-  Expression: {
+  }),
+  Expression: clean({
     FunctionExpression: 0,
     ArrowFunctionExpression: 0,
     ClassExpression: 0,
@@ -373,17 +816,17 @@ export const aliases: {
     MetaProperty: 0,
     AwaitExpression: 0,
     ImportExpression: 0
-  },
-  Pattern: {
+  }),
+  Pattern: clean({
     Identifier: 0,
     MemberExpression: 0,
     ObjectPattern: 0,
     ArrayPattern: 0,
     RestElement: 0,
     AssignmentPattern: 0
-  },
-  Class: {
+  }),
+  Class: clean({
     ClassDeclaration: 0,
     ClassExpression: 0
-  }
-};
+  })
+});
