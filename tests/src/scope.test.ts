@@ -29,6 +29,7 @@ test('reference collection', () => {
     BinaryExpression_left + BinaryExpression_right;
     LogicalExpression_left || LogicalExpression_right;
     MemberExpression_object.x;
+    x[MemberExpression_property];
     ConditionalExpression_test ? ConditionalExpression_consequent : ConditionalExpression_alternate;
     CallExpression_callee();
     new NewExpression_callee();
@@ -38,7 +39,7 @@ test('reference collection', () => {
     import(ImportExpression_source);
     ({ [Property_key]: Property_value, x: x });
     [...SpreadElement_argument];
-    class x { fn() {} }
+    class x { methodDefinition_key() {} [MethodDefinition_key_computed]() {} }
     export default ExportDefaultDeclaration_declaration;
     export { ExportSpecifier_local as x }
 

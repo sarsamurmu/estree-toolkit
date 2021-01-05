@@ -392,7 +392,11 @@ const identifierCrawlers: {
       case 'object':
         state.references.push(path);
         break;
-      case 'property': break;
+      case 'property':
+        if (path.parent!.computed) {
+          state.references.push(path);
+        }
+        break;
       /* istanbul ignore next */
       default: assertNever(key);
     }
@@ -467,7 +471,7 @@ const identifierCrawlers: {
   Property(key, path, state) {
     switch (key) {
       case 'key':
-        if ((path.parent as NodeT<'Property'>).computed) {
+        if (path.parent!.computed) {
           state.references.push(path);
         }
         break;
@@ -495,9 +499,13 @@ const identifierCrawlers: {
       default: assertNever(key);
     }
   },
-  MethodDefinition(key) {
+  MethodDefinition(key, path, state) {
     switch (key) {
-      case 'key': break;
+      case 'key':
+        if (path.parent!.computed) {
+          state.references.push(path);
+        }
+        break;
       /* istanbul ignore next */
       default: assertNever(key);
     }
