@@ -1,6 +1,7 @@
 import { Node } from 'estree';
 
 import { Context, NodePath } from './nodepath';
+import { visitorKeys } from './definitions';
 
 export type VisitorFn<T extends Node = Node, S = unknown> = (path: NodePath<T>, state: S) => boolean | void;
 export type ExpandedVisitor<T extends Node, S> = {
@@ -40,9 +41,10 @@ export class Traverser {
   }) {
     if (data.node == null) return;
 
-    const visitor = this.visitors[data.node.type] || {};
+    const { node, state } = data;
+    const visitor = this.visitors[node.type] || {};
     const nodePath = NodePath.for({
-      node: data.node,
+      node: node,
       key: data.key,
       listKey: data.listKey,
       parentPath: data.parentPath,
@@ -55,14 +57,17 @@ export class Traverser {
       if (this.ctx.shouldSkip(nodePath)) return;
 
       if (visitor.enter != null) {
-        visitor.enter(nodePath, data.state);
+        visitor.enter(nodePath, state);
 
         if (this.ctx.shouldSkip(nodePath)) return;
       }
     }
 
-    for (const property in data.node) {
-      const value: Node | Node[] | null | undefined = (data.node as any)[property];
+    const keys = visitorKeys[node.type] || Object.keys(node);
+
+    for (let i = 0; i < keys.length; i++) {
+      const key = keys[i];
+      const value: Node | Node[] | null | undefined = (node as any)[key];
 
       if (value == null) continue;
 
@@ -71,7 +76,7 @@ export class Traverser {
           NodePath.for({
             node,
             key: index,
-            listKey: property,
+            listKey: key,
             parentPath: nodePath,
             ctx: this.ctx
           }).init()
@@ -85,23 +90,23 @@ export class Traverser {
               key: childNodePath.key,
               listKey: childNodePath.listKey,
               parentPath: childNodePath.parentPath,
-              state: data.state
+              state: state
             });
           }
         }
       } else if (typeof value.type === 'string') {
         this.visitNode({
           node: value,
-          key: property,
+          key: key,
           listKey: null,
           parentPath: nodePath,
-          state: data.state
+          state: state
         });
       }
     }
 
     if (!data.onlyChildren && visitor.leave != null) {
-      visitor.leave(nodePath, data.state);
+      visitor.leave(nodePath, state);
     }
   }
 

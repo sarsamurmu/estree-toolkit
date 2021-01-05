@@ -743,6 +743,16 @@ export const getFieldsOf = ({ indices }: Definition, type: 'builder' | 'visitor'
   return fields.sort((a, b) => a.index - b.index).map(({ name }) => name);
 }
 
+export const visitorKeys = (() => {
+  const record: Record<string, readonly string[] | undefined> = Object.create(null);
+
+  for (const nodeType in definitions) {
+    record[nodeType] = getFieldsOf((definitions as Record<string, Definition>)[nodeType], 'visitor');
+  }
+
+  return record as Readonly<typeof record>;
+})();
+
 type AliasMap = {
   Function: import('estree').Function;
   Statement: import('estree').Statement

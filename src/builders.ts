@@ -18,7 +18,7 @@ for (const key in definitions) {
   (builders as any)[lowerCasedNodeType] = (...args: any[]) => {
     const node: Record<string, unknown> = { type: nodeType };
 
-    fieldNames.forEach((fieldName, index: number) => {
+    fieldNames.forEach((fieldName, index) => {
       let shouldValidate = true;
       const field = (fields as Record<string, DefinitionField<Some, Some>>)[fieldName];
 
