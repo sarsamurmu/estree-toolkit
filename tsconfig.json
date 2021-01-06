@@ -5,7 +5,7 @@
     "target": "ES2018",
     "strict": true,
     "declaration": true,
-    "lib": ["es2018"]
+    "lib": ["ES2018"]
   },
   "include": [
     "./src/**/*"
