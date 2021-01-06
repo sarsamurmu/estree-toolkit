@@ -806,7 +806,7 @@ const crawlerVisitor: {
     [K in ScopedNode]: ExpandedVisitor<NodeT<K>, CrawlerState>;
   }
   const cVisitors = crawlerVisitor as any as CrawlerVisitors;
-  const visitor: VisitorType = {
+  const skipToChildNodeVisitor: VisitorType = {
     enter(path, state) {
       // Stop crawling whenever a scoped node is found
       // children will handle the further crawling
@@ -816,14 +816,15 @@ const crawlerVisitor: {
   };
 
   for (let i = 0; i < scopedNodeTypes.length; i++) {
-    cVisitors[scopedNodeTypes[i]] = visitor;
+    cVisitors[scopedNodeTypes[i]] = skipToChildNodeVisitor;
   }
 
-  // `crawlerVisitor` stops whenever it founds `FunctionDeclaration`
-  // so it never gets the chance to register the function declaration
+  // `crawlerVisitor` stops whenever it founds `FunctionDeclaration` or `ClassDeclaration`
+  // so it never gets the chance to register the declaration's binding
   // We are making an exception to handle the case
-  cVisitors.FunctionDeclaration = {
-    enter(path, state) {
+  cVisitors.FunctionDeclaration =
+  cVisitors.ClassDeclaration = {
+    enter(path: NodePath<NodeT<'FunctionDeclaration' | 'ClassDeclaration'>>, state) {
       // ? Register `unknown` binding if `id` is null
       if (path.node!.id != null) {
         const id = path.get('id');
@@ -831,20 +832,7 @@ const crawlerVisitor: {
         // Skip it as we have already gathered information from it
         id.skip();
       }
-      visitor.enter!(path, state);
-    }
-  }
-
-  // See `FunctionDeclaration`s comments
-  cVisitors.ClassDeclaration = {
-    enter(path, state) {
-      // ? Register `unknown` binding if `id` is null
-      if (path.node!.id != null) {
-        const id = path.get('id');
-        state.scope.registerBinding('hoisted', id, path);
-        id.skip();
-      }
-      visitor.enter!(path, state);
+      skipToChildNodeVisitor.enter!(path, state);
     }
   }
 
@@ -854,7 +842,7 @@ const crawlerVisitor: {
   cVisitors.BlockStatement = {
     enter(path, state) {
       if (shouldBlockStatementMakeScope(path.parent)) {
-        visitor.enter!(path, state);
+        skipToChildNodeVisitor.enter!(path, state);
       }
     }
   }
