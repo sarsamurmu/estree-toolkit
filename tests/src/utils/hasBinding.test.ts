@@ -5,7 +5,7 @@ import { traverse, utils as u } from '<project>';
 test('variable declaration', () => {
   const ast = parseModule(`
     let a;
-    const { b: [c, { d }], e, f = 0, ...g } = a;
+    const { b: [, c, { d }], e, f = 0, ...g } = a;
 
     {
       targetNode
@@ -31,21 +31,19 @@ test('variable declaration', () => {
 test('function parameters', () => {
   const ast = parseModule(`
     {
-      function fn(a, { b: [c, { d }], e }, f = 0, ...g) {
+      function fn(a, { b: [, c, { d }], e }, f = 0, ...g) {
         targetNode;
       }
     }
 
     {
-      ({
-        fn(a, { b: [c, { d }], e }, f = 0, ...g) {
-          targetNode;
-        }
+      (function (a, { b: [, c, { d }], e }, f = 0, ...g) {
+        targetNode;
       })
     }
 
     {
-      (a, { b: [c, { d }], e }, f = 0, ...g) => {
+      (a, { b: [, c, { d }], e }, f = 0, ...g) => {
         targetNode;
       }
     }
@@ -120,19 +118,15 @@ test('class declaration', () => {
 test('function and class expression', () => {
   const ast = parseModule(`
     {
-      ({
-        fn: function a() {
-          targetNode;
-        }
+      (function a() {
+        targetNode;
       })
     }
 
     {
-      ({
-        _class: class a {
-          constructor() {
-            targetNode;
-          }
+      (class a {
+        constructor() {
+          targetNode;
         }
       })
     }
@@ -190,11 +184,11 @@ test('for statement', () => {
 
 test('for..in and for..of statement', () => {
   const ast = parseModule(`
-    for (const { a: [b, { c }], d, e = 0, ...f } in o) {
+    for (const { a: [, b, { c }], d, e = 0, ...f } in o) {
       targetNode;
     }
 
-    for (const { a: [b, { c }], d, e = 0, ...f } of o) {
+    for (const { a: [, b, { c }], d, e = 0, ...f } of o) {
       targetNode;
     }
   `);

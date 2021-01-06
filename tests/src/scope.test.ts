@@ -158,7 +158,7 @@ describe('label', () => {
 describe('binding registration', () => {
   test('from variable declaration', () => {
     const ast = parseModule(`
-      const { a, b: [c, { d }], e: f = 0, ...g } = x;
+      const { a, b: [, c, { d }], e: f = 0, ...g } = x;
     `);
 
     traverse(ast, {
@@ -230,9 +230,9 @@ describe('binding registration', () => {
 
   test('from for, for..in and for..of statement', () => {
     const ast = parseModule(`
-      for (var { a, b: [c, { d }], e: f = 0, ...g } = x;;);
-      for (let { h, i: [j, { k }], l: m = 0, ...n } in x);
-      for (const { o, p: [q, { r }], s: t = 0, ...u } of x);
+      for (var { a, b: [, c, { d }], e: f = 0, ...g } = x;;);
+      for (let { h, i: [, j, { k }], l: m = 0, ...n } in x);
+      for (const { o, p: [, q, { r }], s: t = 0, ...u } of x);
     `);
 
     traverse(ast, {
@@ -353,9 +353,9 @@ describe('binding registration', () => {
 
   test('from function parameters', () => {
     const ast = parseModule(`
-      function fn({ a, b: c }, [d, e], f = 0, ...g) {}
+      function fn({ a, b: c }, [, d, e], f = 0, ...g) {}
 
-      (function ({ h, i: j }, [k, l], m = 0, ...n) {})
+      (function ({ h, i: j }, [, k, l], m = 0, ...n) {})
     `);
 
     traverse(ast, {
@@ -402,7 +402,7 @@ describe('binding registration', () => {
 describe('constant violations', () => {
   test('in AssignmentExpression and UpdateExpression', () => {
     const ast = parseModule(`
-      ({ a, b: [c, { d }], e: f = 0, ...g } = x);
+      ({ a, b: [, c, { d }], e: f = 0, ...g } = x);
       h++;
     `);
 
@@ -426,8 +426,8 @@ describe('constant violations', () => {
 
   test('in for..in and for..of statement', () => {
     const ast = parseModule(`
-      for ({ a, b: [c, { d }], e: f = 0, ...g } in x);
-      for ({ a, b: [c, { d }], e: f = 0, ...g } of x);
+      for ({ a, b: [, c, { d }], e: f = 0, ...g } in x);
+      for ({ a, b: [, c, { d }], e: f = 0, ...g } of x);
     `);
 
     traverse(ast, {

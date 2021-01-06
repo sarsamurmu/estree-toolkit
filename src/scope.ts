@@ -711,8 +711,11 @@ const findVisiblePathsInPattern = (
     }
 
     case 'ArrayPattern': {
-      const elementPaths = (path as NodePath<NodeT<'ArrayPattern'>>).get('elements');
+      const aPath = (path as NodePath<NodeT<'ArrayPattern'>>);
+      const elementPaths = aPath.get('elements');
+      const elements = aPath.node!.elements;
       for (let i = 0; i < elementPaths.length; i++) {
+        if (elements[i] == null) continue;
         findVisiblePathsInPattern(elementPaths[i], result);
       }
       break;

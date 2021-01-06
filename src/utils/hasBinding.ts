@@ -5,9 +5,9 @@ import {
   Statement,
   ModuleDeclaration
 } from 'estree';
-import { NodeMap } from '../internal-utils';
 
 import { NodePath } from '../nodepath';
+import { NodeMap } from '../internal-utils';
 
 export const hasBinding = (() => {
   const findInPattern = (node: Pattern, bindingName: string): boolean => {
@@ -15,9 +15,10 @@ export const hasBinding = (() => {
       case 'Identifier':
         return node.name === bindingName;
       
-      case 'ObjectPattern':
-        for (let i = 0; i < node.properties.length; i++) {
-          const property = node.properties[i];
+      case 'ObjectPattern': {
+        const { properties } = node;
+        for (let i = 0; i < properties.length; i++) {
+          const property = properties[i];
           if (property.type === 'RestElement') {
             if (findInPattern(property.argument, bindingName)) return true;
           } else {
@@ -35,12 +36,16 @@ export const hasBinding = (() => {
           }
         }
         break;
+      }
       
-      case 'ArrayPattern':
-        for (let i = 0; i < node.elements.length; i++) {
-          if (findInPattern(node.elements[i], bindingName)) return true;
+      case 'ArrayPattern': {
+        const { elements } = node;
+        for (let i = 0; i < elements.length; i++) {
+          if (elements[i] == null) continue;
+          if (findInPattern(elements[i], bindingName)) return true;
         }
         break;
+      }
       
       case 'RestElement':
         return findInPattern(node.argument, bindingName);
