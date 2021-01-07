@@ -1,7 +1,7 @@
 import { Node } from 'estree';
 
 import { Context, NodePath } from './nodepath';
-import { visitorKeys } from './definitions';
+import { aliases, visitorKeys } from './definitions';
 
 export type VisitorFn<T extends Node = Node, S = unknown> = (path: NodePath<T>, state: S) => boolean | void;
 export type ExpandedVisitor<T extends Node, S> = {
@@ -111,21 +111,49 @@ export class Traverser {
   }
 
   static expandVisitors<S = unknown>(visitors: Visitors<S>): ExpandedVisitors<S> {
-    const expandedVisitors: ExpandedVisitors = {};
+    const enterFns: Record<string, VisitorFn[]> = Object.create(null);
+    const leaveFns: Record<string, VisitorFn[]> = Object.create(null);
 
-    for (const keyName in visitors) {
-      const keys = keyName.split('|');
-      const visitor: VisitorFn<Node> = (visitors as any)[keyName];
+    // You can use functional approach here
+    // Because this code won't run many times like other code does
+
+    Object.keys(visitors).forEach((keyName) => {
+      const keys = ([] as string[]).concat(...keyName.split('|').map(
+        (key) => key in aliases ? Object.keys((aliases as any)[key]) : [key]
+      ));
+      const visitor = (visitors as Record<string, Visitor<Node>>)[keyName];
       if (typeof visitor == 'function') {
-        for (let i = 0; i < keys.length; i++) {
-          expandedVisitors[keys[i]] = { enter: visitor };
-        }
+        keys.forEach((key) => {
+          (enterFns[key] ||= []).push(visitor);
+        });
       } else if (typeof visitor == 'object') {
-        for (let i = 0; i < keys.length; i++) {
-          expandedVisitors[keys[i]] = visitor;
-        }
+        keys.forEach((key) => {
+          if (visitor.enter != null) {
+            (enterFns[key] ||= []).push(visitor.enter);
+          }
+          if (visitor.leave != null) {
+            (leaveFns[key] ||= []).push(visitor.leave);
+          }
+        });
       }
+    });
+
+    const expandedVisitors: ExpandedVisitors = Object.create(null);
+
+    // We are using transducers to merge up all `enterFns` and `leaveFns`
+    const reducer = (nextFn: VisitorFn, fn: VisitorFn): VisitorFn => (path, state) => {
+      fn(path, state);
+      // Don't call next function if the path has been removed
+      if (path.removed) return;
+      nextFn(path, state);
     }
+    
+    Object.keys(enterFns).forEach((key) => {
+      (expandedVisitors[key] ||= {}).enter = enterFns[key].reduceRight(reducer);
+    });
+    Object.keys(leaveFns).forEach((key) => {
+      (expandedVisitors[key] ||= {}).leave = leaveFns[key].reduceRight(reducer);
+    });
 
     return expandedVisitors;
   }
