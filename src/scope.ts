@@ -1022,8 +1022,7 @@ export class Scope {
           binding.addReference(path);
         } else {
           (
-            globalBindings[bindingName] ||
-            (globalBindings[bindingName] = new GlobalBinding({ name: bindingName }))
+            globalBindings[bindingName] ||= new GlobalBinding({ name: bindingName })
           ).addReference(path);
         }
       }
@@ -1039,8 +1038,7 @@ export class Scope {
           binding.addConstantViolation(path);
         } else {
           (
-            globalBindings[bindingName] ||
-            (globalBindings[bindingName] = new GlobalBinding({ name: bindingName }))
+            globalBindings[bindingName] ||= new GlobalBinding({ name: bindingName })
           ).addConstantViolation(path);
         }
       }
