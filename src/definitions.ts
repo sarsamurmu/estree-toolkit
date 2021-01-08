@@ -753,7 +753,7 @@ export const visitorKeys = (() => {
   return record as Readonly<typeof record>;
 })();
 
-type AliasMap = {
+export type AliasMap = {
   Function: import('estree').Function;
   Statement: import('estree').Statement
   Declaration: import('estree').Declaration;

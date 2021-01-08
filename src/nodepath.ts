@@ -16,14 +16,12 @@ const mapSet = <K, V>(map: Map<K, V>, key: K, value: V): V => {
 export class Context {
   pathCache = new Map<Node | null, Map<Node | null, NodePath>>();
   scopeCache = new Map<NodePath, Scope>();
-  makeScope = true;
+  makeScope = false;
   private currentSkipPaths = new Set<NodePath>();
   private readonly skipPathSetStack = [this.currentSkipPaths];
 
   constructor(options?: TraverseOptions) {
-    if (options?.scope === false) {
-      this.makeScope = false;
-    }
+    this.makeScope = options?.scope === true;
   }
 
   setSkipped(path: NodePath) {

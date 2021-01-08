@@ -1,7 +1,7 @@
 import { Node } from 'estree';
 
 import { Context, NodePath } from './nodepath';
-import { aliases, visitorKeys } from './definitions';
+import { aliases, AliasMap, visitorKeys } from './definitions';
 
 export type VisitorFn<T extends Node = Node, S = unknown> = (path: NodePath<T>, state: S) => boolean | void;
 export type ExpandedVisitor<T extends Node, S> = {
@@ -12,6 +12,8 @@ export type Visitor<T extends Node = Node, S = unknown> = VisitorFn<T, S> | Expa
 
 export type Visitors<S> = {
   [K in Node as `${K['type']}`]?: Visitor<K, S>;
+} & {
+  [K in keyof AliasMap]?: Visitor<AliasMap[K], S>;
 }
 export type ExpandedVisitors<S = unknown> = {
   [type: string]: ExpandedVisitor<Node, S> | undefined;
@@ -111,8 +113,7 @@ export class Traverser {
   }
 
   static expandVisitors<S = unknown>(visitors: Visitors<S>): ExpandedVisitors<S> {
-    const enterFns: Record<string, VisitorFn[]> = Object.create(null);
-    const leaveFns: Record<string, VisitorFn[]> = Object.create(null);
+    const expandedVisitors: ExpandedVisitors = Object.create(null);
 
     // You can use functional approach here
     // Because this code won't run many times like other code does
@@ -124,35 +125,16 @@ export class Traverser {
       const visitor = (visitors as Record<string, Visitor<Node>>)[keyName];
       if (typeof visitor == 'function') {
         keys.forEach((key) => {
-          (enterFns[key] ||= []).push(visitor);
+          expandedVisitors[key] = { enter: visitor };
         });
       } else if (typeof visitor == 'object') {
         keys.forEach((key) => {
-          if (visitor.enter != null) {
-            (enterFns[key] ||= []).push(visitor.enter);
-          }
-          if (visitor.leave != null) {
-            (leaveFns[key] ||= []).push(visitor.leave);
+          expandedVisitors[key] = {
+            enter: visitor.enter,
+            leave: visitor.leave
           }
         });
       }
-    });
-
-    const expandedVisitors: ExpandedVisitors = Object.create(null);
-
-    // We are using transducers to merge up all `enterFns` and `leaveFns`
-    const reducer = (nextFn: VisitorFn, fn: VisitorFn): VisitorFn => (path, state) => {
-      fn(path, state);
-      // Don't call next function if the path has been removed
-      if (path.removed) return;
-      nextFn(path, state);
-    }
-    
-    Object.keys(enterFns).forEach((key) => {
-      (expandedVisitors[key] ||= {}).enter = enterFns[key].reduceRight(reducer);
-    });
-    Object.keys(leaveFns).forEach((key) => {
-      (expandedVisitors[key] ||= {}).leave = leaveFns[key].reduceRight(reducer);
     });
 
     return expandedVisitors;
@@ -185,7 +167,11 @@ export class Traverser {
   }
 }
 
-export const traverse = <N, S>(node: N, visitors: Visitors<S> & { $?: TraverseOptions }, state?: S) => {
+export const traverse = <NodeT, StateT>(
+  node: NodeT,
+  visitors: Visitors<StateT> & { $?: TraverseOptions },
+  state?: StateT
+) => {
   const ctx = new Context(visitors.$);
 
   if ((node as unknown as Node).type !== 'Program') {
