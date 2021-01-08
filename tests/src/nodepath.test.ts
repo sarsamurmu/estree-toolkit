@@ -1,11 +1,12 @@
+import { AssignmentExpression } from 'estree';
+
 import { traverse } from '<project>';
-import { Node, ExpressionStatement, AssignmentExpression, Literal, IfStatement } from 'estree';
 
 describe('Methods', () => {
   //#region Ancestry
 
   test('findParent', () => {
-    const ast: Node = {
+    const ast = {
       type: 'BlockStatement',
       body: [
         {
@@ -35,7 +36,7 @@ describe('Methods', () => {
   });
 
   test('find', () => {
-    const ast: Node = {
+    const ast = {
       type: 'ExpressionStatement',
       expression: {
         type: 'Literal',
@@ -54,7 +55,7 @@ describe('Methods', () => {
   });
 
   test('getFunctionParent', () => {
-    const ast: Node = {
+    const ast = {
       type: 'Program',
       sourceType: 'script',
       body: [
@@ -124,17 +125,15 @@ describe('Methods', () => {
           generator: false
         }
       ]
-    };
+    } as const;
 
     traverse(ast, {
       Literal(path) {
         const { node: { value } } = path;
         if (value === 'arrow') {
-          expect(path.getFunctionParent().node).toBe((ast.body[0] as ExpressionStatement).expression);
+          expect(path.getFunctionParent().node).toBe(ast.body[0].expression);
         } else if (value === 'expression') {
-          expect(path.getFunctionParent().node).toBe(
-            ((ast.body[1] as ExpressionStatement).expression as AssignmentExpression).right
-          );
+          expect(path.getFunctionParent().node).toBe(ast.body[1].expression.right);
         } else if (value === 'declaration') {
           expect(path.getFunctionParent().node).toBe(ast.body[2]);
         }
@@ -149,7 +148,7 @@ describe('Methods', () => {
   //#region Modification
 
   test('insertBefore', () => {
-    const ast: Node = {
+    const ast = {
       type: 'ArrayExpression',
       elements: [
         {
@@ -218,7 +217,7 @@ describe('Methods', () => {
   });
 
   test('insertAfter', () => {
-    const ast: Node = {
+    const ast = {
       type: 'ArrayExpression',
       elements: [
         {
@@ -287,7 +286,7 @@ describe('Methods', () => {
   });
 
   test('unshiftContainer', () => {
-    const ast1: Node = {
+    const ast1 = {
       type: 'ArrayExpression',
       elements: [
         {
@@ -342,7 +341,7 @@ describe('Methods', () => {
       ]
     });
 
-    const ast2: Node = {
+    const ast2 = {
       type: 'ArrayExpression',
       elements: []
     };
@@ -382,7 +381,7 @@ describe('Methods', () => {
   });
 
   test('insertContainer', () => {
-    const ast1: Node = {
+    const ast1 = {
       type: 'ArrayExpression',
       elements: [
         {
@@ -437,7 +436,7 @@ describe('Methods', () => {
       ]
     });
 
-    const ast2: Node = {
+    const ast2 = {
       type: 'ArrayExpression',
       elements: []
     };
@@ -481,7 +480,7 @@ describe('Methods', () => {
   //#region Family
 
   test('get', () => {
-    const ast: Node = {
+    const ast = {
       type: 'Program',
       sourceType: 'script',
       body: [
@@ -505,7 +504,7 @@ describe('Methods', () => {
           }
         }
       ]
-    };
+    } as const;
 
     traverse(ast, {
       Program(path) {
@@ -522,7 +521,7 @@ describe('Methods', () => {
         expect(bodyNodePaths[1].listKey).toBe('body');
       },
       IfStatement(path) {
-        const ifStatement = ast.body[0] as IfStatement;
+        const ifStatement = ast.body[0];
         expect(path.get('test').node).toBe(ifStatement.test);
         expect(path.get('test').key).toBe('test');
         expect(path.get('test').parent).toBe(ifStatement);
@@ -533,7 +532,7 @@ describe('Methods', () => {
   });
 
   test('getSibling', () => {
-    const ast: Node = {
+    const ast = {
       type: 'Program',
       sourceType: 'script',
       body: [
@@ -574,7 +573,7 @@ describe('Methods', () => {
           }
         }
       ]
-    };
+    } as const;
 
     traverse(ast, {
       ExpressionStatement(path) {
@@ -597,7 +596,7 @@ describe('Methods', () => {
   });
 
   test('getOpposite', () => {
-    const ast: Node = {
+    const ast = {
       type: 'AssignmentExpression',
       left: {
         type: 'Identifier',
@@ -624,7 +623,7 @@ describe('Methods', () => {
   });
 
   test('getPrevSibling', () => {
-    const ast: Node = {
+    const ast = {
       type: 'ArrayExpression',
       elements: [
         {
@@ -654,7 +653,7 @@ describe('Methods', () => {
   });
 
   test('getPrevSibling', () => {
-    const ast: Node = {
+    const ast = {
       type: 'ArrayExpression',
       elements: [
         {
@@ -684,7 +683,7 @@ describe('Methods', () => {
   });
 
   test('getAllPrevSiblings', () => {
-    const ast: Node = {
+    const ast = {
       type: 'ArrayExpression',
       elements: [
         {
@@ -724,7 +723,7 @@ describe('Methods', () => {
   });
 
   test('getAllNextSiblings', () => {
-    const ast: Node = {
+    const ast = {
       type: 'ArrayExpression',
       elements: [
         {
@@ -768,7 +767,7 @@ describe('Methods', () => {
   //#region Introspection
 
   test('has', () => {
-    const ast: Node = {
+    const ast = {
       type: 'IfStatement',
       test: {
         type: 'Identifier',
@@ -795,7 +794,7 @@ describe('Methods', () => {
   });
 
   test('is', () => {
-    const ast: Node = {
+    const ast = {
       type: 'Property',
       key: {
         type: 'Identifier',
@@ -826,7 +825,7 @@ describe('Methods', () => {
   //#region Removal
 
   test('remove', () => {
-    const ast1: Node = {
+    const ast1 = {
       type: 'IfStatement',
       test: {
         type: 'Literal',
@@ -864,8 +863,7 @@ describe('Methods', () => {
       alternate: null
     });
 
-
-    const ast2: Node = {
+    const ast2 = {
       type: 'Program',
       sourceType: 'script',
       body: [
@@ -950,7 +948,7 @@ describe('Methods', () => {
   //#region Replacement
 
   test('replaceWith', () => {
-    const ast: Node = {
+    const ast = {
       type: 'ArrayExpression',
       elements: [
         {
@@ -1004,7 +1002,7 @@ describe('Methods', () => {
   });
 
   test('replaceWithMultiple', () => {
-    const ast: Node = {
+    const ast = {
       type: 'ArrayExpression',
       elements: [
         {
@@ -1067,11 +1065,11 @@ describe('Methods', () => {
 
 describe('Properties', () => {
   test('node', () => {
-    const literalNode: Node = {
+    const literalNode = {
       type: 'Literal',
       value: 0
     };
-    const ast: Node = {
+    const ast = {
       type: 'Program',
       sourceType: 'script',
       body: [
@@ -1092,7 +1090,7 @@ describe('Properties', () => {
   });
 
   test('type', () => {
-    const ast: Node = {
+    const ast = {
       type: 'Program',
       sourceType: 'script',
       body: [
@@ -1116,7 +1114,7 @@ describe('Properties', () => {
   });
 
   test('key', () => {
-    const ast: Node = {
+    const ast = {
       type: 'Program',
       sourceType: 'script',
       body: [
@@ -1140,7 +1138,7 @@ describe('Properties', () => {
   });
 
   test('listKey', () => {
-    const ast: Node = {
+    const ast = {
       type: 'Program',
       sourceType: 'script',
       body: [
@@ -1165,7 +1163,7 @@ describe('Properties', () => {
   });
 
   test('parentPath', () => {
-    const ast: Node = {
+    const ast = {
       type: 'Program',
       sourceType: 'script',
       body: [
@@ -1189,7 +1187,7 @@ describe('Properties', () => {
   });
 
   test('parent', () => {
-    const ast: Node = {
+    const ast = {
       type: 'Program',
       sourceType: 'script',
       body: [
@@ -1213,7 +1211,7 @@ describe('Properties', () => {
   });
 
   test('container', () => {
-    const ast: Node = {
+    const ast = {
       type: 'Program',
       sourceType: 'script',
       body: [
@@ -1240,7 +1238,7 @@ describe('Properties', () => {
   });
 
   test('removed', () => {
-    const ast: Node = {
+    const ast = {
       type: 'Program',
       sourceType: 'script',
       body: [

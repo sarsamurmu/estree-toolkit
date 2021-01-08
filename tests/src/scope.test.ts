@@ -56,6 +56,7 @@ test('reference collection', () => {
   const referencedIdentifiers = [...source.matchAll(/\b([A-Z][a-z]+)+_[A-Za-z]+\b/gm)].map((m) => m[0]);
 
   traverse(ast, {
+    $: { scope: true },
     Program(path) {
       const bindingNames = Object.keys(path.scope.globalBindings);
       expect(bindingNames).toEqual(expect.arrayContaining(referencedIdentifiers));
@@ -78,6 +79,7 @@ describe('label', () => {
       `);
 
       traverse(ast, {
+        $: { scope: true },
         ForOfStatement(path) {
           expect(path.scope.labels.forOf).toBeTruthy();
           expect(path.scope.labels.forIn).toBe(undefined);
@@ -99,6 +101,7 @@ describe('label', () => {
       `);
 
       traverse(ast, {
+        $: { scope: true },
         BlockStatement(path) {
           expect(path.scope.labels.blockLabel).toBeTruthy();
         }
@@ -128,6 +131,7 @@ describe('label', () => {
     `);
 
     traverse(ast, {
+      $: { scope: true },
       BlockStatement(path) {
         if (path.parent.type !== 'LabeledStatement') return;
         const { references } = path.scope.labels.block;
@@ -162,6 +166,7 @@ describe('binding registration', () => {
     `);
 
     traverse(ast, {
+      $: { scope: true },
       Program(path) {
         const bindingNames = Object.keys(path.scope.bindings);
         expect(bindingNames).toHaveLength(5);
@@ -179,6 +184,7 @@ describe('binding registration', () => {
     `);
 
     traverse(ast, {
+      $: { scope: true },
       Program(path) {
         const { a: aBinding, b: bBinding } = path.scope.bindings;
         expect(aBinding).toBeUndefined();
@@ -198,6 +204,7 @@ describe('binding registration', () => {
     `);
 
     traverse(ast, {
+      $: { scope: true },
       Program(path) {
         const binding = path.scope.bindings.a;
         expect(binding.kind).toBe('module');
@@ -216,6 +223,7 @@ describe('binding registration', () => {
     `);
 
     traverse(ast, {
+      $: { scope: true },
       Program(path) {
         const binding = path.scope.bindings.a;
         expect(binding.kind).toBe('module');
@@ -236,6 +244,7 @@ describe('binding registration', () => {
     `);
 
     traverse(ast, {
+      $: { scope: true },
       ForStatement(path) {
         const bindingNames = Object.keys(path.scope.bindings);
         expect(bindingNames).toHaveLength(5);
@@ -273,6 +282,7 @@ describe('binding registration', () => {
     `);
 
     traverse(ast, {
+      $: { scope: true },
       BlockStatement(path) {
         if (path.parent.type !== 'Program') return;
         const fnBinding = path.scope.bindings.fnDec;
@@ -294,6 +304,7 @@ describe('binding registration', () => {
     `);
 
     traverse(ast, {
+      $: { scope: true },
       BlockStatement(path) {
         if (path.parent.type !== 'Program') return;
         const classBinding = path.scope.bindings.classDec;
@@ -313,6 +324,7 @@ describe('binding registration', () => {
     `);
 
     traverse(ast, {
+      $: { scope: true },
       Program(path) {
         const fnBinding = path.scope.bindings.fnExp;
         expect(fnBinding).toBeUndefined();
@@ -335,6 +347,7 @@ describe('binding registration', () => {
     `);
 
     traverse(ast, {
+      $: { scope: true },
       Program(path) {
         const classBinding = path.scope.bindings.fn;
         expect(classBinding).toBeUndefined();
@@ -359,6 +372,7 @@ describe('binding registration', () => {
     `);
 
     traverse(ast, {
+      $: { scope: true },
       FunctionDeclaration(path) {
         const bindingNames = Object.keys(path.scope.bindings);
         expect(bindingNames).toHaveLength(6);
@@ -386,6 +400,7 @@ describe('binding registration', () => {
     `);
 
     traverse(ast, {
+      $: { scope: true },
       CatchClause(path) {
         const binding = path.scope.bindings.message;
         expect(binding.kind).toBe('let');
@@ -407,6 +422,7 @@ describe('constant violations', () => {
     `);
 
     traverse(ast, {
+      $: { scope: true },
       Program(path) {
         const { globalBindings } = path.scope;
         delete globalBindings.x;
@@ -431,6 +447,7 @@ describe('constant violations', () => {
     `);
 
     traverse(ast, {
+      $: { scope: true },
       Program(path) {
         const { globalBindings } = path.scope;
         delete globalBindings.x;
