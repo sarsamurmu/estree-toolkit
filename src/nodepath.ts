@@ -126,6 +126,10 @@ export class NodePath<T extends Node = Node, P extends Node = Node> implements N
     this.ctx.setSkipped(this);
   }
 
+  unSkip() {
+    this.ctx.setNotSkipped(this);
+  }
+
   traverse<S>(visitors: Visitors<S>, state?: S) {
     if (this.node == null) {
       throw new Error('Can not use method `traverse` on a null NodePath');
@@ -269,9 +273,9 @@ export class NodePath<T extends Node = Node, P extends Node = Node> implements N
   ): T[K] extends Node[]
     ? NodePath<T[K][number], T>[]
     : T[K] extends Node ? NodePath<T[K], T> : NodePath<never, T>;
-  get<N extends Node | Node[] | null = null>(
+  get<N extends Node | Node[] | unknown = unknown>(
     key: string
-  ): null extends N
+  ): unknown extends N
     ? NodePath | NodePath[]
     : N extends Node[]
       ? NodePath<N[number]>[]

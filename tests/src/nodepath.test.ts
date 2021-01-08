@@ -1,8 +1,60 @@
-import { AssignmentExpression } from 'estree';
+import { AssignmentExpression, Identifier } from 'estree';
 
-import { traverse } from '<project>';
+import { NodePath, traverse } from '<project>';
 
 describe('Methods', () => {
+  //#region Traversal
+
+  test('skip', () => {
+    const ast = {
+      type: 'ExpressionStatement',
+      expression: {
+        type: 'Identifier',
+        name: 'x'
+      }
+    };
+
+    const expressionMock = jest.fn<void, [NodePath]>((path) => {
+      path.get<Identifier>('expression').skip();
+    });
+    const identifierMock = jest.fn<void, [NodePath]>();
+
+    traverse(ast, {
+      ExpressionStatement: expressionMock,
+      Identifier: identifierMock
+    });
+
+    expect(expressionMock).toBeCalledTimes(1);
+    expect(identifierMock).toBeCalledTimes(0);
+  });
+
+  test('unSkip', () => {
+    const ast = {
+      type: 'ExpressionStatement',
+      expression: {
+        type: 'Identifier',
+        name: 'x'
+      }
+    };
+
+    const expressionMock = jest.fn<void, [NodePath]>((path) => {
+      const identifierPath = path.get<Identifier>('expression');
+      identifierPath.skip();
+      identifierPath.unSkip();
+    });
+    const identifierMock = jest.fn<void, [NodePath]>();
+
+    traverse(ast, {
+      ExpressionStatement: expressionMock,
+      Identifier: identifierMock
+    });
+
+    expect(expressionMock).toBeCalledTimes(1);
+    expect(identifierMock).toBeCalledTimes(1);
+  });
+
+  //#endregion
+
   //#region Ancestry
 
   test('findParent', () => {
