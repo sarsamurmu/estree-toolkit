@@ -1,4 +1,4 @@
-import { AssignmentExpression, Identifier } from 'estree';
+import { AssignmentExpression, Identifier, Literal } from 'estree';
 
 import { NodePath, traverse } from '<project>';
 
@@ -28,29 +28,58 @@ describe('Methods', () => {
     expect(identifierMock).toBeCalledTimes(0);
   });
 
-  test('unSkip', () => {
-    const ast = {
-      type: 'ExpressionStatement',
-      expression: {
-        type: 'Identifier',
-        name: 'x'
-      }
-    };
+  describe('unSkip', () => {
+    test('traverses the unSkipped path when in visiting phase', () => {
+      const ast = {
+        type: 'ExpressionStatement',
+        expression: {
+          type: 'Identifier',
+          name: 'x'
+        }
+      };
 
-    const expressionMock = jest.fn<void, [NodePath]>((path) => {
-      const identifierPath = path.get<Identifier>('expression');
-      identifierPath.skip();
+      const expressionMock = jest.fn<void, [NodePath]>((path) => {
+        const identifierPath = path.get<Identifier>('expression');
+        identifierPath.skip();
+        identifierPath.unSkip();
+      });
+      const identifierMock = jest.fn<void, [NodePath]>();
+
+      traverse(ast, {
+        ExpressionStatement: expressionMock,
+        Identifier: identifierMock
+      });
+
+      expect(expressionMock).toBeCalledTimes(1);
+      expect(identifierMock).toBeCalledTimes(1);
+    });
+
+    test('does not traverses the unSkipped path when not in visiting phase', () => {
+      const ast = {
+        type: 'ExpressionStatement',
+        expression: {
+          type: 'Identifier',
+          name: 'x'
+        }
+      };
+
+      let identifierPath: NodePath;
+      const expressionMock = jest.fn<void, [NodePath]>((path) => {
+        identifierPath = path.get<Identifier>('expression');
+        identifierPath.skip();
+      });
+      const identifierMock = jest.fn<void, [NodePath]>();
+
+      traverse(ast, {
+        ExpressionStatement: expressionMock,
+        Identifier: identifierMock
+      });
+
       identifierPath.unSkip();
-    });
-    const identifierMock = jest.fn<void, [NodePath]>();
 
-    traverse(ast, {
-      ExpressionStatement: expressionMock,
-      Identifier: identifierMock
+      expect(expressionMock).toBeCalledTimes(1);
+      expect(identifierMock).toBeCalledTimes(0);
     });
-
-    expect(expressionMock).toBeCalledTimes(1);
-    expect(identifierMock).toBeCalledTimes(1);
   });
 
   //#endregion
@@ -217,9 +246,10 @@ describe('Methods', () => {
         }
       ]
     };
+    let mockFn: jest.Mock<void, [NodePath<Literal>]>;
 
     traverse(ast, {
-      Literal(path) {
+      Literal: (mockFn = jest.fn((path) => {
         if (path.node.value === 2) {
           const nodePaths = path.insertBefore([
             {
@@ -238,9 +268,10 @@ describe('Methods', () => {
         if (path.node.value === 3) {
           expect(path.key).toBe(4);
         }
-      }
+      }))
     });
 
+    expect(mockFn).toBeCalledTimes(5);
     expect(ast).toEqual({
       type: 'ArrayExpression',
       elements: [
@@ -286,9 +317,10 @@ describe('Methods', () => {
         }
       ]
     };
+    let mockFn: jest.Mock<void, [NodePath<Literal>]>;
 
     traverse(ast, {
-      Literal(path) {
+      Literal: (mockFn = jest.fn((path) => {
         if (path.node.value === 2) {
           const nodePaths = path.insertAfter([
             {
@@ -307,9 +339,10 @@ describe('Methods', () => {
         if (path.node.value === 3) {
           expect(path.key).toBe(4);
         }
-      }
+      }))
     });
 
+    expect(mockFn).toBeCalledTimes(5);
     expect(ast).toEqual({
       type: 'ArrayExpression',
       elements: [
@@ -351,6 +384,7 @@ describe('Methods', () => {
         }
       ]
     };
+    const mockFn1 = jest.fn();
 
     traverse(ast1, {
       ArrayExpression(path) {
@@ -368,9 +402,11 @@ describe('Methods', () => {
         expect(nodePaths[1].key).toBe(1);
         expect(nodePaths[0].listKey).toBe('elements');
         expect(nodePaths[1].listKey).toBe('elements');
-      }
+      },
+      Literal: mockFn1
     });
 
+    expect(mockFn1).toBeCalledTimes(4);
     expect(ast1).toEqual({
       type: 'ArrayExpression',
       elements: [
@@ -397,6 +433,7 @@ describe('Methods', () => {
       type: 'ArrayExpression',
       elements: []
     };
+    const mockFn2 = jest.fn();
 
     traverse(ast2, {
       ArrayExpression(path) {
@@ -414,9 +451,11 @@ describe('Methods', () => {
         expect(nodePaths[1].key).toBe(1);
         expect(nodePaths[0].listKey).toBe('elements');
         expect(nodePaths[1].listKey).toBe('elements');
-      }
+      },
+      Literal: mockFn2
     });
 
+    expect(mockFn2).toBeCalledTimes(2);
     expect(ast2).toEqual({
       type: 'ArrayExpression',
       elements: [
@@ -446,6 +485,7 @@ describe('Methods', () => {
         }
       ]
     };
+    const mockFn1 = jest.fn();
 
     traverse(ast1, {
       ArrayExpression(path) {
@@ -463,9 +503,11 @@ describe('Methods', () => {
         expect(nodePaths[1].key).toBe(3);
         expect(nodePaths[0].listKey).toBe('elements');
         expect(nodePaths[1].listKey).toBe('elements');
-      }
+      },
+      Literal: mockFn1
     });
 
+    expect(mockFn1).toBeCalledTimes(4);
     expect(ast1).toEqual({
       type: 'ArrayExpression',
       elements: [
@@ -492,6 +534,7 @@ describe('Methods', () => {
       type: 'ArrayExpression',
       elements: []
     };
+    const mockFn2 = jest.fn();
 
     traverse(ast2, {
       ArrayExpression(path) {
@@ -509,9 +552,11 @@ describe('Methods', () => {
         expect(nodePaths[1].key).toBe(1);
         expect(nodePaths[0].listKey).toBe('elements');
         expect(nodePaths[1].listKey).toBe('elements');
-      }
+      },
+      Literal: mockFn2
     });
 
+    expect(mockFn2).toBeCalledTimes(2);
     expect(ast2).toEqual({
       type: 'ArrayExpression',
       elements: [
@@ -1017,9 +1062,10 @@ describe('Methods', () => {
         }
       ]
     };
+    let mockFn: jest.Mock<void, [NodePath<Literal>]>;
 
     traverse(ast, {
-      Literal(path) {
+      Literal: (mockFn = jest.fn((path) => {
         if (path.node.value === 2) {
           const newPath = path.replaceWith({
             type: 'Literal',
@@ -1031,9 +1077,10 @@ describe('Methods', () => {
           expect(newPath.listKey).toBe(path.listKey);
           expect(newPath.parentPath).toBe(path.parentPath);
         }
-      }
+      }))
     });
 
+    expect(mockFn).toBeCalledTimes(4);
     expect(ast).toEqual({
       type: 'ArrayExpression',
       elements: [
@@ -1063,9 +1110,10 @@ describe('Methods', () => {
         }
       ]
     };
+    let mockFn: jest.Mock<void, [NodePath<Literal>]>;
 
     traverse(ast, {
-      Literal(path) {
+      Literal: (mockFn = jest.fn((path) => {
         if (path.node.value === 0) {
           const newPaths = path.replaceWithMultiple([
             {
@@ -1090,9 +1138,10 @@ describe('Methods', () => {
           expect(newPaths[1].listKey).toBe(path.listKey);
           expect(newPaths[2].listKey).toBe(path.listKey);
         }
-      }
+      }))
     });
 
+    expect(mockFn).toBeCalledTimes(4);
     expect(ast).toEqual({
       type: 'ArrayExpression',
       elements: [
