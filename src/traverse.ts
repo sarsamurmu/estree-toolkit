@@ -23,49 +23,45 @@ export type TraverseOptions = { scope?: boolean };
 
 export class Traverser {
   private readonly visitors: ExpandedVisitors;
-  private readonly ctx: Context;
 
-  constructor(data: {
-    visitors: ExpandedVisitors<any>;
-    ctx: Context;
-  }) {
-    this.visitors = data.visitors;
-    this.ctx = data.ctx;
+  constructor(visitors: ExpandedVisitors<any>) {
+    this.visitors = visitors;
   }
 
-  visitNode<S>(data: {
-    node: Node | null;
-    key: string | number | null;
-    listKey: string | null;
-    parentPath: NodePath | null;
-    state: S | undefined;
-    onlyChildren?: boolean;
-  }) {
-    if (data.node == null) return;
+  visitPath<S>(
+    path: NodePath,
+    state: S,
+    visitedPaths: Set<NodePath>,
+    onlyChildren = false
+  ) {
+    if (visitedPaths.has(path)) {
+      return;
+    } else {
+      visitedPaths.add(path);
+    }
 
-    const { node, state } = data;
-    const visitor = this.visitors[node.type] || {};
-    const nodePath = NodePath.for({
-      node: node,
-      key: data.key,
-      listKey: data.listKey,
-      parentPath: data.parentPath,
-      ctx: this.ctx
-    });
+    const { node, ctx } = path;
+    if (node == null) return;
 
-    if (!data.onlyChildren) {
-      nodePath.init();
+    const nodeType = node.type;
+    const visitor = this.visitors[nodeType] || {};
 
-      if (this.ctx.shouldSkip(nodePath)) return;
+    ctx.newQueue();
+
+    if (!onlyChildren) {
+      // NOTE: If ctx.makeScope is `false`, it can cause the parent scope to reset to `null`
+      path.init();
+
+      if (ctx.shouldSkip(path)) return;
 
       if (visitor.enter != null) {
-        visitor.enter(nodePath, state);
+        visitor.enter(path, state);
 
-        if (this.ctx.shouldSkip(nodePath)) return;
+        if (ctx.shouldSkip(path)) return;
       }
     }
 
-    const keys = visitorKeys[node.type] || Object.keys(node);
+    const keys = visitorKeys[nodeType] || Object.keys(node);
 
     for (let i = 0; i < keys.length; i++) {
       const key = keys[i];
@@ -74,41 +70,48 @@ export class Traverser {
       if (value == null) continue;
 
       if (Array.isArray(value)) {
-        const childNodePaths = value.map((node, index) => (
+        const childNodePaths = value.map((childNode, index) => (
           NodePath.for({
-            node,
+            node: childNode,
             key: index,
             listKey: key,
-            parentPath: nodePath,
-            ctx: this.ctx
+            parentPath: path,
+            ctx: ctx
           }).init()
         ));
 
         for (let i = 0; i < childNodePaths.length; i++) {
           const childNodePath = childNodePaths[i];
           if (!childNodePath.removed) {
-            this.visitNode({
-              node: childNodePath.node,
-              key: childNodePath.key,
-              listKey: childNodePath.listKey,
-              parentPath: childNodePath.parentPath,
-              state: state
-            });
+            this.visitPath(childNodePath, state, visitedPaths);
           }
         }
       } else if (typeof value.type === 'string') {
-        this.visitNode({
-          node: value,
-          key: key,
-          listKey: null,
-          parentPath: nodePath,
-          state: state
-        });
+        this.visitPath(
+          NodePath.for({
+            node: value,
+            key: key,
+            listKey: null,
+            parentPath: path,
+            ctx: ctx
+          }).init(),
+          state,
+          visitedPaths
+        );
       }
     }
 
-    if (!data.onlyChildren && visitor.leave != null) {
-      visitor.leave(nodePath, state);
+    if (!onlyChildren && visitor.leave != null) {
+      visitor.leave(path, state);
+    }
+
+    const { new: newPaths, unSkipped: unSkippedPaths } = ctx.popQueue();
+    
+    for (let i = 0; i < newPaths.length; i++) {
+      this.visitPath(newPaths[i], state, visitedPaths);
+    }
+    for (let i = 0; i < unSkippedPaths.length; i++) {
+      this.visitPath(unSkippedPaths[i], state, visitedPaths);
     }
   }
 
@@ -153,17 +156,20 @@ export class Traverser {
     expand: false;
     visitors: ExpandedVisitors<S>;
   })) {
-    new Traverser({
-      visitors: data.expand ? this.expandVisitors(data.visitors) : data.visitors,
-      ctx: data.ctx
-    }).visitNode({
-      node: data.node,
-      key: null,
-      listKey: null,
-      parentPath: data.parentPath,
-      state: data.state,
-      onlyChildren: data.onlyChildren
-    });
+    new Traverser(
+      data.expand ? this.expandVisitors(data.visitors) : data.visitors
+    ).visitPath(
+      NodePath.for({
+        node: data.node,
+        key: null,
+        listKey: null,
+        parentPath: data.parentPath,
+        ctx: data.ctx
+      }),
+      data.state,
+      new Set(),
+      data.onlyChildren
+    );
   }
 }
 

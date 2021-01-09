@@ -19,6 +19,11 @@ export class Context {
   makeScope = false;
   private currentSkipPaths = new Set<NodePath>();
   private readonly skipPathSetStack = [this.currentSkipPaths];
+  /** Store newly added nodes to this queue for traversal */
+  private readonly queueStack: {
+    new: NodePath[];
+    unSkipped: NodePath[];
+  }[] = [];
 
   constructor(options?: TraverseOptions) {
     this.makeScope = options?.scope === true;
@@ -48,6 +53,22 @@ export class Context {
   restorePrevSkipPathStack() {
     this.skipPathSetStack.pop();
     this.updateCurrentSkipPaths();
+  }
+
+  pushToQueue(paths: NodePath[], stackName: keyof Context['queueStack'][number]) {
+    const last = this.queueStack[this.queueStack.length - 1];
+    if (last != null) last[stackName].push(...paths);
+  }
+
+  newQueue() {
+    this.queueStack.push({
+      new: [],
+      unSkipped: []
+    });
+  }
+
+  popQueue() {
+    return this.queueStack.pop()!;
   }
 }
 
@@ -128,6 +149,7 @@ export class NodePath<T extends Node = Node, P extends Node = Node> implements N
 
   unSkip() {
     this.ctx.setNotSkipped(this);
+    this.ctx.pushToQueue([this], 'unSkipped');
   }
 
   traverse<S>(visitors: Visitors<S>, state?: S) {
@@ -200,7 +222,7 @@ export class NodePath<T extends Node = Node, P extends Node = Node> implements N
     this.container.splice(key, 0, ...nodes);
     this.updateSiblingIndex(key, nodes.length);
 
-    return nodes.map((node, idx) => (
+    const newPaths = nodes.map((node, idx) => (
       NodePath.for({
         node,
         key: key + idx,
@@ -209,6 +231,10 @@ export class NodePath<T extends Node = Node, P extends Node = Node> implements N
         ctx: this.ctx
       }).init()
     ));
+
+    this.ctx.pushToQueue(newPaths, 'new');
+
+    return newPaths;
   }
 
   insertAfter(nodes: readonly Node[]): NodePath[] {
@@ -224,7 +250,7 @@ export class NodePath<T extends Node = Node, P extends Node = Node> implements N
     this.container.splice(key + 1, 0, ...nodes);
     this.updateSiblingIndex(key + 1, nodes.length);
 
-    return nodes.map((node, idx) => (
+    const newPaths = nodes.map((node, idx) => (
       NodePath.for({
         node,
         key: key + idx + 1,
@@ -233,6 +259,10 @@ export class NodePath<T extends Node = Node, P extends Node = Node> implements N
         ctx: this.ctx
       }).init()
     ));
+
+    this.ctx.pushToQueue(newPaths, 'new');
+
+    return newPaths;
   }
 
   unshiftContainer(listKey: string, nodes: readonly Node[]): NodePath[] {
@@ -240,13 +270,18 @@ export class NodePath<T extends Node = Node, P extends Node = Node> implements N
 
     const firstNode = (this.node as any as Record<string, Node[]>)[listKey][0];
     // Create a virtual NodePath
-    return NodePath.for({
+    const lastNodePath = NodePath.for({
       node: firstNode,
       key: 0,
       listKey,
       parentPath: this,
       ctx: this.ctx
-    }).insertBefore(nodes);
+    });
+    const newPaths = lastNodePath.insertBefore(nodes);
+
+    this.ctx.pushToQueue(newPaths, 'new');
+
+    return newPaths;
   }
 
   pushContainer(listKey: string, nodes: readonly Node[]): NodePath[] {
@@ -255,13 +290,18 @@ export class NodePath<T extends Node = Node, P extends Node = Node> implements N
     const container = (this.node as any as Record<string, Node[]>)[listKey];
     const lastNode = container[container.length - 1];
     // Create a virtual NodePath
-    return NodePath.for({
+    const lastNodePath = NodePath.for({
       node: lastNode,
       key: container.length - 1,
       listKey,
       parentPath: this,
       ctx: this.ctx
-    }).insertAfter(nodes);
+    });
+    const newPaths = lastNodePath.insertAfter(nodes);
+
+    this.ctx.pushToQueue(newPaths, 'new');
+
+    return newPaths;
   }
 
   //#endregion
@@ -421,13 +461,17 @@ export class NodePath<T extends Node = Node, P extends Node = Node> implements N
     this.ctx.pathCache.get(this.parent)?.delete(this.node);
     this.removed = true;
 
-    return NodePath.for({
+    const newPath = NodePath.for({
       node,
       key: this.key,
       listKey: this.listKey,
       parentPath: this.parentPath,
       ctx: this.ctx
     }).init();
+
+    this.ctx.pushToQueue([newPath], 'new');
+
+    return newPath;
   }
 
   replaceWithMultiple<N extends readonly Node[]>(nodes: N): NodePath<N[number]>[] {
@@ -436,7 +480,6 @@ export class NodePath<T extends Node = Node, P extends Node = Node> implements N
     }
 
     const newPath = this.replaceWith(nodes[0]);
-
     return [newPath].concat(newPath.insertAfter(nodes.slice(1)));
   } 
 
