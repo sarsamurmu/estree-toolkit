@@ -194,3 +194,39 @@ test('enter/leave object', () => {
   expect(leaveFn.mock.calls[0][0].node).toBe(ast);
   expect(leaveFn.mock.calls[0][1]).toBe(state);
 });
+
+describe('stopping traversal does not traverse', () => {
+  test('keyed children', () => {
+    const ast = {
+      type: 'ArrayExpression',
+      elements: [
+        {
+          type: 'Literal',
+          value: 1
+        },
+        {
+          type: 'Literal',
+          value: 2
+        },
+        {
+          type: 'Literal',
+          value: 3
+        },
+        {
+          type: 'Literal',
+          value: 4
+        }
+      ]
+    };
+    const mockFn = jest.fn();
+
+    traverse(ast, {
+      ArrayExpression() {
+        this.stop();
+      },
+      Literal: mockFn
+    });
+
+    expect(mockFn).toBeCalledTimes(0);
+  })
+});

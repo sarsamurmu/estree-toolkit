@@ -832,7 +832,7 @@ const crawlerVisitor: {
         // Skip it as we have already gathered information from it
         id.skip();
       }
-      skipToChildNodeVisitor.enter!(path, state);
+      skipToChildNodeVisitor.enter!.call({} as any, path, state);
     }
   }
 
@@ -842,7 +842,7 @@ const crawlerVisitor: {
   cVisitors.BlockStatement = {
     enter(path, state) {
       if (shouldBlockStatementMakeScope(path.parent)) {
-        skipToChildNodeVisitor.enter!(path, state);
+        skipToChildNodeVisitor.enter!.call({} as any, path, state);
       }
     }
   }
