@@ -689,7 +689,7 @@ export const definitions: Definitions = clean<Definitions>({
     fields: {
       imported: {},
       local: {
-        default: (node) => node.imported
+        default: (node) => ({ type: 'Identifier', name: node.imported.name })
       }
     }
   },
@@ -717,7 +717,7 @@ export const definitions: Definitions = clean<Definitions>({
     fields: {
       local: {},
       exported: {
-        default: (node) => node.local
+        default: (node) => ({ type: 'Identifier', name: node.local.name })
       }
     }
   }
