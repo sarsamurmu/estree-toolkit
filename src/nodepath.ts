@@ -153,6 +153,10 @@ export class NodePath<T extends Node = Node, P extends Node = Node> implements N
     this.ctx.pushToQueue([this], 'unSkipped');
   }
 
+  unskip() {
+    this.unSkip();
+  }
+
   traverse<S>(visitors: Visitors<S>, state?: S) {
     if (this.node == null) {
       throw new Error('Can not use method `traverse` on a null NodePath');
