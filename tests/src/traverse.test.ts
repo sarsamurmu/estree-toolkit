@@ -195,6 +195,40 @@ test('enter/leave object', () => {
   expect(leaveFn.mock.calls[0][1]).toBe(state);
 });
 
+test('does not visit removed paths', () => {
+  const ast = {
+    type: 'IfStatement',
+    test: {
+      type: 'Literal',
+      value: 0
+    },
+    consequent: {
+      type: 'ExpressionStatement',
+      expression: {
+        type: 'Literal',
+        value: 1
+      }
+    },
+    alternate: {
+      type: 'ExpressionStatement',
+      expression: {
+        type: 'Identifier',
+        name: 'y'
+      }
+    }
+  };
+  const mockFn = jest.fn();
+
+  traverse(ast, {
+    IfStatement(path) {
+      path.get('alternate').remove();
+    },
+    Identifier: mockFn
+  });
+
+  expect(mockFn).toBeCalledTimes(0);
+});
+
 describe('stopping traversal does not traverse', () => {
   test('keyed children', () => {
     const ast = {
@@ -207,14 +241,6 @@ describe('stopping traversal does not traverse', () => {
         {
           type: 'Literal',
           value: 2
-        },
-        {
-          type: 'Literal',
-          value: 3
-        },
-        {
-          type: 'Literal',
-          value: 4
         }
       ]
     };
@@ -228,5 +254,164 @@ describe('stopping traversal does not traverse', () => {
     });
 
     expect(mockFn).toBeCalledTimes(0);
-  })
+  });
+
+  test('siblings', () => {
+    const ast = {
+      type: 'ArrayExpression',
+      elements: [
+        {
+          type: 'Literal',
+          value: 1
+        },
+        {
+          type: 'Identifier',
+          name: 'x'
+        }
+      ]
+    };
+    const mockFn = jest.fn();
+
+    traverse(ast, {
+      Literal() {
+        this.stop();
+      },
+      Identifier: mockFn
+    });
+
+    expect(mockFn).toBeCalledTimes(0);
+  });
+
+  test('keyed siblings', () => {
+    const ast = {
+      type: 'ConditionalExpression',
+      test: {
+        type: 'Literal',
+        value: true
+      },
+      consequent: {
+        type: 'Literal',
+        value: 0
+      },
+      alternate: {
+        type: 'Identifier',
+        name: 'x'
+      }
+    };
+    const mockFn = jest.fn();
+
+    traverse(ast, {
+      Literal() {
+        this.stop();
+      },
+      Identifier: mockFn
+    });
+
+    expect(mockFn).toBeCalledTimes(0);
+  });
+
+  test('on leave fn', () => {
+    const ast = {
+      type: 'ConditionalExpression',
+      test: {
+        type: 'Literal',
+        value: true
+      },
+      consequent: {
+        type: 'Literal',
+        value: 0
+      },
+      alternate: {
+        type: 'Identifier',
+        name: 'x'
+      }
+    };
+    const mockFn = jest.fn();
+
+    traverse(ast, {
+      Literal: {
+        leave() {
+          this.stop();
+        }
+      },
+      Identifier: mockFn
+    });
+
+    expect(mockFn).toBeCalledTimes(0);
+  });
+
+  test('newly added nodes', () => {
+    const ast = {
+      type: 'ArrayExpression',
+      elements: [
+        {
+          type: 'Literal',
+          value: 1
+        },
+      ]
+    };
+    const mockFn = jest.fn();
+
+    traverse(ast, {
+      Literal(path) {
+        if (path.node.value === 1) {
+          path.insertAfter([
+            {
+              type: 'Literal',
+              value: 2
+            },
+            {
+              type: 'Identifier',
+              name: 'x'
+            }
+          ]);
+        }
+
+        if (path.node.value === 2) this.stop();
+      },
+      Identifier: mockFn
+    });
+
+    expect(mockFn).toBeCalledTimes(0);
+  });
+
+  test('unSkipped nodes', () => {
+    const ast = {
+      type: 'ArrayExpression',
+      elements: [
+        {
+          type: 'Literal',
+          value: 1
+        },
+        {
+          type: 'Identifier',
+          name: 'x'
+        },
+        {
+          type: 'Literal',
+          value: 2
+        },
+      ]
+    };
+    const mockFn = jest.fn();
+
+    traverse(ast, {
+      ArrayExpression(path) {
+        const elements = path.get('elements');
+        elements[0].skip();
+        elements[1].skip();
+      },
+      Literal(path) {
+        if (path.node.value === 2) {
+          path.getSibling(0).unSkip();
+          path.getSibling(1).unSkip();
+        }
+
+        if (path.node.value === 1) this.stop();
+      },
+      Identifier: mockFn
+    });
+
+    expect(mockFn).toBeCalledTimes(0);
+  });
 });

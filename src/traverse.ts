@@ -43,104 +43,96 @@ export class Traverser {
     visitorCtx: VisitorContext,
     path: NodePath,
     state: S,
-    visitedPaths: Set<NodePath>,
+    visitedPaths: WeakSet<NodePath>,
     onlyChildren = false
   ) {
-    if (visitedPaths.has(path)) {
-      return;
-    } else {
-      visitedPaths.add(path);
-    }
-
     const { node, ctx } = path;
-    if (node == null) return;
+    if (
+      visitedPaths.has(path) ||
+      path.removed ||
+      node == null
+    ) {
+      return;
+    }
 
     const nodeType = node.type;
     const visitor = this.visitors[nodeType] || {};
 
     ctx.newQueue();
+    const cleanup = () => ctx.popQueue();
 
-    visitPhase: {
-      if (!onlyChildren) {
-        // NOTE: If ctx.makeScope is `false`, it can cause the parent scope to reset to `null`
-        path.init();
+    if (!onlyChildren) {
+      // NOTE: If ctx.makeScope is `false`, it can cause the parent scope to reset to `null`
+      path.init();
 
-        if (ctx.shouldSkip(path)) break visitPhase;
+      if (ctx.shouldSkip(path)) return cleanup();
 
-        if (visitor.enter != null) {
-          visitor.enter.call(visitorCtx, path, state);
+      if (visitor.enter != null) {
+        visitor.enter.call(visitorCtx, path, state);
 
-          if (ctx.shouldSkip(path) || visitorCtx.stopped) break visitPhase;
-        }
-      }
-
-      const keys = visitorKeys[nodeType] || Object.keys(node);
-
-      for (let i = 0; i < keys.length; i++) {
-        if (visitorCtx.stopped) break visitPhase;
-
-        const key = keys[i];
-        const value: Node | Node[] | null | undefined = (node as any)[key];
-
-        if (value == null) continue;
-
-        if (Array.isArray(value)) {
-          const childNodePaths = value.map((childNode, index) => (
-            NodePath.for({
-              node: childNode,
-              key: index,
-              listKey: key,
-              parentPath: path,
-              ctx: ctx
-            }).init()
-          ));
-
-          for (let i = 0; i < childNodePaths.length; i++) {
-            const childNodePath = childNodePaths[i];
-            if (!childNodePath.removed) {
-              this.visitPath(visitorCtx, childNodePath, state, visitedPaths);
-            }
-
-            if (visitorCtx.stopped) break visitPhase;
-          }
-        } else if (typeof value.type === 'string') {
-          this.visitPath(
-            visitorCtx,
-            NodePath.for({
-              node: value,
-              key: key,
-              listKey: null,
-              parentPath: path,
-              ctx: ctx
-            }).init(),
-            state,
-            visitedPaths
-          );
-
-          if (visitorCtx.stopped) break visitPhase;
-        }
-      }
-
-      if (!onlyChildren && visitor.leave != null) {
-        visitor.leave.call(visitorCtx, path, state);
-
-        if (visitorCtx.stopped) break visitPhase;
+        if (ctx.shouldSkip(path) || visitorCtx.stopped) return cleanup();
       }
     }
 
-    const queue = ctx.popQueue();
-    
-    if (!visitorCtx.stopped) {
-      const { new: newPaths, unSkipped: unSkippedPaths } = queue;
+    const keys = visitorKeys[nodeType] || Object.keys(node);
 
-      for (let i = 0; i < newPaths.length; i++) {
-        if (visitorCtx.stopped) break;
-        this.visitPath(visitorCtx, newPaths[i], state, visitedPaths);
+    for (let i = 0; i < keys.length; i++) {
+      const key = keys[i];
+      const value: Node | Node[] | null | undefined = (node as any)[key];
+
+      if (value == null) continue;
+
+      if (Array.isArray(value)) {
+        const childNodePaths = value.map((childNode, index) => (
+          NodePath.for({
+            node: childNode,
+            key: index,
+            listKey: key,
+            parentPath: path,
+            ctx: ctx
+          }).init()
+        ));
+
+        for (let i = 0; i < childNodePaths.length; i++) {
+          this.visitPath(visitorCtx, childNodePaths[i], state, visitedPaths);
+
+          if (visitorCtx.stopped) return cleanup();
+        }
+      } else if (typeof value.type === 'string') {
+        this.visitPath(
+          visitorCtx,
+          NodePath.for({
+            node: value,
+            key: key,
+            listKey: null,
+            parentPath: path,
+            ctx: ctx
+          }).init(),
+          state,
+          visitedPaths
+        );
+
+        if (visitorCtx.stopped) return cleanup();
       }
-      for (let i = 0; i < unSkippedPaths.length; i++) {
-        if (visitorCtx.stopped) break;
-        this.visitPath(visitorCtx, unSkippedPaths[i], state, visitedPaths);
-      }
+    }
+
+    if (!onlyChildren && visitor.leave != null) {
+      visitor.leave.call(visitorCtx, path, state);
+
+      if (visitorCtx.stopped) return cleanup();
+    }
+
+    visitedPaths.add(path);
+
+    const { new: newPaths, unSkipped: unSkippedPaths } = cleanup();
+    
+    for (let i = 0; i < newPaths.length; i++) {
+      if (visitorCtx.stopped) break;
+      this.visitPath(visitorCtx, newPaths[i], state, visitedPaths);
+    }
+    for (let i = 0; i < unSkippedPaths.length; i++) {
+      if (visitorCtx.stopped) break;
+      this.visitPath(visitorCtx, unSkippedPaths[i], state, visitedPaths);
     }
   }
 
@@ -204,7 +196,7 @@ export class Traverser {
         ctx: data.ctx
       }),
       data.state,
-      new Set(),
+      new WeakSet(),
       data.onlyChildren
     );
   }
