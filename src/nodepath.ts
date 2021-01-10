@@ -106,6 +106,7 @@ export class NodePath<T extends Node = Node, P extends Node = Node> implements N
     this.removed = false;
 
     this.ctx = data.ctx;
+    this.scope = undefined;
   }
 
   /** Get the cached NodePath object or create new if cache is not available */
