@@ -142,7 +142,7 @@ traverse(ast, {
 ```
 ### Utilities
 There are several static utilities which you can use. For now there's two utility
-- `evaluate`
+- `evaluate`\
   Evaluates the given path. For now it only supports evaluation of logical and binary operations.
   ```js
   const { utils: u } = require('estree-toolkit');
@@ -167,10 +167,10 @@ There are several static utilities which you can use. For now there's two utilit
     }
   });
   ```
-- `evaluateTruthy`
+- `evaluateTruthy`\
   Evaluates the path for truthiness and returns `true`, `false` or `undefined` depending on
   evaluation result.
-- `hasBinding`
+- `hasBinding`\
   Checks if any binding with the name is available.
   ```js
   const { utils: u } = require('estree-toolkit');
