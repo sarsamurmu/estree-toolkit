@@ -14,7 +14,7 @@
     "test:watch": "jest --watch",
     "test:build": "tsc -p ./tests/build.tsconfig.json",
     "test:build:watch": "tsc -p ./tests/build.tsconfig.json --incremental -w",
-    "test:ci": "npm run build && npm run test:build && npm run test:run"
+    "test:ci": "npm run generate && npm run build:sourcemap && npm run test:build && npm run test:run"
   },
   "keywords": [],
   "author": "Sarsa Murmu <sarsamurmu05@gmail.com>",
