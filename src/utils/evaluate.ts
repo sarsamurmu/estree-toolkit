@@ -135,7 +135,7 @@ export const evaluate = (path: NodePath): { value: unknown } | undefined => {
 
 /**
  * Evaluates the given path for truthiness
- * @return `true` or `false` if the evaluation is successful, otherwise `undefined`
+ * @returns `true` or `false` if the evaluation is successful, otherwise `undefined`
  */
 export const evaluateTruthy = (path: NodePath): boolean | undefined => {
   const result = evaluate(path);
