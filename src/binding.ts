@@ -63,10 +63,15 @@ export class Binding<T extends BindingKind = BindingKind> extends BaseBinding {
     this.identifierPath = data.identifierPath;
     this.path = data.path;
   }
+
+  get constant() {
+    return this.constantViolations.length === 0;
+  }
 }
 
 export class GlobalBinding extends BaseBinding {
   readonly kind = 'global';
+  readonly constant = false;
   readonly name: string;
 
   constructor(data: {
