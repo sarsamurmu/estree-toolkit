@@ -19,7 +19,7 @@ jobs:
           # TODO
           command: cd .
 
-workflow:
+workflows:
   run_tests:
     jobs:
       - test
