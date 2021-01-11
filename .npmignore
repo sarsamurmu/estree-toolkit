@@ -1,0 +1,9 @@
+__tests__/
+coverage/
+generator-scripts/
+src/
+tests/
+.eslintignore
+.eslintrc.js
+jest.config.js
+tsconfig.json

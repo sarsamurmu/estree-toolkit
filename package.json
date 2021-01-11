@@ -16,7 +16,8 @@
     "test:build:watch": "tsc -p ./tests/build.tsconfig.json --incremental -w",
     "test:ci": "npm run generate && npm run build:sourcemap && npm run test:build && npm run test:run"
   },
-  "keywords": [],
+  "keywords": ["estree", "ast", "traverse", "scope"],
+  "repository": "github:sarsamurmu/estree-toolkit",
   "author": "Sarsa Murmu <sarsamurmu05@gmail.com>",
   "license": "MIT",
   "devDependencies": {

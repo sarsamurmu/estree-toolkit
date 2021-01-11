@@ -2,6 +2,17 @@
   <code>estree-toolkit</code>
 </h1>
 <h4 align=center>Tools for working with ESTree AST</h4>
+<p align=center>
+  <a href="https://npmjs.com/package/estree-toolkit">
+    <img alt="npm" src="https://img.shields.io/npm/v/estree-toolkit?style=flat-square">
+  </a>
+  <a href="https://circleci.com/gh/sarsamurmu/estree-toolkit">
+    <img alt="Circle CI" src="https://circleci.com/gh/sarsamurmu/estree-toolkit.svg?style=svg">
+  </a>
+  <a href="https://codecov.io/gh/sarsamurmu/estree-toolkit">
+    <img alt="codecov" src="https://img.shields.io/codecov/c/github/sarsamurmu/estree-toolkit?style=flat-square">
+  </a>
+</p>
 
 ## Installation
 ```bash
