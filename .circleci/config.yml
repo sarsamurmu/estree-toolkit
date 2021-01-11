@@ -15,9 +15,8 @@ jobs:
           name: Run tests
           command: npm run test:ci
       - run:
-          name: Upload coverage
-          # TODO
-          command: cd .
+          name: Upload coverage report
+          command: bash <(curl -s https://codecov.io/bash)
 
 workflows:
   run_tests:
