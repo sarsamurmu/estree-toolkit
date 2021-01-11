@@ -6,13 +6,15 @@
   "types": "./dist/index.d.ts",
   "scripts": {
     "generate": "ts-node ./generator-scripts/index.ts",
-    "build": "tsc",
+    "build": "npm run generate && npm run build:ts",
+    "build:ts": "tsc",
     "build:sourcemap": "tsc --sourceMap",
     "build:watch": "tsc --incremental --sourceMap -w",
-    "test": "jest --coverage --runInBand",
+    "test:run": "jest --coverage --runInBand",
     "test:watch": "jest --watch",
     "test:build": "tsc -p ./tests/build.tsconfig.json",
-    "test:build:watch": "tsc -p ./tests/build.tsconfig.json --incremental -w"
+    "test:build:watch": "tsc -p ./tests/build.tsconfig.json --incremental -w",
+    "test:ci": "npm run build && npm run test:build && npm run test:run"
   },
   "keywords": [],
   "author": "Sarsa Murmu <sarsamurmu05@gmail.com>",
