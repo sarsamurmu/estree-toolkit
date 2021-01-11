@@ -1,6 +1,6 @@
 {
   "name": "estree-toolkit",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Tools for working with ESTree AST",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -10,6 +10,7 @@
     "build:ts": "tsc",
     "build:sourcemap": "tsc --sourceMap",
     "build:watch": "tsc --incremental --sourceMap -w",
+    "test": "npm run test:run",
     "test:run": "jest --coverage --runInBand",
     "test:watch": "jest --watch",
     "test:build": "tsc -p ./tests/build.tsconfig.json",

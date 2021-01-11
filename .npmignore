@@ -1,4 +1,6 @@
 __tests__/
+.circleci/
+.vscode/
 coverage/
 generator-scripts/
 src/
