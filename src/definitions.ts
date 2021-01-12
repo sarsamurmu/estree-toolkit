@@ -16,7 +16,7 @@ export type DefinitionField<N, V> = {
 
 export type Definition<N extends Node = Node> = {
   indices: {
-    [K in NodeKeys<N>]: DefinitionIndex<N[K] extends Node | Node[] | undefined | null ? true : false>;
+    [K in NodeKeys<N>]: DefinitionIndex<N[K] extends Node | (Node | null)[] | undefined | null ? true : false>;
   };
   fields: {
     [F in NodeKeys<N>]: DefinitionField<N, N[F]>;

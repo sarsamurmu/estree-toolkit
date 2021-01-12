@@ -315,8 +315,8 @@ export class NodePath<T extends Node = Node, P extends Node = Node> implements N
   
   get<K extends Exclude<keyof T, keyof BaseNode>>(
     key: K
-  ): T[K] extends Node[]
-    ? NodePath<T[K][number], T>[]
+  ): T[K] extends (infer U | null)[]
+    ? U extends Node ? NodePath<U, T>[] : NodePath<never, T>[]
     : T[K] extends Node ? NodePath<T[K], T> : NodePath<never, T>;
   get<N extends Node | Node[] | unknown = unknown>(
     key: string

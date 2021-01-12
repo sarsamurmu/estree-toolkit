@@ -41,8 +41,9 @@ export const hasBinding = (() => {
       case 'ArrayPattern': {
         const { elements } = node;
         for (let i = 0; i < elements.length; i++) {
-          if (elements[i] == null) continue;
-          if (findInPattern(elements[i], bindingName)) return true;
+          const element = elements[i];
+          if (element == null) continue;
+          if (findInPattern(element, bindingName)) return true;
         }
         break;
       }
