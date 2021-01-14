@@ -5,8 +5,7 @@ import { definitions, aliases } from '../src/definitions';
 
 const nodeTypes = Object.keys(definitions);
 const aliasNames = Object.keys(aliases);
-const typesToExport = [].concat(nodeTypes, aliasNames);
-const content = `
+let content = `
 // Generated file. Do not modify by hands.
 // Run "npm run generate" to re-generate this file.
 
@@ -15,7 +14,13 @@ export {
   SimpleLiteral,
   RegExpLiteral
 } from 'estree';
-export { ${typesToExport.join(', ')} } from 'estree';
+export { ${nodeTypes.join(', ')} } from 'estree';
 `.trim();
+
+content += `import type { AliasMap } from '../definitions';\n\n`;
+
+Object.keys(aliases).forEach((alias) => {
+  content += `export type ${alias} = import('../definitions').AliasMap['${alias}'];\n`;
+});
 
 fs.writeFileSync(path.join(__dirname, '../src/generated/types.ts'), content);

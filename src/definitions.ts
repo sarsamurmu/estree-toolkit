@@ -1,8 +1,8 @@
 /* istanbul ignore file */
 
-import { Node, BaseNode } from 'estree';
+import * as ESTree from 'estree';
 
-type NodeKeys<N> = Exclude<keyof N, keyof BaseNode>;
+type NodeKeys<N> = Exclude<keyof N, keyof ESTree.BaseNode>;
 
 export type DefinitionIndex<T> = T extends true
   ? number | [builderIndex: number | false, visitIndex: number | false]
@@ -14,9 +14,9 @@ export type DefinitionField<N, V> = {
   type?: string;
 };
 
-export type Definition<N extends Node = Node> = {
+export type Definition<N extends ESTree.Node = ESTree.Node> = {
   indices: {
-    [K in NodeKeys<N>]: DefinitionIndex<N[K] extends Node | (Node | null)[] | undefined | null ? true : false>;
+    [K in NodeKeys<N>]: DefinitionIndex<N[K] extends ESTree.Node | (ESTree.Node | null)[] | undefined | null ? true : false>;
   };
   fields: {
     [F in NodeKeys<N>]: DefinitionField<N, N[F]>;
@@ -24,7 +24,7 @@ export type Definition<N extends Node = Node> = {
 };
 
 export type Definitions = {
-  [N in Node as `${N['type']}`]: Definition<N>;
+  [N in ESTree.Node as `${N['type']}`]: Definition<N>;
 }
 
 /** Creates a clean object without any prototype */
@@ -760,6 +760,7 @@ export type AliasMap = {
   Expression: import('estree').Expression;
   Pattern: import('estree').Pattern;
   Class: import('estree').Class;
+  ExportDeclaration: ESTree.ExportAllDeclaration | ESTree.ExportDefaultDeclaration | ESTree.ExportNamedDeclaration;
 }
 
 export const aliases: {
@@ -838,5 +839,10 @@ export const aliases: {
   Class: clean({
     ClassDeclaration: 0,
     ClassExpression: 0
+  }),
+  ExportDeclaration: clean({
+    ExportNamedDeclaration: 0,
+    ExportDefaultDeclaration: 0,
+    ExportAllDeclaration: 0
   })
 });

@@ -83,10 +83,11 @@ export type Is = {
   importNamespaceSpecifier: Checker<ImportNamespaceSpecifier>;
   exportSpecifier: Checker<ExportSpecifier>;
 
-  function: Checker<import('estree').Function>;
-  statement: Checker<import('estree').Statement>;
-  declaration: Checker<import('estree').Declaration>;
-  expression: Checker<import('estree').Expression>;
-  pattern: Checker<import('estree').Pattern>;
-  class: Checker<import('estree').Class>;
+  function: Checker<import('../definitions').AliasMap['Function']>;
+  statement: Checker<import('../definitions').AliasMap['Statement']>;
+  declaration: Checker<import('../definitions').AliasMap['Declaration']>;
+  expression: Checker<import('../definitions').AliasMap['Expression']>;
+  pattern: Checker<import('../definitions').AliasMap['Pattern']>;
+  class: Checker<import('../definitions').AliasMap['Class']>;
+  exportDeclaration: Checker<import('../definitions').AliasMap['ExportDeclaration']>;
 }
