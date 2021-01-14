@@ -1,3 +1,6 @@
+## 1.0.4
+- Add support for `ExportDeclaration` alias.
+
 ## 1.0.3
 - Add support for evaluating `UnaryExpression`
 
