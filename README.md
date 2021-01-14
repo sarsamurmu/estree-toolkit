@@ -40,7 +40,7 @@ b.identifier('x'); // => { type: 'Identifier', name: 'x' }
 ```
 ### Checking node types
 ```js
-const { is } = require('estree-toolkit');
+const { traverse, is } = require('estree-toolkit');
 const { parseModule } = require('meriyah');
 
 const ast = parseModule(`x = 0`);
@@ -143,7 +143,7 @@ traverse(ast, {
 ### Utilities
 There are several static utilities which you can use. For now there's two utility
 - `evaluate`\
-  Evaluates the given path. For now it only supports evaluation of logical and binary operations.
+  Evaluates the given path. For now it only supports evaluation of logical, binary and unary operations.
   ```js
   const { utils: u } = require('estree-toolkit');
   // We are using `meriyah` but you can use any parser (like `acorn`)
