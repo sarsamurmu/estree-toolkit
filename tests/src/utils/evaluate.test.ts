@@ -63,12 +63,47 @@ describe('evaluate', () => {
 
     test.todo('in');
 
-    test('unknown', () => {
+    test('unknown binding', () => {
       ['1 - unknown', 'unknown / 2'].forEach((expression) => {
         const ast = parseModule(expression);
 
         traverse(ast, {
           BinaryExpression(path) {
+            expect(u.evaluate(path)).toBeUndefined();
+          }
+        })
+      });
+
+      expect.assertions(2);
+    });
+  });
+
+  describe('Unary expressions', () => {
+    test.each([
+      ['+', '"1"', 1],
+      ['-', '"1"', -1],
+      ['!', 'true', false],
+      ['~', '1.3', -2],
+      ['typeof', '5', 'number'],
+      ['void', '2', undefined]
+    ])('%s', (operator, argument, expected) => {
+      const ast = parseModule(`${operator} ${argument}`);
+
+      traverse(ast, {
+        UnaryExpression(path) {
+          expect(u.evaluate(path)).toEqual({ value: expected });
+        }
+      });
+
+      expect.assertions(1);
+    });
+
+    test('delete and unknown binding', () => {
+      ['delete 45', '!unknown'].forEach((expression) => {
+        const ast = parseModule(expression);
+
+        traverse(ast, {
+          UnaryExpression(path) {
             expect(u.evaluate(path)).toBeUndefined();
           }
         })

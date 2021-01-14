@@ -1,5 +1,5 @@
 import { NodePath } from '../nodepath';
-import { NodeT } from '../internal-utils';
+import { assertNever, NodeT } from '../internal-utils';
 
 const binaryExpressionEvaluators: {
   [K in NodeT<'BinaryExpression'>['operator']]: (left: any, right: any) => any;
@@ -66,6 +66,34 @@ class Evaluator {
         }
       }
 
+      case 'UnaryExpression': {
+        const aPath = path as NodePath<NodeT<'UnaryExpression'>>;
+        const arg = this.getEvaluated(aPath.get('argument'));
+        if (arg == null) return;
+
+        const argVal = arg.value as any;
+
+        switch (aPath.node!.operator) {
+          case '+':
+            return { value: +argVal }
+          case '-':
+            return { value: -argVal }
+          case '!':
+            return { value: !argVal }
+          case '~':
+            return { value: ~argVal }
+          case 'typeof':
+            return { value: typeof argVal }
+          case 'void':
+            return { value: undefined }
+          case 'delete': break;
+          /* istanbul ignore next */
+          default: assertNever(aPath.node!.operator)
+        }
+
+        break;
+      }
+
       case 'LogicalExpression': {
         const aPath = path as NodePath<NodeT<'LogicalExpression'>>;
         const left = this.getEvaluated(aPath.get('left'));
@@ -118,6 +146,7 @@ class Evaluator {
             }
             break;
           }
+          default: assertNever(aPath.node!.operator)
         }
       }
     }
