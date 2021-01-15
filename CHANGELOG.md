@@ -1,3 +1,6 @@
+## 1.0.8
+- Export more types
+
 ## 1.0.7
 - Add `hasBinding` method to `Scope`
 
