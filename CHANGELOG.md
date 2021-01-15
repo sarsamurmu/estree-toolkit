@@ -1,3 +1,6 @@
+## 1.0.5
+- Fix TypeScript types
+
 ## 1.0.4
 - Add support for `ExportDeclaration` alias.
 
