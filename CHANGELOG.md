@@ -1,3 +1,6 @@
+## 1.0.7
+- Add `hasBinding` method to `Scope`
+
 ## 1.0.6
 - Improve typings
 
