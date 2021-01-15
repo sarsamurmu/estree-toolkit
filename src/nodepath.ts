@@ -73,6 +73,9 @@ export class Context {
 }
 
 type Keys<N extends Node> = Exclude<keyof N, keyof BaseNode>;
+type PickKeysWithValue<N extends Node, Condition> = {
+  [K in keyof N]: N[K] extends Condition ? K : never;
+}[keyof N];
 
 type NodePathData<T extends Node, P extends Node> = {
   node: NodePath<T>['node'];
@@ -271,6 +274,15 @@ export class NodePath<T extends Node = Node, P extends Node = Node> implements N
     return newPaths;
   }
 
+  unshiftContainer<K extends PickKeysWithValue<T, Node[]>>(
+    listKey: K extends never ? string : K,
+    nodes: Readonly<K extends never ? Node[] : T[K]>
+  ): NodePath<
+    K extends never
+      ? Node
+      : T[K] extends Node[] ? T[K][number] : Node,
+    T
+  >[];
   unshiftContainer(listKey: string, nodes: readonly Node[]): NodePath[] {
     this.assertNotRemoved();
 
@@ -290,6 +302,15 @@ export class NodePath<T extends Node = Node, P extends Node = Node> implements N
     return newPaths;
   }
 
+  pushContainer<K extends PickKeysWithValue<T, Node[]>>(
+    listKey: K extends never ? string : K,
+    nodes: Readonly<K extends never ? Node[] : T[K]>
+  ): NodePath<
+    K extends never
+      ? Node
+      : T[K] extends Node[] ? T[K][number] : Node,
+    T
+  >[];
   pushContainer(listKey: string, nodes: readonly Node[]): NodePath[] {
     this.assertNotRemoved();
 
