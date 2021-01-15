@@ -72,6 +72,8 @@ export class Context {
   }
 }
 
+type Keys<N extends Node> = Exclude<keyof N, keyof BaseNode>;
+
 type NodePathData<T extends Node, P extends Node> = {
   node: NodePath<T>['node'];
   key: NodePath['key'];
@@ -195,7 +197,6 @@ export class NodePath<T extends Node = Node, P extends Node = Node> implements N
     return null;
   }
 
-  /** Get the closest function parent */
   getFunctionParent(): NodePath<t.Function> | null {
     return this.findParent((p) => is.function(p));
   }
@@ -313,7 +314,7 @@ export class NodePath<T extends Node = Node, P extends Node = Node> implements N
 
   //#region Family
   
-  get<K extends Exclude<keyof T, keyof BaseNode>>(
+  get<K extends Keys<T>>(
     key: K
   ): T[K] extends (infer U | null)[]
     ? U extends Node ? NodePath<U, T>[] : NodePath<never, T>[]
@@ -414,16 +415,18 @@ export class NodePath<T extends Node = Node, P extends Node = Node> implements N
 
   //#region Introspection
 
-  has(key: Exclude<keyof T, keyof BaseNode>): boolean {
-    const value = this.node?.[key];
+  has(key: Keys<T> extends never ? string : Keys<T>): boolean;
+  has(key: any): boolean {
+    const value = (this.node as Record<string, any>)?.[key];
     if (value != null && Array.isArray(value) && value.length === 0) {
       return false;
     }
     return !!value;
   }
 
-  is(key: Exclude<keyof T, keyof BaseNode>): boolean {
-    return !!this.node?.[key];
+  is(key: Keys<T> extends never ? string : Keys<T>): boolean;
+  is(key: any): boolean {
+    return !!(this.node as Record<string, any>)?.[key];
   }
 
   //#endregion
