@@ -1363,3 +1363,45 @@ describe('Properties', () => {
     expect.assertions(1);
   });
 });
+
+describe('operations', () => {
+  test('syncs paths', () => {
+    const ast = {
+      type: 'Program',
+      sourceType: 'module',
+      body: [
+        {
+          type: 'BlockStatement',
+          body: [
+            {
+              type: 'ExpressionStatement',
+              expression: {
+                type: 'Identifier',
+                name: 'target',
+                pattern: false
+              }
+            }
+          ]
+        }
+      ]
+    };
+
+    let programPath: NodePath;
+    traverse(ast, { Program: (p) => programPath = p });
+
+    programPath.traverse({
+      BlockStatement(path) {
+        path.replaceWithMultiple(path.node.body);
+        expect(0).toBe(0);
+      }
+    });
+
+    programPath.traverse({
+      ExpressionStatement(path) {
+        expect(path.parentPath).toBe(programPath);
+      }
+    });
+
+    expect.assertions(2);
+  });
+});

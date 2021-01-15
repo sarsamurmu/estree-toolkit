@@ -14,7 +14,7 @@ const mapSet = <K, V>(map: Map<K, V>, key: K, value: V): V => {
 }
 
 export class Context {
-  pathCache = new Map<Node | null, Map<Node | null, NodePath>>();
+  pathCache = new Map<NodePath | null, Map<Node | null, NodePath>>();
   scopeCache = new Map<NodePath, Scope>();
   makeScope = false;
   private currentSkipPaths = new Set<NodePath>();
@@ -122,8 +122,8 @@ export class NodePath<T extends Node = Node, P extends Node = Node> implements N
     }
 
     const pathCache = data.ctx.pathCache;
-    const parentNode = data.parentPath && data.parentPath.node;
-    const children = pathCache.get(parentNode) || mapSet(pathCache, parentNode, new Map<Node, NodePath>());
+    const { parentPath } = data;
+    const children = pathCache.get(parentPath) || mapSet(pathCache, parentPath, new Map<Node, NodePath>());
     return (children.get(data.node) || mapSet(children, data.node, new NodePath<any, any>(data)));
   }
 
@@ -211,7 +211,7 @@ export class NodePath<T extends Node = Node, P extends Node = Node> implements N
   protected updateSiblingIndex(fromIndex: number, incrementBy: number): void {
     if ((this.container as any[]).length === 0) return;
 
-    this.ctx.pathCache.get(this.parent)?.forEach((path) => {
+    this.ctx.pathCache.get(this.parentPath)?.forEach((path) => {
       if ((path.key as number) >= fromIndex) {
         (path.key as number) += incrementBy;
       }
@@ -467,12 +467,12 @@ export class NodePath<T extends Node = Node, P extends Node = Node> implements N
       const key = this.key as number;
       const container = this.container as Node[];
       container.splice(key, 1);
-      this.ctx.pathCache.get(this.parent)?.delete(this.node);
+      this.ctx.pathCache.get(this.parentPath)?.delete(this.node);
       this.updateSiblingIndex(key + 1, -1);
       this.removed = true;
     } else if (this.key != null) {
       (this.container as any as Record<string, Node | null>)[this.key] = null;
-      this.ctx.pathCache.get(this.parent)?.delete(this.node);
+      this.ctx.pathCache.get(this.parentPath)?.delete(this.node);
       this.removed = true;
     }
   }
@@ -487,7 +487,7 @@ export class NodePath<T extends Node = Node, P extends Node = Node> implements N
     }
 
     (this.container as any as Record<string | number, Node>)[this.key!] = node;
-    this.ctx.pathCache.get(this.parent)?.delete(this.node);
+    this.ctx.pathCache.get(this.parentPath)?.delete(this.node);
     this.removed = true;
 
     const newPath = NodePath.for({
