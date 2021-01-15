@@ -1101,6 +1101,10 @@ export class Scope {
     return this.bindings[name];
   }
 
+  hasBinding(name: string): boolean {
+    return this.getBinding(name) != null;
+  }
+
   getBinding(name: string): Binding | undefined {
     // eslint-disable-next-line @typescript-eslint/no-this-alias
     let scope: Scope | null = this;
