@@ -1,3 +1,6 @@
+## 1.0.9
+- Fix `NodePath`'s synchronization
+
 ## 1.0.8
 - Export more types
 
