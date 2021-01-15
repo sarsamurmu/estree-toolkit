@@ -1,3 +1,6 @@
+## 1.0.6
+- Improve typings
+
 ## 1.0.5
 - Fix TypeScript types
 
