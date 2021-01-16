@@ -4,7 +4,6 @@ import path from 'path';
 import { definitions, aliases } from '../src/definitions';
 
 const nodeTypes = Object.keys(definitions);
-const aliasNames = Object.keys(aliases);
 let content = `
 // Generated file. Do not modify by hands.
 // Run "npm run generate" to re-generate this file.

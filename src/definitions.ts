@@ -2,6 +2,8 @@
 
 import * as ESTree from 'estree';
 
+import * as assert from './assert';
+
 type NodeKeys<N> = Exclude<keyof N, keyof ESTree.BaseNode>;
 
 export type DefinitionIndex<T> = T extends true
@@ -9,7 +11,7 @@ export type DefinitionIndex<T> = T extends true
   : false | [builderIndex: number | false, visitIndex: false];
 
 export type DefinitionField<N, V> = {
-  validate?: (value: V) => boolean; // Make it required
+  validate?: (value: V) => void; // Make it required
   default?: V | ((node: N) => V);
   type?: string;
 };
@@ -36,7 +38,12 @@ export const definitions: Definitions = clean<Definitions>({
       name: [0, false]
     },
     fields: {
-      name: {}
+      name: {
+        validate: assert.chain(
+          assert.valueType('string'),
+          assert.isValidIdentifier
+        )
+      }
     }
   },
   Literal: {
@@ -45,7 +52,11 @@ export const definitions: Definitions = clean<Definitions>({
       raw: false
     },
     fields: {
-      value: {},
+      value: {
+        validate: assert.chain(
+          assert.valueType('string', 'number', 'boolean', null)
+        )
+      },
       raw: {}
     }
   },
@@ -761,6 +772,12 @@ export type AliasMap = {
   Pattern: import('estree').Pattern;
   Class: import('estree').Class;
   ExportDeclaration: ESTree.ExportAllDeclaration | ESTree.ExportDefaultDeclaration | ESTree.ExportNamedDeclaration;
+  Loop:
+    | ESTree.ForStatement
+    | ESTree.ForInStatement
+    | ESTree.ForOfStatement
+    | ESTree.WhileStatement
+    | ESTree.DoWhileStatement;
 }
 
 export const aliases: {
@@ -844,5 +861,12 @@ export const aliases: {
     ExportNamedDeclaration: 0,
     ExportDefaultDeclaration: 0,
     ExportAllDeclaration: 0
+  }),
+  Loop: clean({
+    ForStatement: 0,
+    ForInStatement: 0,
+    ForOfStatement: 0,
+    WhileStatement: 0,
+    DoWhileStatement: 0,
   })
 });

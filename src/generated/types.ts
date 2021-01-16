@@ -15,3 +15,4 @@ export type Expression = import('../definitions').AliasMap['Expression'];
 export type Pattern = import('../definitions').AliasMap['Pattern'];
 export type Class = import('../definitions').AliasMap['Class'];
 export type ExportDeclaration = import('../definitions').AliasMap['ExportDeclaration'];
+export type Loop = import('../definitions').AliasMap['Loop'];

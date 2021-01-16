@@ -90,4 +90,5 @@ export type Is = {
   pattern: Checker<import('../definitions').AliasMap['Pattern']>;
   class: Checker<import('../definitions').AliasMap['Class']>;
   exportDeclaration: Checker<import('../definitions').AliasMap['ExportDeclaration']>;
+  loop: Checker<import('../definitions').AliasMap['Loop']>;
 }
