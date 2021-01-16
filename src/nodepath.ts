@@ -5,6 +5,7 @@ import { Scope } from './scope';
 import { is } from './is';
 import * as t from './generated/types';
 import { NodePathDocs } from './nodepath-doc';
+import { NodeT } from './internal-utils';
 
 // * Tip: Fold the regions for better experience
 
@@ -454,6 +455,43 @@ export class NodePath<T extends Node = Node, P extends Node = Node> implements N
 
   //#region Removal
 
+  private onRemove(): boolean {
+    const { parent, key, listKey } = this;
+    const parentT = parent!.type;
+    const parentPath = this.parentPath!;
+
+    switch (true) {
+      case parentT === 'ExpressionStatement' && key === 'expression':
+      case is.exportDeclaration(parent) && key === 'declaration':
+      case (parentT === 'WhileStatement' || parentT === 'SwitchCase') && key === 'test':
+      case parentT === 'LabeledStatement' && key === 'body':
+      case (parentT === 'VariableDeclaration' && listKey === 'declarations' && (parent as NodeT<'VariableDeclaration'>).declarations.length === 0):
+        parentPath.remove();
+        return true;
+
+      case parentT === 'BinaryExpression':
+        parentPath.replaceWith(
+          (parent as NodeT<'BinaryExpression'>)[key === 'right' ? 'left' : 'right']
+        );
+        return true;
+      
+      case parentT === 'IfStatement' && (key === 'consequent' || key === 'alternate'):
+      case (parentT === 'ArrowFunctionExpression' || is.loop(parent)) && key === 'body':
+        this.replaceWith({
+          type: 'BlockStatement',
+          body: []
+        });
+        return true;
+    }
+
+    return false;
+  }
+
+  private markRemoved() {
+    this.ctx.pathCache.get(this.parentPath)?.delete(this.node);
+    this.removed = true;
+  }
+
   remove(): void {
     if (this.removed) {
       throw new Error('Node is already removed');
@@ -463,17 +501,20 @@ export class NodePath<T extends Node = Node, P extends Node = Node> implements N
       this.throwNoParent('remove');
     }
 
+    if (this.onRemove()) {
+      // Things are handled by `onRemove` function.
+      return this.markRemoved();
+    }
+
     if (this.listKey != null) {
       const key = this.key as number;
       const container = this.container as Node[];
       container.splice(key, 1);
-      this.ctx.pathCache.get(this.parentPath)?.delete(this.node);
+      this.markRemoved();
       this.updateSiblingIndex(key + 1, -1);
-      this.removed = true;
     } else if (this.key != null) {
       (this.container as any as Record<string, Node | null>)[this.key] = null;
-      this.ctx.pathCache.get(this.parentPath)?.delete(this.node);
-      this.removed = true;
+      this.markRemoved();
     }
   }
 
@@ -487,8 +528,7 @@ export class NodePath<T extends Node = Node, P extends Node = Node> implements N
     }
 
     (this.container as any as Record<string | number, Node>)[this.key!] = node;
-    this.ctx.pathCache.get(this.parentPath)?.delete(this.node);
-    this.removed = true;
+    this.markRemoved();
 
     const newPath = NodePath.for({
       node,
