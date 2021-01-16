@@ -475,7 +475,7 @@ export class NodePath<T extends Node = Node, P extends Node = Node> implements N
         );
         return true;
       
-      case parentT === 'IfStatement' && (key === 'consequent' || key === 'alternate'):
+      case parentT === 'IfStatement' && key === 'consequent':
       case (parentT === 'ArrowFunctionExpression' || is.loop(parent)) && key === 'body':
         this.replaceWith({
           type: 'BlockStatement',
