@@ -1,3 +1,6 @@
+## 1.1.0
+- More fixes
+
 ## 1.0.9
 - Fix `NodePath`'s synchronization
 
