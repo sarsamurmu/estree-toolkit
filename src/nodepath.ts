@@ -465,7 +465,7 @@ export class NodePath<T extends Node = Node, P extends Node = Node> implements N
       case is.exportDeclaration(parent) && key === 'declaration':
       case (parentT === 'WhileStatement' || parentT === 'SwitchCase') && key === 'test':
       case parentT === 'LabeledStatement' && key === 'body':
-      case (parentT === 'VariableDeclaration' && listKey === 'declarations' && (parent as NodeT<'VariableDeclaration'>).declarations.length === 0):
+      case (parentT === 'VariableDeclaration' && listKey === 'declarations' && (parent as NodeT<'VariableDeclaration'>).declarations.length === 1):
         parentPath.remove();
         return true;
 
@@ -477,6 +477,9 @@ export class NodePath<T extends Node = Node, P extends Node = Node> implements N
       
       case parentT === 'IfStatement' && key === 'consequent':
       case (parentT === 'ArrowFunctionExpression' || is.loop(parent)) && key === 'body':
+        if (parentT === 'ArrowFunctionExpression') {
+          (parent as NodeT<'ArrowFunctionExpression'>).expression = false;
+        }
         this.replaceWith({
           type: 'BlockStatement',
           body: []

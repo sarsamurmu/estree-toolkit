@@ -1,6 +1,4 @@
-import { AssignmentExpression, Identifier, Literal } from 'estree';
-
-import { NodePath, traverse } from '<project>';
+import { NodePath, traverse, types as t } from '<project>';
 
 describe('Methods', () => {
   //#region Traversal
@@ -15,7 +13,7 @@ describe('Methods', () => {
     };
 
     const expressionMock = jest.fn<void, [NodePath]>((path) => {
-      path.get<Identifier>('expression').skip();
+      path.get<t.Identifier>('expression').skip();
     });
     const identifierMock = jest.fn<void, [NodePath]>();
 
@@ -39,7 +37,7 @@ describe('Methods', () => {
       };
 
       const expressionMock = jest.fn<void, [NodePath]>((path) => {
-        const identifierPath = path.get<Identifier>('expression');
+        const identifierPath = path.get<t.Identifier>('expression');
         identifierPath.skip();
         identifierPath.unSkip();
       });
@@ -65,7 +63,7 @@ describe('Methods', () => {
 
       let identifierPath: NodePath;
       const expressionMock = jest.fn<void, [NodePath]>((path) => {
-        identifierPath = path.get<Identifier>('expression');
+        identifierPath = path.get<t.Identifier>('expression');
         identifierPath.skip();
       });
       const identifierMock = jest.fn<void, [NodePath]>();
@@ -246,7 +244,7 @@ describe('Methods', () => {
         }
       ]
     };
-    let mockFn: jest.Mock<void, [NodePath<Literal>]>;
+    let mockFn: jest.Mock<void, [NodePath<t.Literal>]>;
 
     traverse(ast, {
       Literal: (mockFn = jest.fn((path) => {
@@ -317,7 +315,7 @@ describe('Methods', () => {
         }
       ]
     };
-    let mockFn: jest.Mock<void, [NodePath<Literal>]>;
+    let mockFn: jest.Mock<void, [NodePath<t.Literal>]>;
 
     traverse(ast, {
       Literal: (mockFn = jest.fn((path) => {
@@ -684,7 +682,7 @@ describe('Methods', () => {
       },
       Identifier(path) {
         if (path.node.name === 'a') {
-          expect(path.getSibling('right').node).toBe((path.parentPath.node as AssignmentExpression).right);
+          expect(path.getSibling('right').node).toBe((path.parentPath.node as t.AssignmentExpression).right);
         }
       }
     });
@@ -1062,7 +1060,7 @@ describe('Methods', () => {
         }
       ]
     };
-    let mockFn: jest.Mock<void, [NodePath<Literal>]>;
+    let mockFn: jest.Mock<void, [NodePath<t.Literal>]>;
 
     traverse(ast, {
       Literal: (mockFn = jest.fn((path) => {
@@ -1110,7 +1108,7 @@ describe('Methods', () => {
         }
       ]
     };
-    let mockFn: jest.Mock<void, [NodePath<Literal>]>;
+    let mockFn: jest.Mock<void, [NodePath<t.Literal>]>;
 
     traverse(ast, {
       Literal: (mockFn = jest.fn((path) => {
@@ -1364,7 +1362,7 @@ describe('Properties', () => {
   });
 });
 
-describe('operations', () => {
+describe('special cases', () => {
   test('syncs paths', () => {
     const ast = {
       type: 'Program',
@@ -1403,5 +1401,512 @@ describe('operations', () => {
     });
 
     expect.assertions(2);
+  });
+
+  describe('removal cases', () => {
+    test('"expression" of ExpressionStatement', () => {
+      const ast = {
+        type: 'Program',
+        sourceType: 'module',
+        body: [
+          {
+            type: 'ExpressionStatement',
+            expression: {
+              type: 'Identifier',
+              name: 'target'
+            }
+          }
+        ]
+      };
+
+      traverse(ast, {
+        Identifier(path) {
+          path.remove();
+        }
+      });
+
+      expect(ast).toEqual({
+        type: 'Program',
+        sourceType: 'module',
+        body: []
+      });
+    });
+
+    test('"declaration" of ExportDeclaration', () => {
+      const ast = {
+        type: 'Program',
+        sourceType: 'module',
+        body: [
+          {
+            type: 'ExportDefaultDeclaration',
+            declaration: {
+              type: 'Literal',
+              value: 8
+            }
+          },
+          {
+            type: 'ExportNamedDeclaration',
+            declaration: {
+              type: 'VariableDeclaration',
+              kind: 'const',
+              declarations: [
+                {
+                  type: 'VariableDeclarator',
+                  id: {
+                    type: 'Identifier',
+                    name: 'num'
+                  },
+                  init: {
+                    type: 'Literal',
+                    value: 6
+                  }
+                }
+              ]
+            },
+            specifiers: [],
+            source: null
+          }
+        ]
+      };
+
+      traverse(ast, {
+        ExportDeclaration(path) {
+          if (path.has('declaration')) {
+            path.get<t.Node>('declaration').remove();
+          }
+        }
+      });
+
+      expect(ast).toEqual({
+        type: 'Program',
+        sourceType: 'module',
+        body: []
+      });
+    });
+
+    test('"test" of WhileStatement or SwitchCase', () => {
+      const ast = {
+        type: 'Program',
+        sourceType: 'module',
+        body: [
+          {
+            type: 'WhileStatement',
+            test: {
+              type: 'Identifier',
+              name: 'targetNode'
+            },
+            body: {
+              type: 'BlockStatement',
+              body: []
+            }
+          },
+          {
+            type: 'SwitchStatement',
+            discriminant: {
+              type: 'Identifier',
+              name: 'x'
+            },
+            cases: [
+              {
+                type: 'SwitchCase',
+                test: {
+                  type: 'Identifier',
+                  name: 'targetNode'
+                },
+                consequent: [
+                  {
+                    type: 'BreakStatement',
+                    label: null
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      };
+
+      traverse(ast, {
+        Identifier(path) {
+          if (path.node.name === 'targetNode') {
+            path.remove();
+          }
+        }
+      });
+
+      expect(ast).toEqual({
+        type: 'Program',
+        sourceType: 'module',
+        body: [
+          {
+            type: 'SwitchStatement',
+            discriminant: {
+              type: 'Identifier',
+              name: 'x'
+            },
+            cases: []
+          }
+        ]
+      });
+    });
+
+    test('"body" of LabeledStatement', () => {
+      const ast = {
+        type: 'Program',
+        sourceType: 'module',
+        body: [
+          {
+            type: 'LabeledStatement',
+            label: {
+              type: 'Identifier',
+              name: 'label'
+            },
+            body: {
+              type: 'BlockStatement',
+              body: []
+            }
+          }
+        ]
+      };
+
+      traverse(ast, {
+        BlockStatement(path) {
+          path.remove();
+        }
+      });
+
+      expect(ast).toEqual({
+        type: 'Program',
+        sourceType: 'module',
+        body: []
+      });
+    });
+
+    test('"declarations" of VariableDeclaration', () => {
+      const ast = {
+        type: 'Program',
+        sourceType: 'module',
+        body: [
+          {
+            type: 'VariableDeclaration',
+            kind: 'let',
+            declarations: [
+              {
+                type: 'VariableDeclarator',
+                id: {
+                  type: 'Identifier',
+                  name: 'a'
+                },
+                init: null
+              }
+            ]
+          }
+        ]
+      };
+
+      traverse(ast, {
+        VariableDeclarator(path) {
+          path.remove();
+        }
+      });
+
+      expect(ast).toEqual({
+        type: 'Program',
+        sourceType: 'module',
+        body: []
+      });
+    });
+
+    test('child of BinaryExpression', () => {
+      const ast = {
+        type: 'Program',
+        sourceType: 'module',
+        body: [
+          {
+            type: 'ExpressionStatement',
+            expression: {
+              type: 'BinaryExpression',
+              left: {
+                type: 'Identifier',
+                name: 'target'
+              },
+              right: {
+                type: 'Literal',
+                value: 1
+              },
+              operator: '+'
+            }
+          },
+          {
+            type: 'ExpressionStatement',
+            expression: {
+              type: 'BinaryExpression',
+              left: {
+                type: 'Literal',
+                value: 2
+              },
+              right: {
+                type: 'Identifier',
+                name: 'target'
+              },
+              operator: '+'
+            }
+          }
+        ]
+      };
+
+      traverse(ast, {
+        Identifier(path) {
+          if (path.node.name === 'target') {
+            path.remove();
+          }
+        }
+      });
+
+      expect(ast).toEqual({
+        type: 'Program',
+        sourceType: 'module',
+        body: [
+          {
+            type: 'ExpressionStatement',
+            expression: {
+              type: 'Literal',
+              value: 1
+            }
+          },
+          {
+            type: 'ExpressionStatement',
+            expression: {
+              type: 'Literal',
+              value: 2
+            }
+          }
+        ]
+      });
+    });
+
+    test('consequent of IfStatement', () => {
+      const ast = {
+        type: 'Program',
+        sourceType: 'module',
+        body: [
+          {
+            type: 'IfStatement',
+            test: {
+              type: 'Identifier',
+              name: 'x'
+            },
+            consequent: {
+              type: 'ExpressionStatement',
+              expression: {
+                type: 'Identifier',
+                name: 'target'
+              }
+            },
+            alternate: null
+          }
+        ]
+      };
+      
+      traverse(ast, {
+        Identifier(path) {
+          if (path.node.name === 'target') {
+            path.remove();
+          }
+        }
+      });
+
+      expect(ast).toEqual({
+        type: 'Program',
+        sourceType: 'module',
+        body: [
+          {
+            type: 'IfStatement',
+            test: {
+              type: 'Identifier',
+              name: 'x'
+            },
+            consequent: {
+              type: 'BlockStatement',
+              body: []
+            },
+            alternate: null
+          }
+        ]
+      });
+    });
+
+    test('"body" of ArrowFunctionExpression or Loop', () => {
+      const ast = {
+        type: 'Program',
+        sourceType: 'module',
+        body: [
+          {
+            type: 'ExpressionStatement',
+            expression: {
+              type: 'ArrowFunctionExpression',
+              params: [],
+              body: {
+                type: 'Literal',
+                value: 5
+              },
+              async: false,
+              expression: true
+            }
+          },
+          {
+            type: 'ForInStatement',
+            body: {
+              type: 'ExpressionStatement',
+              expression: {
+                type: 'Literal',
+                value: 5
+              }
+            },
+            left: {
+              type: 'Identifier',
+              name: 'x'
+            },
+            right: {
+              type: 'Identifier',
+              name: 'o'
+            }
+          },
+          {
+            type: 'ForOfStatement',
+            left: {
+              type: 'Identifier',
+              name: 'x'
+            },
+            right: {
+              type: 'Identifier',
+              name: 'o'
+            },
+            body: {
+              type: 'ExpressionStatement',
+              expression: {
+                type: 'Literal',
+                value: 5
+              }
+            },
+            await: false
+          },
+          {
+            type: 'WhileStatement',
+            test: {
+              type: 'Identifier',
+              name: 'x'
+            },
+            body: {
+              type: 'ExpressionStatement',
+              expression: {
+                type: 'Literal',
+                value: 5
+              }
+            }
+          },
+          {
+            type: 'DoWhileStatement',
+            body: {
+              type: 'BlockStatement',
+              body: [
+                {
+                  type: 'ExpressionStatement',
+                  expression: {
+                    type: 'Literal',
+                    value: 5
+                  }
+                }
+              ]
+            },
+            test: {
+              type: 'Identifier',
+              name: 'x'
+            }
+          }
+        ]
+      };
+
+      traverse(ast, {
+        ArrowFunctionExpression(path) {
+          path.get('body').remove();
+        },
+        Loop(path) {
+          path.get('body').remove();
+        }
+      });
+
+      expect(ast).toEqual({
+        type: 'Program',
+        sourceType: 'module',
+        body: [
+          {
+            type: 'ExpressionStatement',
+            expression: {
+              type: 'ArrowFunctionExpression',
+              params: [],
+              body: {
+                type: 'BlockStatement',
+                body: []
+              },
+              async: false,
+              expression: false
+            }
+          },
+          {
+            type: 'ForInStatement',
+            body: {
+              type: 'BlockStatement',
+              body: []
+            },
+            left: {
+              type: 'Identifier',
+              name: 'x'
+            },
+            right: {
+              type: 'Identifier',
+              name: 'o'
+            }
+          },
+          {
+            type: 'ForOfStatement',
+            left: {
+              type: 'Identifier',
+              name: 'x'
+            },
+            right: {
+              type: 'Identifier',
+              name: 'o'
+            },
+            body: {
+              type: 'BlockStatement',
+              body: []
+            },
+            await: false
+          },
+          {
+            type: 'WhileStatement',
+            test: {
+              type: 'Identifier',
+              name: 'x'
+            },
+            body: {
+              type: 'BlockStatement',
+              body: []
+            }
+          },
+          {
+            type: 'DoWhileStatement',
+            body: {
+              type: 'BlockStatement',
+              body: []
+            },
+            test: {
+              type: 'Identifier',
+              name: 'x'
+            }
+          }
+        ]
+      });
+    });
   });
 });
