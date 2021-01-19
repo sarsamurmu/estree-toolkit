@@ -12,6 +12,9 @@
   <a href="https://codecov.io/gh/sarsamurmu/estree-toolkit">
     <img alt="codecov" src="https://img.shields.io/codecov/c/github/sarsamurmu/estree-toolkit?style=flat-square">
   </a>
+  <a href="https://github.com/sarsamurmu/estree-toolkit/blob/main/LICENSE">
+    <img alt="License" src="https://img.shields.io/github/license/sarsamurmu/estree-toolkit?style=flat-square">
+  </a>
 </p>
 
 ## Installation
