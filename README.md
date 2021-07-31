@@ -25,7 +25,7 @@ yarn add estree-toolkit
 ```
 
 ## Basic operations
-### Traversing AST
+### Traversing an AST
 ```js
 const { traverse } = require('estree-toolkit');
 
@@ -78,6 +78,7 @@ traverse(ast, {
 const { traverse } = require('estree-toolkit');
 
 traverse(ast, {
+  // Enable scope
   $: { scope: true },
   Program(path) {
     // `path.scope` is now available in all paths
@@ -127,7 +128,7 @@ traverse(ast, {
   }
 });
 ```
-#### Checking if a global is used
+#### Checking if a global have been used
 ```js
 const { traverse } = require('estree-toolkit');
 const { parseModule } = require('meriyah');
@@ -144,7 +145,7 @@ traverse(ast, {
 });
 ```
 ### Utilities
-There are several static utilities which you can use. For now there's two utility
+There are several static utilities that you can use.
 - `evaluate`\
   Evaluates the given path. For now it only supports evaluation of logical, binary and unary operations.
   ```js
@@ -174,7 +175,7 @@ There are several static utilities which you can use. For now there's two utilit
   Evaluates the path for truthiness and returns `true`, `false` or `undefined` depending on
   evaluation result.
 - `hasBinding`\
-  Checks if any binding with the name is available.
+  Checks if any binding with the name is available in the containing scope.
   ```js
   const { utils: u } = require('estree-toolkit');
   const { parseModule } = require('meriyah');
@@ -193,9 +194,9 @@ There are several static utilities which you can use. For now there's two utilit
   traverse(ast, {
     Identifier(path) {
       if (path.node.name === 'id1') {
-        u.hasBinding('a') // => true
+        u.hasBinding(path, 'a') // => true
       } else if (path.node.name === 'id2') {
-        u.hasBinding('a') // => false
+        u.hasBinding(path, 'a') // => false
       }
     }
   });
@@ -206,7 +207,7 @@ This project provides built-in TypeScript definitions with documentation, so you
 good editor experience with this project (if you are using editors like VS Code or WebStorm),
 just hover on any method to view the method's documentation with examples.
 
-Also you can read more about NodePath by exploring [`declaration file`](/src/nodepath-doc.ts).
+Also you can read more about NodePath by exploring the [`declaration file`](/src/nodepath-doc.ts).
 
 ## To-Do
 - More methods and documentation for [`Scope`](/src/scope.ts).

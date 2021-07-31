@@ -146,6 +146,7 @@ class Evaluator {
             }
             break;
           }
+          /* istanbul ignore next */
           default: assertNever(aPath.node!.operator)
         }
       }

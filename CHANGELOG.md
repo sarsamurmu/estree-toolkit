@@ -1,3 +1,7 @@
+## 1.2.0
+- Updated to latest `@types/estree`
+- Improved compatibility with latest TypeScript
+
 ## 1.1.0
 - More fixes
 

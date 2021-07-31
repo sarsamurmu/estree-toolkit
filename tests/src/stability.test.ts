@@ -6,6 +6,8 @@ import * as https from 'https';
 
 import { traverse } from '<project>';
 
+jest.setTimeout(10000);
+
 const cacheDir = path.join(__dirname, './__script_cache__');
 const scriptLinks = {
   angular: 'angular@1.8.2/angular.js',
