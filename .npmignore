@@ -2,6 +2,7 @@ __tests__/
 .circleci/
 .vscode/
 coverage/
+dist/**/*.map
 generator-scripts/
 src/
 tests/
