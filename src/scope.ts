@@ -560,6 +560,23 @@ const identifierCrawlers: {
       /* istanbul ignore next */
       default: assertNever(key);
     }
+  },
+  ExportAllDeclaration(key) {
+    switch (key) {
+      case 'exported': break;
+      /* istanbul ignore next */
+      default: assertNever(key);
+    }
+  },
+  PropertyDefinition(key, path, state) {
+    switch (key) {
+      case 'key': break;
+      case 'value':
+        state.references.push(path);
+        break;
+      /* istanbul ignore next */
+      default: assertNever(key);
+    }
   }
 }
 
@@ -1018,7 +1035,7 @@ export class Scope {
           ? memoizedBindings[bindingName]
           : (memoizedBindings[bindingName] = this.getBinding(bindingName));
 
-        if (binding) {
+        if (binding != null) {
           binding.addReference(path);
         } else {
           (
@@ -1034,7 +1051,7 @@ export class Scope {
           ? memoizedBindings[bindingName]
           : (memoizedBindings[bindingName] = this.getBinding(bindingName));
         
-        if (binding) {
+        if (binding != null) {
           binding.addConstantViolation(path);
         } else {
           (
@@ -1079,7 +1096,7 @@ export class Scope {
     const bindingName = identifierPath.node!.name;
     const binding = this.getOwnBinding(bindingName);
 
-    if (binding) {
+    if (binding != null) {
       binding.constantViolations.push(identifierPath);
       return;
     }

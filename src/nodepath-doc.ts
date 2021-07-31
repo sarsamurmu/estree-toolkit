@@ -4,9 +4,9 @@
 /** This interface documents each field of a NodePath. */
 export interface NodePathDocs {
   /** The node associated with the current path */
-  node
+  node;
   /** Type of the node that is associated with this path */
-  type
+  type;
   /**
     The current node's key in its parent
    
@@ -33,7 +33,7 @@ export interface NodePathDocs {
     });
     ```
    */
-  key
+  key;
   /**
     If this node is part of an array, `listKey` would be the key of the array in its parent
     
@@ -59,13 +59,13 @@ export interface NodePathDocs {
     });
     ```
    */
-  listKey
+  listKey;
   /** If the node has been removed from its parent */
-  removed
+  removed;
   /** The parent path of the current path */
-  parentPath
+  parentPath;
   /** The parent node of the current path */
-  parent
+  parent;
   /**
     Container of the node
     
@@ -113,7 +113,7 @@ export interface NodePathDocs {
     });
     ```
    */
-  container
+  container;
 
   //#region Traversal
 
@@ -144,16 +144,16 @@ export interface NodePathDocs {
     });
     ```
    */
-  skip
+  skip;
   /**
     Un-skip the path from traversal. Whenever un-skipped, the path would be
     traversed if it's not already traversed
    */
-  unSkip
+  unSkip;
   /** Alias of `unSkip` */
-  unskip
+  unskip;
   /** Traverse this path and its children with the given `visitor` and `state` */
-  traverse
+  traverse;
 
   //#endregion
 
@@ -193,7 +193,7 @@ export interface NodePathDocs {
     });
     ```
    */
-  findParent
+  findParent;
   /**
     Starting from **this** path and going up the tree,
     returns the first path where `predicate` is true
@@ -216,9 +216,9 @@ export interface NodePathDocs {
     });
     ```
    */
-  find
+  find;
   /** Get the closest function parent */
-  getFunctionParent
+  getFunctionParent;
 
   //#endregion
 
@@ -277,7 +277,7 @@ export interface NodePathDocs {
     });
     ```
    */
-  insertBefore
+  insertBefore;
   /**
     Inserts the `nodes` after the current node
 
@@ -331,7 +331,7 @@ export interface NodePathDocs {
     });
     ```
    */
-  insertAfter
+  insertAfter;
   /**
     Inserts child nodes at the start of the container
 
@@ -383,7 +383,7 @@ export interface NodePathDocs {
     });
     ```
    */
-  unshiftContainer
+  unshiftContainer;
   /**
     Inserts the child nodes at the end of the container
 
@@ -435,7 +435,7 @@ export interface NodePathDocs {
     });
     ```
    */
-  pushContainer
+  pushContainer;
 
   //#endregion
 
@@ -466,7 +466,7 @@ export interface NodePathDocs {
     });
     ```
    */
-  get
+  get;
   /**
     Get the path of its sibling for which the key is `key`
 
@@ -499,7 +499,7 @@ export interface NodePathDocs {
     });
     ```
    */
-  getSibling
+  getSibling;
   /**
     Get the opposite path of the current path
 
@@ -527,7 +527,7 @@ export interface NodePathDocs {
     });
     ```
    */
-  getOpposite
+  getOpposite;
   /**
     The the previous sibling's path of the current path
 
@@ -560,7 +560,7 @@ export interface NodePathDocs {
     });
     ```
    */
-  getPrevSibling
+  getPrevSibling;
   /**
     The the next sibling's path of the current path
 
@@ -593,7 +593,7 @@ export interface NodePathDocs {
     });
     ```
    */
-  getNextSibling
+  getNextSibling;
   /**
     Get all previous siblings' path of the current path\
     __NOTE__: Returned paths are reversed (they are sorted in how close
@@ -638,7 +638,7 @@ export interface NodePathDocs {
     });
     ```
    */
-  getAllPrevSiblings
+  getAllPrevSiblings;
   /**
     Get all next siblings' path of the current path
 
@@ -681,7 +681,7 @@ export interface NodePathDocs {
     });
     ```
    */
-  getAllNextSiblings
+  getAllNextSiblings;
 
   //#endregion
 
@@ -746,7 +746,7 @@ export interface NodePathDocs {
     });
     ```
    */
-  has
+  has;
   /**
     Checks if path _is_ something
 
@@ -783,14 +783,14 @@ export interface NodePathDocs {
     });
     ```
    */
-  is
+  is;
 
   //#endregion
 
   //#region Removal
 
   /** Removes the path from its parent */
-  remove
+  remove;
 
   //#endregion
 
@@ -841,7 +841,7 @@ export interface NodePathDocs {
     });
     ```
    */
-  replaceWith
+  replaceWith;
   /**
     Removes the old node and inserts the new nodes in the old node's position
 
@@ -915,7 +915,7 @@ export interface NodePathDocs {
     });
     ```
    */
-  replaceWithMultiple
+  replaceWithMultiple;
 
   //#endregion
 }

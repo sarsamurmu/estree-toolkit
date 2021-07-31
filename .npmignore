@@ -7,5 +7,6 @@ src/
 tests/
 .eslintignore
 .eslintrc.js
+codecov.yml
 jest.config.js
 tsconfig.json

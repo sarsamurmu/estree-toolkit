@@ -686,10 +686,12 @@ export const definitions: Definitions = clean<Definitions>({
   },
   ExportAllDeclaration: {
     indices: {
-      source: 0
+      source: 0,
+      exported: 1
     },
     fields: {
-      source: {}
+      source: {},
+      exported: { default: null }
     }
   },
   ImportSpecifier: {
@@ -730,6 +732,28 @@ export const definitions: Definitions = clean<Definitions>({
       exported: {
         default: (node) => ({ type: 'Identifier', name: node.local.name })
       }
+    }
+  },
+  PrivateIdentifier: {
+    indices: {
+      name: [1, false]
+    },
+    fields: {
+      name: {}
+    }
+  },
+  PropertyDefinition: {
+    indices: {
+      key: 0,
+      value: 1,
+      computed: [2, false],
+      static: [3, false]
+    },
+    fields: {
+      key: {},
+      value: {},
+      computed: { default: false },
+      static: { default: false }
     }
   }
 });

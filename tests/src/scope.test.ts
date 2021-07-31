@@ -42,6 +42,8 @@ test('reference collection', () => {
     class x { methodDefinition_key() {} [MethodDefinition_key_computed]() {} }
     export default ExportDefaultDeclaration_declaration;
     export { ExportSpecifier_local as x }
+    export * as exportAllDeclaration_exported from '';
+    class x { propertyDefinition_key = PropertyDefinition_value }
 
     // ----------------------------
     //   inListIdentifierCrawlers
@@ -52,7 +54,7 @@ test('reference collection', () => {
     (SequenceExpression_expressions, x);
     \`\${TemplateLiteral_expressions}\`;
   `;
-  const ast = parseModule(source);
+  const ast = parseModule(source, { next: true });
   const referencedIdentifiers = [...source.matchAll(/\b([A-Z][a-z]+)+_[A-Za-z]+\b/gm)].map((m) => m[0]);
 
   traverse(ast, {

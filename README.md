@@ -31,7 +31,7 @@ const { traverse } = require('estree-toolkit');
 
 traverse(ast, {
   Program(path) {
-    // Do something with path
+    // Do something with the path
   }
 });
 ```

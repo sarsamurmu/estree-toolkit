@@ -168,5 +168,5 @@ export const evaluate = (path: NodePath): { value: unknown } | undefined => {
  */
 export const evaluateTruthy = (path: NodePath): boolean | undefined => {
   const result = evaluate(path);
-  if (result) return !!result.value;
+  if (result != null) return !!result.value;
 }

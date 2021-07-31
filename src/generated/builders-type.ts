@@ -1,7 +1,7 @@
 // Generated file. Do not modify by hands.
 // Run "npm run generate" to re-generate this file.
 
-import { Identifier, Literal, Program, FunctionDeclaration, FunctionExpression, ArrowFunctionExpression, SwitchCase, CatchClause, VariableDeclarator, ExpressionStatement, BlockStatement, EmptyStatement, DebuggerStatement, WithStatement, ReturnStatement, LabeledStatement, BreakStatement, ContinueStatement, IfStatement, SwitchStatement, ThrowStatement, TryStatement, WhileStatement, DoWhileStatement, ForStatement, ForInStatement, ForOfStatement, VariableDeclaration, ClassDeclaration, ThisExpression, ArrayExpression, ObjectExpression, YieldExpression, UnaryExpression, UpdateExpression, BinaryExpression, AssignmentExpression, LogicalExpression, MemberExpression, ConditionalExpression, CallExpression, NewExpression, SequenceExpression, TemplateLiteral, TaggedTemplateExpression, ClassExpression, MetaProperty, AwaitExpression, ImportExpression, ChainExpression, Property, Super, TemplateElement, SpreadElement, ObjectPattern, ArrayPattern, RestElement, AssignmentPattern, ClassBody, MethodDefinition, ImportDeclaration, ExportNamedDeclaration, ExportDefaultDeclaration, ExportAllDeclaration, ImportSpecifier, ImportDefaultSpecifier, ImportNamespaceSpecifier, ExportSpecifier } from 'estree';
+import { Identifier, Literal, Program, FunctionDeclaration, FunctionExpression, ArrowFunctionExpression, SwitchCase, CatchClause, VariableDeclarator, ExpressionStatement, BlockStatement, EmptyStatement, DebuggerStatement, WithStatement, ReturnStatement, LabeledStatement, BreakStatement, ContinueStatement, IfStatement, SwitchStatement, ThrowStatement, TryStatement, WhileStatement, DoWhileStatement, ForStatement, ForInStatement, ForOfStatement, VariableDeclaration, ClassDeclaration, ThisExpression, ArrayExpression, ObjectExpression, YieldExpression, UnaryExpression, UpdateExpression, BinaryExpression, AssignmentExpression, LogicalExpression, MemberExpression, ConditionalExpression, CallExpression, NewExpression, SequenceExpression, TemplateLiteral, TaggedTemplateExpression, ClassExpression, MetaProperty, AwaitExpression, ImportExpression, ChainExpression, Property, Super, TemplateElement, SpreadElement, ObjectPattern, ArrayPattern, RestElement, AssignmentPattern, ClassBody, MethodDefinition, ImportDeclaration, ExportNamedDeclaration, ExportDefaultDeclaration, ExportAllDeclaration, ImportSpecifier, ImportDefaultSpecifier, ImportNamespaceSpecifier, ExportSpecifier, PrivateIdentifier, PropertyDefinition } from 'estree';
 
 export type Builders = {
   identifier(name: Identifier['name']): Identifier;
@@ -67,9 +67,11 @@ export type Builders = {
   importDeclaration(specifiers: ImportDeclaration['specifiers'], source: ImportDeclaration['source']): ImportDeclaration;
   exportNamedDeclaration(declaration: ExportNamedDeclaration['declaration'], specifiers?: ExportNamedDeclaration['specifiers'], source?: ExportNamedDeclaration['source']): ExportNamedDeclaration;
   exportDefaultDeclaration(declaration: ExportDefaultDeclaration['declaration']): ExportDefaultDeclaration;
-  exportAllDeclaration(source: ExportAllDeclaration['source']): ExportAllDeclaration;
+  exportAllDeclaration(source: ExportAllDeclaration['source'], exported?: ExportAllDeclaration['exported']): ExportAllDeclaration;
   importSpecifier(imported: ImportSpecifier['imported'], local?: ImportSpecifier['local']): ImportSpecifier;
   importDefaultSpecifier(local: ImportDefaultSpecifier['local']): ImportDefaultSpecifier;
   importNamespaceSpecifier(local: ImportNamespaceSpecifier['local']): ImportNamespaceSpecifier;
   exportSpecifier(local: ExportSpecifier['local'], exported?: ExportSpecifier['exported']): ExportSpecifier;
+  privateIdentifier(name: PrivateIdentifier['name']): PrivateIdentifier;
+  propertyDefinition(key: PropertyDefinition['key'], value: PropertyDefinition['value'], computed?: PropertyDefinition['computed'], _static?: PropertyDefinition['static']): PropertyDefinition;
 }
