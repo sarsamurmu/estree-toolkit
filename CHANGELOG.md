@@ -1,3 +1,6 @@
+## 1.2.2
+- Added node validator to all builders
+
 ## 1.2.0
 - Updated to latest `@types/estree`
 - Improved compatibility with latest TypeScript

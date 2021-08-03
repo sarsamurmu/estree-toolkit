@@ -2,7 +2,7 @@ __tests__/
 .circleci/
 .vscode/
 coverage/
-dist/**/*.map
+dist/**/*.{map,tsbuildinfo}
 generator-scripts/
 src/
 tests/
