@@ -1,4 +1,5 @@
-import { NodePath, traverse } from '<project>';
+import { NodePath, traverse, builders as b } from '<project>';
+import { getNodeValidationEnabled } from '<project>/builders';
 
 test('basic traversal', () => {
   const ast = {
@@ -414,4 +415,32 @@ describe('stopping traversal does not traverse', () => {
 
     expect(mockFn).toBeCalledTimes(0);
   });
+});
+
+test('enabling/disabling node validation and restoring node validation state', () => {
+  const ast = {
+    type: 'Program',
+    sourceType: 'module',
+    body: []
+  };
+
+  const wasValidationEnabled = getNodeValidationEnabled();
+
+  traverse(ast, {
+    $: { validateNodes: false },
+    Program(p) {
+      expect(() => b.identifier(null)).not.toThrow();
+
+      traverse(p.node, {
+        $: { validateNodes: true },
+        Program() {
+          expect(() => b.identifier(null)).toThrow();
+        }
+      });
+
+      expect(() => b.identifier(null)).not.toThrow();
+    }
+  });
+
+  expect(getNodeValidationEnabled()).toBe(wasValidationEnabled);
 });

@@ -3,7 +3,8 @@
   "compilerOptions": {
     "baseUrl": "./",
     "paths": {
-      "<project>": ["../dist"]
+      "<project>": ["../dist"],
+      "<project>/*": ["../dist/*"]
     }
   }
 }

@@ -1,7 +1,8 @@
 import { Node } from 'estree';
 
 import { Is, Matcher } from './generated/is-type';
-import { definitions, aliases } from './definitions';
+import { definitions } from './definitions';
+import { aliases } from './aliases';
 import { NodePath } from './nodepath';
 
 const matches = (object: Record<string, any>, toMatch: Matcher<Node>) => {

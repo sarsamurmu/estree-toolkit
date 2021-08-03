@@ -18,6 +18,7 @@ export class Context {
   pathCache = new Map<NodePath | null, Map<Node | null, NodePath>>();
   scopeCache = new Map<NodePath, Scope>();
   makeScope = false;
+  shouldValidateNodes = true;
   private currentSkipPaths = new Set<NodePath>();
   private readonly skipPathSetStack = [this.currentSkipPaths];
   /** Store newly added nodes to this queue for traversal */
@@ -28,6 +29,9 @@ export class Context {
 
   constructor(options?: TraverseOptions) {
     this.makeScope = options?.scope === true;
+    if (options?.validateNodes != null) {
+      this.shouldValidateNodes = options.validateNodes;
+    }
   }
 
   setSkipped(path: NodePath) {

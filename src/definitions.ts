@@ -2,7 +2,7 @@
 
 import * as ESTree from 'estree';
 
-import * as assert from './assert';
+import * as a from './assert';
 
 type NodeKeys<N> = Exclude<keyof N, keyof ESTree.BaseNode>;
 
@@ -11,8 +11,8 @@ export type DefinitionIndex<T> = T extends true
   : false | [builderIndex: number | false, visitIndex: false];
 
 export type DefinitionField<N, V> = {
-  validate?: (value: V) => void; // Make it required
   default?: V | ((node: N) => V);
+  validate: a.ValidateFn<Exclude<V, undefined>>;
   type?: string;
 };
 
@@ -23,25 +23,27 @@ export type Definition<N extends ESTree.Node = ESTree.Node> = {
   fields: {
     [F in NodeKeys<N>]: DefinitionField<N, N[F]>;
   };
+  finalValidate?: a.ValidateFn<N>;
 };
 
 export type Definitions = {
   [N in ESTree.Node as `${N['type']}`]: Definition<N>;
 }
 
-/** Creates a clean object without any prototype */
-const clean = <T>(obj: T): T => Object.assign(Object.create(null), obj);
+const anyValidate = {
+  validate: a.any
+}
 
-export const definitions: Definitions = clean<Definitions>({
+export const definitions: Definitions = Object.assign<any, Definitions>(Object.create(null), {
   Identifier: {
     indices: {
       name: [0, false]
     },
     fields: {
       name: {
-        validate: assert.chain(
-          assert.valueType('string'),
-          assert.isValidIdentifier
+        validate: a.chain(
+          a.value('string'),
+          a.validIdentifier
         )
       }
     }
@@ -53,11 +55,10 @@ export const definitions: Definitions = clean<Definitions>({
     },
     fields: {
       value: {
-        validate: assert.chain(
-          assert.valueType('string', 'number', 'boolean', null)
-        )
+        // @ts-expect-error Practically RegExp would never appear here
+        validate: a.value('string', 'number', 'bigint', 'boolean', 'null')
       },
-      raw: {}
+      raw: anyValidate
     }
   },
   Program: {
@@ -67,9 +68,14 @@ export const definitions: Definitions = clean<Definitions>({
       comments: [2, false]
     },
     fields: {
-      body: {},
-      sourceType: { default: 'module' },
-      comments: { default: [] }
+      body: {
+        validate: a.arrayOf(a.OR(a.nodeAlias('Statement'), a.nodeAlias('ModuleDeclaration')))
+      },
+      sourceType: {
+        default: 'module',
+        validate: a.value('string')
+      },
+      comments: { default: [], ...anyValidate }
     }
   },
   FunctionDeclaration: {
@@ -81,11 +87,23 @@ export const definitions: Definitions = clean<Definitions>({
       async: [4, false]
     },
     fields: {
-      id: {},
-      params: {},
-      body: {},
-      generator: { default: false },
-      async: { default: false }
+      id: {
+        validate: a.nullable(a.node('Identifier'))
+      },
+      params: {
+        validate: a.arrayOf(a.nodeAlias('Pattern'))
+      },
+      body: {
+        validate: a.node('BlockStatement')
+      },
+      generator: {
+        default: false,
+        validate: a.value('boolean')
+      },
+      async: {
+        default: false,
+        validate: a.value('boolean')
+      }
     }
   },
   FunctionExpression: {
@@ -97,11 +115,23 @@ export const definitions: Definitions = clean<Definitions>({
       async: [4, false]
     },
     fields: {
-      id: {},
-      params: {},
-      body: {},
-      generator: { default: false },
-      async: { default: false }
+      id: {
+        validate: a.nullable(a.node('Identifier'))
+      },
+      params: {
+        validate: a.arrayOf(a.nodeAlias('Pattern'))
+      },
+      body: {
+        validate: a.node('BlockStatement')
+      },
+      generator: {
+        default: false,
+        validate: a.value('boolean')
+      },
+      async: {
+        default: false,
+        validate: a.value('boolean')
+      }
     }
   },
   ArrowFunctionExpression: {
@@ -113,11 +143,21 @@ export const definitions: Definitions = clean<Definitions>({
       generator: false
     },
     fields: {
-      params: {},
-      body: {},
-      expression: { default: false },
-      async: { default: false },
-      generator: {}
+      params: {
+        validate: a.arrayOf(a.nodeAlias('Pattern'))
+      },
+      body: {
+        validate: a.OR(a.node('BlockStatement'), a.nodeAlias('Expression'))
+      },
+      expression: {
+        default: false,
+        validate: a.value('boolean')
+      },
+      async: {
+        default: false,
+        validate: a.value('boolean')
+      },
+      generator: anyValidate
     }
   },
   SwitchCase: {
@@ -126,8 +166,12 @@ export const definitions: Definitions = clean<Definitions>({
       consequent: 1
     },
     fields: {
-      test: {},
-      consequent: {}
+      test: {
+        validate: a.nullable(a.nodeAlias('Expression'))
+      },
+      consequent: {
+        validate: a.arrayOf(a.nodeAlias('Statement'))
+      }
     }
   },
   CatchClause: {
@@ -136,8 +180,12 @@ export const definitions: Definitions = clean<Definitions>({
       body: 1
     },
     fields: {
-      param: {},
-      body: {}
+      param: {
+        validate: a.nullable(a.nodeAlias('Pattern'))
+      },
+      body: {
+        validate: a.node('BlockStatement')
+      }
     }
   },
   VariableDeclarator: {
@@ -146,8 +194,13 @@ export const definitions: Definitions = clean<Definitions>({
       init: 1
     },
     fields: {
-      id: {},
-      init: { default: null }
+      id: {
+        validate: a.nodeAlias('Pattern')
+      },
+      init: {
+        default: null,
+        validate: a.nullable(a.nodeAlias('Expression'))
+      }
     }
   },
   ExpressionStatement: {
@@ -155,7 +208,9 @@ export const definitions: Definitions = clean<Definitions>({
       expression: 0
     },
     fields: {
-      expression: {}
+      expression: {
+        validate: a.nodeAlias('Expression')
+      }
     }
   },
   BlockStatement: {
@@ -164,8 +219,10 @@ export const definitions: Definitions = clean<Definitions>({
       innerComments: false
     },
     fields: {
-      body: {},
-      innerComments: {}
+      body: {
+        validate: a.arrayOf(a.nodeAlias('Statement'))
+      },
+      innerComments: anyValidate
     }
   },
   EmptyStatement: {
@@ -182,8 +239,12 @@ export const definitions: Definitions = clean<Definitions>({
       body: 1
     },
     fields: {
-      object: {},
-      body: {}
+      object: {
+        validate: a.nodeAlias('Expression')
+      },
+      body: {
+        validate: a.nodeAlias('Statement')
+      }
     }
   },
   ReturnStatement: {
@@ -191,7 +252,10 @@ export const definitions: Definitions = clean<Definitions>({
       argument: 0
     },
     fields: {
-      argument: { default: null }
+      argument: {
+        default: null,
+        validate: a.nullable(a.nodeAlias('Expression'))
+      }
     }
   },
   LabeledStatement: {
@@ -200,8 +264,12 @@ export const definitions: Definitions = clean<Definitions>({
       body: 1
     },
     fields: {
-      label: {},
-      body: {}
+      label: {
+        validate: a.node('Identifier')
+      },
+      body: {
+        validate: a.nodeAlias('Statement')
+      }
     }
   },
   BreakStatement: {
@@ -209,7 +277,10 @@ export const definitions: Definitions = clean<Definitions>({
       label: 0
     },
     fields: {
-      label: { default: null }
+      label: {
+        default: null,
+        validate: a.nullable(a.node('Identifier'))
+      }
     }
   },
   ContinueStatement: {
@@ -217,7 +288,10 @@ export const definitions: Definitions = clean<Definitions>({
       label: 0
     },
     fields: {
-      label: { default: null }
+      label: {
+        default: null,
+        validate: a.nullable(a.node('Identifier'))
+      }
     }
   },
   IfStatement: {
@@ -227,9 +301,16 @@ export const definitions: Definitions = clean<Definitions>({
       alternate: 2
     },
     fields: {
-      test: {},
-      consequent: {},
-      alternate: { default: null }
+      test: {
+        validate: a.nodeAlias('Expression')
+      },
+      consequent: {
+        validate: a.nodeAlias('Statement')
+      },
+      alternate: {
+        default: null,
+        validate: a.nullable(a.nodeAlias('Statement'))
+      }
     }
   },
   SwitchStatement: {
@@ -238,8 +319,12 @@ export const definitions: Definitions = clean<Definitions>({
       cases: 1
     },
     fields: {
-      discriminant: {},
-      cases: {}
+      discriminant: {
+        validate: a.nodeAlias('Expression')
+      },
+      cases: {
+        validate: a.arrayOf(a.node('SwitchCase'))
+      }
     }
   },
   ThrowStatement: {
@@ -247,7 +332,9 @@ export const definitions: Definitions = clean<Definitions>({
       argument: 0
     },
     fields: {
-      argument: {}
+      argument: {
+        validate: a.nodeAlias('Expression')
+      }
     }
   },
   TryStatement: {
@@ -257,9 +344,22 @@ export const definitions: Definitions = clean<Definitions>({
       finalizer: 2
     },
     fields: {
-      block: {},
-      handler: {},
-      finalizer: { default: null }
+      block: {
+        validate: a.node('BlockStatement')
+      },
+      handler: {
+        validate: a.nullable(a.node('CatchClause'))
+      },
+      finalizer: {
+        default: null,
+        validate: a.nullable(a.node('BlockStatement'))
+      }
+    },
+    finalValidate(node) {
+      if (node.handler == null && node.finalizer == null) {
+        return 'If `handler` is null then `finalizer` must be not null'
+      }
+      return null;
     }
   },
   WhileStatement: {
@@ -268,8 +368,12 @@ export const definitions: Definitions = clean<Definitions>({
       body: 1
     },
     fields: {
-      test: {},
-      body: {}
+      test: {
+        validate: a.nodeAlias('Expression')
+      },
+      body: {
+        validate: a.nodeAlias('Statement')
+      }
     }
   },
   DoWhileStatement: {
@@ -278,8 +382,12 @@ export const definitions: Definitions = clean<Definitions>({
       body: 1
     },
     fields: {
-      test: {},
-      body: {}
+      test: {
+        validate: a.nodeAlias('Expression')
+      },
+      body: {
+        validate: a.nodeAlias('Statement')
+      }
     }
   },
   ForStatement: {
@@ -290,10 +398,18 @@ export const definitions: Definitions = clean<Definitions>({
       body: 3
     },
     fields: {
-      init: {},
-      test: {},
-      update: {},
-      body: {}
+      init: {
+        validate: a.nullable(a.OR(a.node('VariableDeclaration'), a.nodeAlias('Expression')))
+      },
+      test: {
+        validate: a.nullable(a.nodeAlias('Expression'))
+      },
+      update: {
+        validate: a.nullable(a.nodeAlias('Expression'))
+      },
+      body: {
+        validate: a.nodeAlias('Statement')
+      }
     }
   },
   ForInStatement: {
@@ -303,9 +419,15 @@ export const definitions: Definitions = clean<Definitions>({
       body: 2
     },
     fields: {
-      left: {},
-      right: {},
-      body: {}
+      left: {
+        validate: a.OR(a.node('VariableDeclaration'), a.nodeAlias('Pattern'))
+      },
+      right: {
+        validate: a.nodeAlias('Expression')
+      },
+      body: {
+        validate: a.nodeAlias('Statement')
+      }
     }
   },
   ForOfStatement: {
@@ -316,10 +438,18 @@ export const definitions: Definitions = clean<Definitions>({
       await: [3, false]
     },
     fields: {
-      left: {},
-      right: {},
-      body: {},
-      await: {}
+      left: {
+        validate: a.OR(a.node('VariableDeclaration'), a.nodeAlias('Pattern'))
+      },
+      right: {
+        validate: a.nodeAlias('Expression')
+      },
+      body: {
+        validate: a.nodeAlias('Statement')
+      },
+      await: {
+        validate: a.value('boolean')
+      }
     }
   },
   VariableDeclaration: {
@@ -328,8 +458,12 @@ export const definitions: Definitions = clean<Definitions>({
       declarations: 1
     },
     fields: {
-      kind: {},
-      declarations: {}
+      kind: {
+        validate: a.oneOf(['var', 'let', 'const'] as const)
+      },
+      declarations: {
+        validate: a.arrayOf(a.node('VariableDeclarator'))
+      }
     }
   },
   ClassDeclaration: {
@@ -339,9 +473,16 @@ export const definitions: Definitions = clean<Definitions>({
       superClass: [3, 1]
     },
     fields: {
-      id: {},
-      body: {},
-      superClass: { default: null }
+      id: {
+        validate: a.nullable(a.node('Identifier'))
+      },
+      body: {
+        validate: a.node('ClassBody')
+      },
+      superClass: {
+        default: null,
+        validate: a.nullable(a.nodeAlias('Expression'))
+      }
     }
   },
   ThisExpression: {
@@ -353,7 +494,9 @@ export const definitions: Definitions = clean<Definitions>({
       elements: 0
     },
     fields: {
-      elements: {}
+      elements: {
+        validate: a.arrayOf(a.nullable(a.OR(a.nodeAlias('Expression'), a.node('SpreadElement'))))
+      }
     }
   },
   ObjectExpression: {
@@ -361,7 +504,9 @@ export const definitions: Definitions = clean<Definitions>({
       properties: 0
     },
     fields: {
-      properties: {}
+      properties: {
+        validate: a.arrayOf(a.OR(a.node('Property'), a.node('SpreadElement')))
+      }
     }
   },
   YieldExpression: {
@@ -370,8 +515,13 @@ export const definitions: Definitions = clean<Definitions>({
       delegate: [1, false]
     },
     fields: {
-      argument: {},
-      delegate: { default: false }
+      argument: {
+        validate: a.nullable(a.nodeAlias('Expression'))
+      },
+      delegate: {
+        default: false,
+        validate: a.value('boolean')
+      }
     }
   },
   UnaryExpression: {
@@ -381,9 +531,16 @@ export const definitions: Definitions = clean<Definitions>({
       prefix: [2, false]
     },
     fields: {
-      operator: {},
-      argument: {},
-      prefix: { default: true }
+      operator: {
+        validate: a.oneOf(['-', '+', '!', '~', 'typeof', 'void', 'delete'] as const)
+      },
+      argument: {
+        validate: a.nodeAlias('Expression')
+      },
+      prefix: {
+        default: true,
+        validate: a.value('boolean')
+      }
     }
   },
   UpdateExpression: {
@@ -393,9 +550,15 @@ export const definitions: Definitions = clean<Definitions>({
       prefix: [2, false]
     },
     fields: {
-      operator: {},
-      argument: {},
-      prefix: {}
+      operator: {
+        validate: a.oneOf(['++', '--'] as const)
+      },
+      argument: {
+        validate: a.nodeAlias('Expression')
+      },
+      prefix: {
+        validate: a.value('boolean')
+      }
     }
   },
   BinaryExpression: {
@@ -405,9 +568,18 @@ export const definitions: Definitions = clean<Definitions>({
       right: 2
     },
     fields: {
-      operator: {},
-      left: {},
-      right: {}
+      operator: {
+        validate: a.oneOf([
+          '==', '!=', '===', '!==', '<', '<=', '>', '>=', '<<', '>>', '>>>',
+          '+', '-', '*', '/', '%', '**', '|', '^', '&', 'in', 'instanceof'
+        ] as const)
+      },
+      left: {
+        validate: a.nodeAlias('Expression')
+      },
+      right: {
+        validate: a.nodeAlias('Expression')
+      }
     }
   },
   AssignmentExpression: {
@@ -417,9 +589,18 @@ export const definitions: Definitions = clean<Definitions>({
       right: 2
     },
     fields: {
-      operator: {},
-      left: {},
-      right: {}
+      operator: {
+        validate: a.oneOf([
+          '=', '+=', '-=', '*=', '/=', '%=', '**=', '<<=', '>>=', '>>>=',
+          '|=', '^=', '&='
+        ] as const)
+      },
+      left: {
+        validate: a.nodeAlias('Pattern')
+      },
+      right: {
+        validate: a.nodeAlias('Expression')
+      }
     }
   },
   LogicalExpression: {
@@ -429,9 +610,15 @@ export const definitions: Definitions = clean<Definitions>({
       right: 2
     },
     fields: {
-      operator: {},
-      left: {},
-      right: {}
+      operator: {
+        validate: a.oneOf(['||', '&&', '??'] as const)
+      },
+      left: {
+        validate: a.nodeAlias('Expression')
+      },
+      right: {
+        validate: a.nodeAlias('Expression')
+      }
     }
   },
   MemberExpression: {
@@ -442,10 +629,20 @@ export const definitions: Definitions = clean<Definitions>({
       optional: [3, false]
     },
     fields: {
-      object: {},
-      property: {},
-      computed: { default: false },
-      optional: { default: false }
+      object: {
+        validate: a.OR(a.nodeAlias('Expression'), a.node('Super'))
+      },
+      property: {
+        validate: a.OR(a.nodeAlias('Expression'), a.node('PrivateIdentifier'))
+      },
+      computed: {
+        default: false,
+        validate: a.value('boolean')
+      },
+      optional: {
+        default: false,
+        validate: a.value('boolean')
+      }
     }
   },
   ConditionalExpression: {
@@ -455,9 +652,15 @@ export const definitions: Definitions = clean<Definitions>({
       alternate: 2
     },
     fields: {
-      test: {},
-      consequent: {},
-      alternate: {}
+      test: {
+        validate: a.nodeAlias('Expression')
+      },
+      consequent: {
+        validate: a.nodeAlias('Expression')
+      },
+      alternate: {
+        validate: a.nodeAlias('Expression')
+      }
     }
   },
   CallExpression: {
@@ -467,9 +670,17 @@ export const definitions: Definitions = clean<Definitions>({
       optional: [2, false]
     },
     fields: {
-      callee: {},
-      arguments: {},
-      optional: { type: 'boolean', default: false }
+      callee: {
+        validate: a.OR(a.nodeAlias('Expression'), a.node('Super'))
+      },
+      arguments: {
+        validate: a.arrayOf(a.OR(a.nodeAlias('Expression'), a.node('SpreadElement')))
+      },
+      optional: {
+        type: 'boolean',
+        default: false,
+        validate: a.value('boolean')
+      }
     }
   },
   NewExpression: {
@@ -478,8 +689,12 @@ export const definitions: Definitions = clean<Definitions>({
       arguments: 1
     },
     fields: {
-      callee: {},
-      arguments: {}
+      callee: {
+        validate: a.OR(a.nodeAlias('Expression'), a.node('Super'))
+      },
+      arguments: {
+        validate: a.arrayOf(a.OR(a.nodeAlias('Expression'), a.node('SpreadElement')))
+      }
     }
   },
   SequenceExpression: {
@@ -487,7 +702,9 @@ export const definitions: Definitions = clean<Definitions>({
       expressions: 0
     },
     fields: {
-      expressions: {}
+      expressions: {
+        validate: a.arrayOf(a.nodeAlias('Expression'))
+      }
     }
   },
   TemplateLiteral: {
@@ -496,8 +713,12 @@ export const definitions: Definitions = clean<Definitions>({
       expressions: 1
     },
     fields: {
-      quasis: {},
-      expressions: {}
+      quasis: {
+        validate: a.arrayOf(a.node('TemplateElement'))
+      },
+      expressions: {
+        validate: a.arrayOf(a.nodeAlias('Expression'))
+      }
     }
   },
   TaggedTemplateExpression: {
@@ -506,8 +727,12 @@ export const definitions: Definitions = clean<Definitions>({
       quasi: 1
     },
     fields: {
-      tag: {},
-      quasi: {}
+      tag: {
+        validate: a.nodeAlias('Expression')
+      },
+      quasi: {
+        validate: a.node('TemplateLiteral')
+      }
     }
   },
   ClassExpression: {
@@ -517,9 +742,16 @@ export const definitions: Definitions = clean<Definitions>({
       superClass: [3, 1]
     },
     fields: {
-      id: {},
-      body: {},
-      superClass: { default: null }
+      id: {
+        validate: a.nullable(a.node('Identifier'))
+      },
+      body: {
+        validate: a.node('ClassBody')
+      },
+      superClass: {
+        default: null,
+        validate: a.nullable(a.nodeAlias('Expression'))
+      }
     }
   },
   MetaProperty: {
@@ -528,8 +760,12 @@ export const definitions: Definitions = clean<Definitions>({
       property: 1
     },
     fields: {
-      meta: {},
-      property: {}
+      meta: {
+        validate: a.node('Identifier')
+      },
+      property: {
+        validate: a.node('Identifier')
+      }
     }
   },
   AwaitExpression: {
@@ -537,7 +773,9 @@ export const definitions: Definitions = clean<Definitions>({
       argument: 0
     },
     fields: {
-      argument: {}
+      argument: {
+        validate: a.nodeAlias('Expression')
+      }
     }
   },
   ImportExpression: {
@@ -545,7 +783,9 @@ export const definitions: Definitions = clean<Definitions>({
       source: 0
     },
     fields: {
-      source: {}
+      source: {
+        validate: a.nodeAlias('Expression')
+      }
     }
   },
   ChainExpression: {
@@ -553,7 +793,9 @@ export const definitions: Definitions = clean<Definitions>({
       expression: 0
     },
     fields: {
-      expression: {}
+      expression: {
+        validate: a.OR(a.node('CallExpression'), a.node('MemberExpression'))
+      }
     }
   },
   Property: {
@@ -566,12 +808,26 @@ export const definitions: Definitions = clean<Definitions>({
       method: false
     },
     fields: {
-      kind: {},
-      key: {},
-      value: {},
-      computed: { default: false },
-      shorthand: { default: false },
-      method: {}
+      kind: {
+        validate: a.oneOf(['init', 'get', 'set'] as const)
+      },
+      key: {
+        validate: a.OR(a.nodeAlias('Expression'), a.node('PrivateIdentifier'))
+      },
+      value: {
+        validate: a.OR(a.nodeAlias('Expression'), a.nodeAlias('Pattern'), a.node('Property'))
+      },
+      computed: {
+        default: false,
+        validate: a.value('boolean')
+      },
+      shorthand: {
+        default: false,
+        validate: a.value('boolean')
+      },
+      method: {
+        validate: a.value('boolean')
+      }
     }
   },
   Super: {
@@ -584,8 +840,12 @@ export const definitions: Definitions = clean<Definitions>({
       tail: [1, false]
     },
     fields: {
-      value: {},
-      tail: {}
+      value: {
+        validate: a.nonNull
+      },
+      tail: {
+        validate: a.value('boolean')
+      }
     }
   },
   SpreadElement: {
@@ -593,7 +853,9 @@ export const definitions: Definitions = clean<Definitions>({
       argument: 0
     },
     fields: {
-      argument: {}
+      argument: {
+        validate: a.nodeAlias('Expression')
+      }
     }
   },
   ObjectPattern: {
@@ -601,7 +863,9 @@ export const definitions: Definitions = clean<Definitions>({
       properties: 0
     },
     fields: {
-      properties: {}
+      properties: {
+        validate: a.arrayOf(a.OR(a.node('Property'), a.node('RestElement')))
+      }
     }
   },
   ArrayPattern: {
@@ -609,7 +873,9 @@ export const definitions: Definitions = clean<Definitions>({
       elements: 0
     },
     fields: {
-      elements: {}
+      elements: {
+        validate: a.arrayOf(a.nullable(a.nodeAlias('Pattern')))
+      }
     }
   },
   RestElement: {
@@ -617,7 +883,9 @@ export const definitions: Definitions = clean<Definitions>({
       argument: 0
     },
     fields: {
-      argument: {}
+      argument: {
+        validate: a.nodeAlias('Pattern')
+      }
     }
   },
   AssignmentPattern: {
@@ -626,8 +894,12 @@ export const definitions: Definitions = clean<Definitions>({
       right: 1
     },
     fields: {
-      left: {},
-      right: {}
+      left: {
+        validate: a.nodeAlias('Pattern')
+      },
+      right: {
+        validate: a.nodeAlias('Expression')
+      }
     }
   },
   ClassBody: {
@@ -635,7 +907,9 @@ export const definitions: Definitions = clean<Definitions>({
       body: 0
     },
     fields: {
-      body: {}
+      body: {
+        validate: a.arrayOf(a.OR(a.node('PropertyDefinition'), a.node('MethodDefinition')))
+      }
     }
   },
   MethodDefinition: {
@@ -647,11 +921,23 @@ export const definitions: Definitions = clean<Definitions>({
       static: [4, false]
     },
     fields: {
-      kind: {},
-      key: {},
-      value: {},
-      computed: { default: false },
-      static: { default: false }
+      kind: {
+        validate: a.oneOf(['method', 'get', 'set', 'constructor'] as const)
+      },
+      key: {
+        validate: a.OR(a.nodeAlias('Expression'), a.node('PrivateIdentifier'))
+      },
+      value: {
+        validate: a.node('FunctionExpression')
+      },
+      computed: {
+        default: false,
+        validate: a.value('boolean')
+      },
+      static: {
+        default: false,
+        validate: a.value('boolean')
+      }
     }
   },
   ImportDeclaration: {
@@ -660,8 +946,12 @@ export const definitions: Definitions = clean<Definitions>({
       source: 1
     },
     fields: {
-      specifiers: {},
-      source: {}
+      specifiers: {
+        validate: a.arrayOf(a.OR(a.node('ImportSpecifier'), a.node('ImportDefaultSpecifier'), a.node('ImportNamespaceSpecifier')))
+      },
+      source: {
+        validate: a.node('Literal')
+      }
     }
   },
   ExportNamedDeclaration: {
@@ -671,9 +961,17 @@ export const definitions: Definitions = clean<Definitions>({
       source: 2
     },
     fields: {
-      declaration: {},
-      specifiers: { default: [] },
-      source: { default: null }
+      declaration: {
+        validate: a.nullable(a.nodeAlias('Declaration'))
+      },
+      specifiers: {
+        default: [],
+        validate: a.arrayOf(a.node('ExportSpecifier'))
+      },
+      source: {
+        default: null,
+        validate: a.nullable(a.node('Literal'))
+      }
     }
   },
   ExportDefaultDeclaration: {
@@ -681,7 +979,9 @@ export const definitions: Definitions = clean<Definitions>({
       declaration: 0
     },
     fields: {
-      declaration: {}
+      declaration: {
+        validate: a.OR(a.nodeAlias('Declaration'), a.nodeAlias('Expression'))
+      }
     }
   },
   ExportAllDeclaration: {
@@ -690,8 +990,13 @@ export const definitions: Definitions = clean<Definitions>({
       exported: 1
     },
     fields: {
-      source: {},
-      exported: { default: null }
+      source: {
+        validate: a.node('Literal')
+      },
+      exported: {
+        default: null,
+        validate: a.nullable(a.node('Identifier'))
+      }
     }
   },
   ImportSpecifier: {
@@ -700,9 +1005,12 @@ export const definitions: Definitions = clean<Definitions>({
       local: 1
     },
     fields: {
-      imported: {},
+      imported: {
+        validate: a.node('Identifier')
+      },
       local: {
-        default: (node) => ({ type: 'Identifier', name: node.imported.name })
+        default: (node) => ({ type: 'Identifier', name: node.imported.name }),
+        validate: a.node('Identifier')
       }
     }
   },
@@ -711,7 +1019,9 @@ export const definitions: Definitions = clean<Definitions>({
       local: 0
     },
     fields: {
-      local: {}
+      local: {
+        validate: a.node('Identifier')
+      }
     }
   },
   ImportNamespaceSpecifier: {
@@ -719,7 +1029,9 @@ export const definitions: Definitions = clean<Definitions>({
       local: 0
     },
     fields: {
-      local: {}
+      local: {
+        validate: a.node('Identifier')
+      }
     }
   },
   ExportSpecifier: {
@@ -728,9 +1040,12 @@ export const definitions: Definitions = clean<Definitions>({
       exported: 1
     },
     fields: {
-      local: {},
+      local: {
+        validate: a.node('Identifier')
+      },
       exported: {
-        default: (node) => ({ type: 'Identifier', name: node.local.name })
+        default: (node) => ({ type: 'Identifier', name: node.local.name }),
+        validate: a.node('Identifier')
       }
     }
   },
@@ -739,7 +1054,12 @@ export const definitions: Definitions = clean<Definitions>({
       name: [1, false]
     },
     fields: {
-      name: {}
+      name: {
+        validate: a.chain(
+          a.value('string'),
+          a.validIdentifier
+        )
+      }
     }
   },
   PropertyDefinition: {
@@ -750,10 +1070,20 @@ export const definitions: Definitions = clean<Definitions>({
       static: [3, false]
     },
     fields: {
-      key: {},
-      value: {},
-      computed: { default: false },
-      static: { default: false }
+      key: {
+        validate: a.OR(a.nodeAlias('Expression'), a.node('PrivateIdentifier'))
+      },
+      value: {
+        validate: a.nullable(a.nodeAlias('Expression'))
+      },
+      computed: {
+        default: false,
+        validate: a.value('boolean')
+      },
+      static: {
+        default: false,
+        validate: a.value('boolean')
+      }
     }
   }
 });
@@ -787,110 +1117,3 @@ export const visitorKeys = (() => {
 
   return record as Readonly<typeof record>;
 })();
-
-export type AliasMap = {
-  Function: import('estree').Function;
-  Statement: import('estree').Statement
-  Declaration: import('estree').Declaration;
-  Expression: import('estree').Expression;
-  Pattern: import('estree').Pattern;
-  Class: import('estree').Class;
-  ExportDeclaration: ESTree.ExportAllDeclaration | ESTree.ExportDefaultDeclaration | ESTree.ExportNamedDeclaration;
-  Loop:
-    | ESTree.ForStatement
-    | ESTree.ForInStatement
-    | ESTree.ForOfStatement
-    | ESTree.WhileStatement
-    | ESTree.DoWhileStatement;
-}
-
-export const aliases: {
-  [K in keyof AliasMap]: {
-    [X in AliasMap[K]['type']]: 0;
-  }
-} = clean({
-  Function: clean({
-    FunctionDeclaration: 0,
-    FunctionExpression: 0,
-    ArrowFunctionExpression: 0
-  }),
-  Statement: clean({
-    FunctionDeclaration: 0,
-    ExpressionStatement: 0,
-    BlockStatement: 0,
-    EmptyStatement: 0,
-    DebuggerStatement: 0,
-    WithStatement: 0,
-    ReturnStatement: 0,
-    LabeledStatement: 0,
-    BreakStatement: 0,
-    ContinueStatement: 0,
-    IfStatement: 0,
-    SwitchStatement: 0,
-    ThrowStatement: 0,
-    TryStatement: 0,
-    WhileStatement: 0,
-    DoWhileStatement: 0,
-    ForStatement: 0,
-    ForInStatement: 0,
-    ForOfStatement: 0,
-    VariableDeclaration: 0,
-    ClassDeclaration: 0
-  }),
-  Declaration: clean({
-    FunctionDeclaration: 0,
-    VariableDeclaration: 0,
-    ClassDeclaration: 0
-  }),
-  Expression: clean({
-    FunctionExpression: 0,
-    ArrowFunctionExpression: 0,
-    ClassExpression: 0,
-    CallExpression: 0,
-    ConditionalExpression: 0,
-    ChainExpression: 0,
-    Identifier: 0,
-    Literal: 0,
-    ThisExpression: 0,
-    ArrayExpression: 0,
-    ObjectExpression: 0,
-    YieldExpression: 0,
-    UnaryExpression: 0,
-    UpdateExpression: 0,
-    BinaryExpression: 0,
-    AssignmentExpression: 0,
-    LogicalExpression: 0,
-    MemberExpression: 0,
-    NewExpression: 0,
-    SequenceExpression: 0,
-    TemplateLiteral: 0,
-    TaggedTemplateExpression: 0,
-    MetaProperty: 0,
-    AwaitExpression: 0,
-    ImportExpression: 0
-  }),
-  Pattern: clean({
-    Identifier: 0,
-    MemberExpression: 0,
-    ObjectPattern: 0,
-    ArrayPattern: 0,
-    RestElement: 0,
-    AssignmentPattern: 0
-  }),
-  Class: clean({
-    ClassDeclaration: 0,
-    ClassExpression: 0
-  }),
-  ExportDeclaration: clean({
-    ExportNamedDeclaration: 0,
-    ExportDefaultDeclaration: 0,
-    ExportAllDeclaration: 0
-  }),
-  Loop: clean({
-    ForStatement: 0,
-    ForInStatement: 0,
-    ForOfStatement: 0,
-    WhileStatement: 0,
-    DoWhileStatement: 0,
-  })
-});

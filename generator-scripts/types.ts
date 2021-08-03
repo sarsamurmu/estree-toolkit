@@ -1,7 +1,8 @@
 import fs from 'fs';
 import path from 'path';
 
-import { definitions, aliases } from '../src/definitions';
+import { definitions } from '../src/definitions';
+import { aliases } from '../src/aliases';
 
 const nodeTypes = Object.keys(definitions);
 let content = `
@@ -16,10 +17,10 @@ export {
 export { ${nodeTypes.join(', ')} } from 'estree';
 `.trim();
 
-content += `import type { AliasMap } from '../definitions';\n\n`;
+content += `import type { AliasMap } from '../aliases';\n\n`;
 
 Object.keys(aliases).forEach((alias) => {
-  content += `export type ${alias} = import('../definitions').AliasMap['${alias}'];\n`;
+  content += `export type ${alias} = AliasMap['${alias}'];\n`;
 });
 
 fs.writeFileSync(path.join(__dirname, '../src/generated/types.ts'), content);

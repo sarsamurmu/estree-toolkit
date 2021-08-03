@@ -1,9 +1,18 @@
 import { Builders } from './generated/builders-type';
 import { definitions, Definition, Definitions, DefinitionField, getFieldsOf } from './definitions';
+import { runValidation } from './assert';
+
+let shouldValidateNodes = true;
+
+export const setNodeValidationEnabled = (state: boolean) => {
+  shouldValidateNodes = state;
+}
+
+export const getNodeValidationEnabled = () => shouldValidateNodes;
 
 export const builders: Builders = {} as any;
 
-// Pseudo type for some kind of value, actual value may not this type
+// Pseudo type for some kind of value, actual value may not like this type
 // eslint-disable-next-line @typescript-eslint/no-empty-interface
 interface Some extends Record<string, Record<string, unknown>> {}
 
@@ -19,21 +28,26 @@ for (const key in definitions) {
     const node: Record<string, unknown> = { type: nodeType };
 
     fieldNames.forEach((fieldName, index) => {
-      let shouldValidate = true;
       const field = (fields as Record<string, DefinitionField<Some, Some>>)[fieldName];
 
-      node[fieldName] = args[index] || (
+      node[fieldName] = args[index] !== undefined ? args[index] : (
         'default' in field
-          ? (shouldValidate = true) && (
+          ? (
             typeof field.default == 'function'
               ? field.default(node as Some)
               : field.default
           )
-          : args[index]
+          : /* istanbul ignore next */ args[index]
       );
 
-      if (shouldValidate) field.validate?.(node[fieldName] as Some);
+      if (shouldValidateNodes && field.validate != null) {
+        runValidation(field.validate, node[fieldName]);
+      }
     });
+
+    if (shouldValidateNodes && definition.finalValidate != null) {
+      runValidation(definition.finalValidate, node);
+    }
 
     return node;
   }

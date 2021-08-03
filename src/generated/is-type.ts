@@ -3,6 +3,7 @@
 
 import { Node, BaseNode, Identifier, Literal, Program, FunctionDeclaration, FunctionExpression, ArrowFunctionExpression, SwitchCase, CatchClause, VariableDeclarator, ExpressionStatement, BlockStatement, EmptyStatement, DebuggerStatement, WithStatement, ReturnStatement, LabeledStatement, BreakStatement, ContinueStatement, IfStatement, SwitchStatement, ThrowStatement, TryStatement, WhileStatement, DoWhileStatement, ForStatement, ForInStatement, ForOfStatement, VariableDeclaration, ClassDeclaration, ThisExpression, ArrayExpression, ObjectExpression, YieldExpression, UnaryExpression, UpdateExpression, BinaryExpression, AssignmentExpression, LogicalExpression, MemberExpression, ConditionalExpression, CallExpression, NewExpression, SequenceExpression, TemplateLiteral, TaggedTemplateExpression, ClassExpression, MetaProperty, AwaitExpression, ImportExpression, ChainExpression, Property, Super, TemplateElement, SpreadElement, ObjectPattern, ArrayPattern, RestElement, AssignmentPattern, ClassBody, MethodDefinition, ImportDeclaration, ExportNamedDeclaration, ExportDefaultDeclaration, ExportAllDeclaration, ImportSpecifier, ImportDefaultSpecifier, ImportNamespaceSpecifier, ExportSpecifier, PrivateIdentifier, PropertyDefinition } from 'estree';
 import { NodePath } from '../nodepath';
+import type { AliasMap } from '../aliases';
 
 export type Matcher<T extends Node> = {
   [K in Exclude<keyof T, keyof BaseNode>]?: T[K] | ((value: T[K]) => boolean);
@@ -85,12 +86,13 @@ export type Is = {
   privateIdentifier: Checker<PrivateIdentifier>;
   propertyDefinition: Checker<PropertyDefinition>;
 
-  function: Checker<import('../definitions').AliasMap['Function']>;
-  statement: Checker<import('../definitions').AliasMap['Statement']>;
-  declaration: Checker<import('../definitions').AliasMap['Declaration']>;
-  expression: Checker<import('../definitions').AliasMap['Expression']>;
-  pattern: Checker<import('../definitions').AliasMap['Pattern']>;
-  class: Checker<import('../definitions').AliasMap['Class']>;
-  exportDeclaration: Checker<import('../definitions').AliasMap['ExportDeclaration']>;
-  loop: Checker<import('../definitions').AliasMap['Loop']>;
+  function: Checker<import('../aliases').AliasMap['Function']>;
+  statement: Checker<import('../aliases').AliasMap['Statement']>;
+  declaration: Checker<import('../aliases').AliasMap['Declaration']>;
+  expression: Checker<import('../aliases').AliasMap['Expression']>;
+  pattern: Checker<import('../aliases').AliasMap['Pattern']>;
+  class: Checker<import('../aliases').AliasMap['Class']>;
+  exportDeclaration: Checker<import('../aliases').AliasMap['ExportDeclaration']>;
+  loop: Checker<import('../aliases').AliasMap['Loop']>;
+  moduleDeclaration: Checker<import('../aliases').AliasMap['ModuleDeclaration']>;
 }

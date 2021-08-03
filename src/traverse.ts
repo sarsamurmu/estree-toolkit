@@ -1,7 +1,9 @@
 import { Node } from 'estree';
 
 import { Context, NodePath } from './nodepath';
-import { aliases, AliasMap, visitorKeys } from './definitions';
+import { visitorKeys } from './definitions';
+import { aliases, AliasMap } from './aliases';
+import { getNodeValidationEnabled, setNodeValidationEnabled } from './builders';
 
 export type VisitorContext = {
   stopped: boolean;
@@ -30,7 +32,12 @@ export type ExpandedVisitors<S = unknown> = {
   [type: string]: ExpandedVisitor<Node, S> | undefined;
 }
 
-export type TraverseOptions = { scope?: boolean };
+export type TraverseOptions = {
+  /** Enable/disable scope information tracking */
+  scope?: boolean;
+  /** Enable/disable validation in `Node` builders */
+  validateNodes?: boolean;
+};
 
 export class Traverser {
   private readonly visitors: ExpandedVisitors;
@@ -44,7 +51,7 @@ export class Traverser {
     path: NodePath,
     state: S,
     visitedPaths: WeakSet<NodePath>,
-    onlyChildren = false
+    visitOnlyChildren = false
   ) {
     const { node, ctx } = path;
     if (
@@ -61,7 +68,7 @@ export class Traverser {
     ctx.newQueue();
     const cleanup = () => ctx.popQueue();
 
-    if (!onlyChildren) {
+    if (!visitOnlyChildren) {
       // NOTE: If ctx.makeScope is `false`, it can cause the parent scope to reset to `null`
       path.init();
 
@@ -116,7 +123,7 @@ export class Traverser {
       }
     }
 
-    if (!onlyChildren && visitor.leave != null) {
+    if (!visitOnlyChildren && visitor.leave != null) {
       visitor.leave.call(visitorCtx, path, state);
 
       if (visitorCtx.stopped) return cleanup();
@@ -169,7 +176,7 @@ export class Traverser {
     parentPath: NodePath | null;
     state: S | undefined;
     ctx: Context;
-    onlyChildren?: boolean;
+    visitOnlyChildren?: boolean;
   } & ({
     expand: true;
     visitors: Visitors<S>;
@@ -184,6 +191,9 @@ export class Traverser {
       }
     };
 
+    const prevNodeValidationEnabled = getNodeValidationEnabled();
+    setNodeValidationEnabled(data.ctx.shouldValidateNodes);
+
     new Traverser(
       data.expand ? this.expandVisitors(data.visitors) : data.visitors
     ).visitPath(
@@ -197,8 +207,10 @@ export class Traverser {
       }),
       data.state,
       new WeakSet(),
-      data.onlyChildren
+      data.visitOnlyChildren
     );
+
+    setNodeValidationEnabled(prevNodeValidationEnabled);
   }
 }
 

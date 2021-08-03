@@ -1018,7 +1018,7 @@ export class Scope {
       state,
       visitors: crawlerVisitor as ExpandedVisitors<CrawlerState>,
       expand: false,
-      onlyChildren: true
+      visitOnlyChildren: true
     });
 
     this.path.ctx.makeScope = true;

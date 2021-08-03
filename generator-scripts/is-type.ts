@@ -1,7 +1,8 @@
 import fs from 'fs';
 import path from 'path';
 
-import { definitions, aliases } from '../src/definitions';
+import { definitions } from '../src/definitions';
+import { aliases } from '../src/aliases';
 
 let content = '';
 const nodeTypes = Object.keys(definitions);
@@ -15,6 +16,7 @@ content += `
 
 import { Node, BaseNode, ${nodeTypes.join(', ')} } from 'estree';
 import { NodePath } from '../nodepath';
+import type { AliasMap } from '../aliases';
 
 export type Matcher<T extends Node> = {
   [K in Exclude<keyof T, keyof BaseNode>]?: T[K] | ((value: T[K]) => boolean);
@@ -35,7 +37,7 @@ nodeTypes.forEach((nodeName) => {
 content += '\n';
 
 aliasNames.forEach((aliasName) => {
-  content += `  ${lowerCase(aliasName)}: Checker<import('../definitions').AliasMap['${aliasName}']>;\n`;
+  content += `  ${lowerCase(aliasName)}: Checker<import('../aliases').AliasMap['${aliasName}']>;\n`;
 });
 
 content += '}';
