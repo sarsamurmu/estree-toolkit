@@ -37,7 +37,7 @@ nodeTypes.forEach((nodeName) => {
 content += '\n';
 
 aliasNames.forEach((aliasName) => {
-  content += `  ${lowerCase(aliasName)}: Checker<import('../aliases').AliasMap['${aliasName}']>;\n`;
+  content += `  ${lowerCase(aliasName)}: Checker<AliasMap['${aliasName}']>;\n`;
 });
 
 content += '}';

@@ -86,13 +86,13 @@ export type Is = {
   privateIdentifier: Checker<PrivateIdentifier>;
   propertyDefinition: Checker<PropertyDefinition>;
 
-  function: Checker<import('../aliases').AliasMap['Function']>;
-  statement: Checker<import('../aliases').AliasMap['Statement']>;
-  declaration: Checker<import('../aliases').AliasMap['Declaration']>;
-  expression: Checker<import('../aliases').AliasMap['Expression']>;
-  pattern: Checker<import('../aliases').AliasMap['Pattern']>;
-  class: Checker<import('../aliases').AliasMap['Class']>;
-  exportDeclaration: Checker<import('../aliases').AliasMap['ExportDeclaration']>;
-  loop: Checker<import('../aliases').AliasMap['Loop']>;
-  moduleDeclaration: Checker<import('../aliases').AliasMap['ModuleDeclaration']>;
+  function: Checker<AliasMap['Function']>;
+  statement: Checker<AliasMap['Statement']>;
+  declaration: Checker<AliasMap['Declaration']>;
+  expression: Checker<AliasMap['Expression']>;
+  pattern: Checker<AliasMap['Pattern']>;
+  class: Checker<AliasMap['Class']>;
+  exportDeclaration: Checker<AliasMap['ExportDeclaration']>;
+  loop: Checker<AliasMap['Loop']>;
+  moduleDeclaration: Checker<AliasMap['ModuleDeclaration']>;
 }
