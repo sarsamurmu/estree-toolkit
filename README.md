@@ -211,7 +211,6 @@ Also you can read more about NodePath by exploring the [`declaration file`](/src
 
 ## To-Do
 - More methods and documentation for [`Scope`](/src/scope.ts).
-- Validators in builders.
 - Collecting values in `Binding`.
 
 ## License
