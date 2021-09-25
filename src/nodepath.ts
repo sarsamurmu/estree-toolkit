@@ -5,7 +5,9 @@ import { Scope } from './scope';
 import { is } from './is';
 import * as t from './generated/types';
 import { NodePathDocs } from './nodepath-doc';
-import { NodeT } from './internal-utils';
+import { NodeT, ParentsOf } from './internal-utils';
+import { Definition, definitions } from './definitions';
+import { getNodeValidationEnabled } from './builders';
 
 // * Tip: Fold the regions for better experience
 
@@ -74,6 +76,17 @@ export class Context {
 
   popQueue() {
     return this.queueStack.pop()!;
+  }
+}
+
+const runInsertionValidation = (node: Node, key: string | number, listKey: string | null, parent: Node) => {
+  if (!getNodeValidationEnabled()) return;
+  const definition: Definition = definitions[node.type] as any;
+  if (definition != null && definition.insertionValidate != null) {
+    const errorMsg = definition.insertionValidate(node, key, listKey, parent as ParentsOf<Node>);
+    if (errorMsg != null) {
+      throw new Error(errorMsg);
+    }
   }
 }
 
@@ -233,6 +246,11 @@ export class NodePath<T extends Node = Node, P extends Node = Node> implements N
     }
 
     const key = this.key as number;
+
+    for (let i = 0; i < nodes.length; i++) {
+      runInsertionValidation(nodes[i], key + i, this.listKey, this.parent!);
+    }
+
     this.container.splice(key, 0, ...nodes);
     this.updateSiblingIndex(key, nodes.length);
 
@@ -261,6 +279,11 @@ export class NodePath<T extends Node = Node, P extends Node = Node> implements N
     }
 
     const key = this.key as number;
+
+    for (let i = 0; i < nodes.length; i++) {
+      runInsertionValidation(nodes[i], key + i + 1, this.listKey, this.parent!);
+    }
+
     this.container.splice(key + 1, 0, ...nodes);
     this.updateSiblingIndex(key + 1, nodes.length);
 
@@ -302,8 +325,6 @@ export class NodePath<T extends Node = Node, P extends Node = Node> implements N
     });
     const newPaths = lastNodePath.insertBefore(nodes);
 
-    this.ctx.pushToQueue(newPaths, 'new');
-
     return newPaths;
   }
 
@@ -330,8 +351,6 @@ export class NodePath<T extends Node = Node, P extends Node = Node> implements N
       ctx: this.ctx
     });
     const newPaths = lastNodePath.insertAfter(nodes);
-
-    this.ctx.pushToQueue(newPaths, 'new');
 
     return newPaths;
   }
@@ -533,6 +552,8 @@ export class NodePath<T extends Node = Node, P extends Node = Node> implements N
     if (this.container == null) {
       this.throwNoParent('replaceWith');
     }
+
+    runInsertionValidation(node, this.key!, this.listKey, this.parent!);
 
     (this.container as any as Record<string | number, Node>)[this.key!] = node;
     this.markRemoved();

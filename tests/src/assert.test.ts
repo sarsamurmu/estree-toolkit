@@ -94,13 +94,22 @@ describe('value', () => {
   });
 });
 
+test('isReserved', () => {
+  'try catch if while const let'.split(' ').forEach((keyword) => {
+    expect(a.isReserved(keyword)).toBe(true);
+  });
+  'some unreserved identifiers'.split(' ').forEach((keyword) => {
+    expect(a.isReserved(keyword)).toBe(false);
+  });
+});
+
 test('isValidIdentifier', () => {
   expect(a.validIdentifier('a b')).toMatch('not a valid identifier');
   expect(a.validIdentifier('a-b')).toMatch('not a valid identifier');
-  expect(a.validIdentifier('try')).toMatch('not a valid identifier');
   expect(a.validIdentifier('')).toMatch('not a valid identifier');
   expect(a.validIdentifier('1_')).toMatch('not a valid identifier');
   expect(a.validIdentifier('a_b')).toBe(null);
+  expect(a.validIdentifier('try')).toBe(null);
 });
 
 test('nonNull', () => {

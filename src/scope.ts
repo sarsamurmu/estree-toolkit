@@ -2,16 +2,9 @@ import { Identifier, Node, Pattern } from 'estree';
 
 import { NodePath } from './nodepath';
 import { Traverser, ExpandedVisitor, ExpandedVisitors } from './traverse';
-import { assertNever, NodeMap, NodeT } from './internal-utils';
+import { assertNever, PossibleKeysInParent, NodeMap, NodeT, ParentsOf } from './internal-utils';
 import { Binding, BindingKind, BindingPathT, GlobalBinding } from './binding';
 import { is } from './is';
-
-type ParentsOf<N extends Node | Node[]> = {
-  [K in keyof NodeMap]: N extends NodeMap[K][keyof NodeMap[K]] ? NodeMap[K] : never;
-}[keyof NodeMap];
-type KeyInParent<N extends Node | Node[], P extends Node> = Exclude<{
-  [K in keyof P]: N extends P[K] ? K : never;
-}[keyof P], undefined>;
 
 type CrawlerState = {
   references: NodePath<Identifier>[];
@@ -94,7 +87,7 @@ const shouldMakeScope = (path: NodePath): boolean => {
 */
 const identifierCrawlers: {
   [Parent in ParentsOf<Identifier> as `${Parent['type']}`]: (
-    key: KeyInParent<Identifier, Parent>,
+    key: PossibleKeysInParent<Identifier, Parent>,
     path: NodePath<Identifier, Parent>,
     state: CrawlerState
   ) => void;
@@ -595,7 +588,7 @@ const identifierCrawlers: {
 */
 const inListIdentifierCrawlers: {
   [Parent in ParentsOf<Identifier[]> as `${Parent['type']}`]: (
-    listKey: KeyInParent<Identifier[], Parent>,
+    listKey: PossibleKeysInParent<Identifier[], Parent>,
     path: NodePath<Identifier>,
     state: CrawlerState
   ) => void;

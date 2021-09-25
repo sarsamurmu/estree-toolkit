@@ -40,6 +40,17 @@ describe('optional fields', () => {
         name: 'imp'
       }
     });
+    expect(b.exportSpecifier(b.identifier('exp'))).toEqual<t.ExportSpecifier>({
+      type: 'ExportSpecifier',
+      exported: {
+        type: 'Identifier',
+        name: 'exp'
+      },
+      local: {
+        type: 'Identifier',
+        name: 'exp'
+      }
+    });
   });
 });
 

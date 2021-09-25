@@ -81,20 +81,24 @@ export const value = <T extends [ValueType, ...ValueType[]]>(
 }
 
 const reservedKeywords = new Set(`
-break case catch class const continue debugger default
-delete do else export extends finally for function if
-import in instanceof new return super switch this throw
-try typeof var void while with yield
+do if in for let new try var case else enum
+eval false null undefined NaN this true void
+with break catch class const super throw while
+yield delete export import public return static
+switch typeof default extends finally package
+private continue debugger function arguments
+interface protected implements instanceof
 `.trim().split(/[ \n]/).map((s) => s.trim()));
+
+export const isReserved = (name: string): boolean => reservedKeywords.has(name);
 
 export const validIdentifier: ValidateFn<string> = (name) => {
   if (
     /[-\s]/.test(name) ||
     /^\d/.test(name) ||
-    reservedKeywords.has(name) ||
     name.length === 0
   ) {
-    return `"${name}" is not a valid identifier.`;
+    return `${JSON.stringify(name)} is not a valid identifier.`;
   }
   return null;
 }

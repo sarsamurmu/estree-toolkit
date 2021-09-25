@@ -1,8 +1,7 @@
-/* istanbul ignore file */
-
 import * as ESTree from 'estree';
 
 import * as a from './assert';
+import { ParentsOf } from './internal-utils';
 
 type NodeKeys<N> = Exclude<keyof N, keyof ESTree.BaseNode>;
 
@@ -24,6 +23,7 @@ export type Definition<N extends ESTree.Node = ESTree.Node> = {
     [F in NodeKeys<N>]: DefinitionField<N, N[F]>;
   };
   finalValidate?: a.ValidateFn<N>;
+  insertionValidate?: (node: N, key: string | number, listKey: string | null, parent: ParentsOf<N>) => string | null;
 };
 
 export type Definitions = {
@@ -46,6 +46,23 @@ export const definitions: Definitions = Object.assign<any, Definitions>(Object.c
           a.validIdentifier
         )
       }
+    },
+    insertionValidate(node, key, listKey, parent) {
+      if (
+        (parent.type === 'MemberExpression' && !parent.computed && key === 'property') ||
+        ((parent.type === 'Property' || parent.type === 'MethodDefinition') && !parent.computed && key === 'key') ||
+        (parent.type === 'ExportSpecifier' && key === 'exported') ||
+        (parent.type === 'ImportSpecifier' && key === 'imported') ||
+        (parent.type === 'MetaProperty' && (key === 'meta' && node.name === 'import' || key === 'property' && node.name === 'meta'))
+      ) {
+        return null;
+      }
+
+      if (a.isReserved(node.name)) {
+        return `${JSON.stringify(node.name)} is not a valid identifier.`
+      }
+
+      return null;
     }
   },
   Literal: {
@@ -886,6 +903,13 @@ export const definitions: Definitions = Object.assign<any, Definitions>(Object.c
       argument: {
         validate: a.nodeAlias('Pattern')
       }
+    },
+    insertionValidate(node, key, listKey, parent) {
+      if (((parent as unknown as Record<string, unknown[]>)[listKey as string]).length > key) {
+        return `RestElement should be the last children of "${listKey}"`;
+      }
+
+      return null;
     }
   },
   AssignmentPattern: {
