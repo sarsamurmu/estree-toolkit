@@ -1,3 +1,10 @@
+## 1.2.4
+- Improved validators.
+- Fixed issue with `Identifier` validator [(#1)](https://github.com/sarsamurmu/estree-toolkit/issues/1)
+
+## 1.2.3
+- Disable validation in builders temporarily
+
 ## 1.2.2
 - Added node validator to all builders
 
