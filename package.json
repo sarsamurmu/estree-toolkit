@@ -1,6 +1,6 @@
 {
   "name": "estree-toolkit",
-  "version": "1.2.5",
+  "version": "1.2.6",
   "description": "Traverser, scope tracker, and more tools for working with ESTree AST",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",

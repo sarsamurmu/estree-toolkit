@@ -1,3 +1,6 @@
+## 1.2.6
+- Fix infinite loop in `NodePath`
+
 ## 1.2.4
 - Improved validators.
 - Fixed issue with `Identifier` validator [(#1)](https://github.com/sarsamurmu/estree-toolkit/issues/1)
