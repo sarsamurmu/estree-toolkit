@@ -1133,6 +1133,8 @@ describe('Methods', () => {
           expect(newPath.key).toBe(path.key);
           expect(newPath.listKey).toBe(path.listKey);
           expect(newPath.parentPath).toBe(path.parentPath);
+
+          expect(() => path.replaceWith({ type: 'Literal', value: null })).toThrow(/already removed/);
         }
       }))
     });
@@ -1197,6 +1199,8 @@ describe('Methods', () => {
           expect(newPaths[0].listKey).toBe(path.listKey);
           expect(newPaths[1].listKey).toBe(path.listKey);
           expect(newPaths[2].listKey).toBe(path.listKey);
+
+          expect(() => path.replaceWithMultiple([{ type: 'Literal', value: null }])).toThrow(/already removed/);
         }
       }))
     });

@@ -552,6 +552,9 @@ export class NodePath<T extends Node = Node, P extends Node = Node> implements N
     if (this.container == null) {
       this.throwNoParent('replaceWith');
     }
+    if (this.removed) {
+      throw new Error('Node is already removed');
+    }
 
     runInsertionValidation(node, this.key!, this.listKey, this.parent!);
 
@@ -574,6 +577,9 @@ export class NodePath<T extends Node = Node, P extends Node = Node> implements N
   replaceWithMultiple<N extends readonly Node[]>(nodes: N): NodePath<N[number]>[] {
     if (this.container == null) {
       this.throwNoParent('replaceWith');
+    }
+    if (this.removed) {
+      throw new Error('Node is already removed');
     }
 
     const newPath = this.replaceWith(nodes[0]);
