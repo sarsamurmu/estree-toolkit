@@ -20,7 +20,7 @@ export class Context {
   pathCache = new Map<NodePath | null, Map<Node | null, NodePath>>();
   scopeCache = new Map<NodePath, Scope>();
   makeScope = false;
-  shouldValidateNodes = true;
+  shouldValidateNodes = getNodeValidationEnabled();
   private currentSkipPaths = new Set<NodePath>();
   private readonly skipPathSetStack = [this.currentSkipPaths];
   /** Store newly added nodes to this queue for traversal */
