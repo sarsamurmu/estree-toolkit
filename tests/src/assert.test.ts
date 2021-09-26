@@ -101,6 +101,7 @@ test('isReserved', () => {
   'some unreserved identifiers'.split(' ').forEach((keyword) => {
     expect(a.isReserved(keyword)).toBe(false);
   });
+  expect.assertions(9);
 });
 
 test('isValidIdentifier', () => {

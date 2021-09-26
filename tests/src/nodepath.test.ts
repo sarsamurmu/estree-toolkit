@@ -73,7 +73,7 @@ describe('Methods', () => {
         Identifier: identifierMock
       });
 
-      identifierPath.unSkip();
+      identifierPath.unskip();
 
       expect(expressionMock).toBeCalledTimes(1);
       expect(identifierMock).toBeCalledTimes(0);
@@ -295,6 +295,25 @@ describe('Methods', () => {
         }
       ]
     });
+
+    expect(() => {
+      traverse({
+        type: 'IfStatement',
+        test: {
+          type: 'Identifier',
+          name: 'x'
+        },
+        consequent: {
+          type: 'BlockStatement',
+          body: []
+        },
+        alternate: null
+      }, {
+        Identifier(path) {
+          path.insertBefore([{ type: 'EmptyStatement' }]);
+        }
+      });
+    }).toThrow(/`container` is not an Array/);
   });
 
   test('insertAfter', () => {
@@ -366,6 +385,25 @@ describe('Methods', () => {
         }
       ]
     });
+
+    expect(() => {
+      traverse({
+        type: 'IfStatement',
+        test: {
+          type: 'Identifier',
+          name: 'x'
+        },
+        consequent: {
+          type: 'BlockStatement',
+          body: []
+        },
+        alternate: null
+      }, {
+        Identifier(path) {
+          path.insertAfter([{ type: 'EmptyStatement' }]);
+        }
+      });
+    }).toThrow(/`container` is not an Array/);
   });
 
   test('unshiftContainer', () => {
@@ -614,6 +652,11 @@ describe('Methods', () => {
         expect(bodyNodePaths[1].key).toBe(1);
         expect(bodyNodePaths[1].parent).toBe(ast);
         expect(bodyNodePaths[1].listKey).toBe('body');
+
+        expect(() => {
+          // @ts-expect-error `get` function is invisible in the type system for null NodePaths, but it's there
+          path.get('invalidKey').get('something');
+        }).toThrow(/Can not use method `get` on a null NodePath/);
       },
       IfStatement(path) {
         const ifStatement = ast.body[0];
@@ -623,7 +666,7 @@ describe('Methods', () => {
       }
     });
 
-    expect.assertions(11);
+    expect.assertions(12);
   });
 
   test('getSibling', () => {
@@ -671,6 +714,9 @@ describe('Methods', () => {
     } as const;
 
     traverse(ast, {
+      Program(path) {
+        expect(() => path.getSibling('some')).toThrow(/does not have a parent/);
+      },
       ExpressionStatement(path) {
         if (
           path.node.expression.type === 'Literal' &&
@@ -687,7 +733,7 @@ describe('Methods', () => {
       }
     });
 
-    expect.assertions(3);
+    expect.assertions(4);
   });
 
   test('getOpposite', () => {
@@ -747,7 +793,7 @@ describe('Methods', () => {
     expect.assertions(1);
   });
 
-  test('getPrevSibling', () => {
+  test('getNextSibling', () => {
     const ast = {
       type: 'ArrayExpression',
       elements: [
@@ -805,6 +851,9 @@ describe('Methods', () => {
     };
 
     traverse(ast, {
+      ArrayExpression(path) {
+        expect(() => path.getAllPrevSiblings()).toThrow(/does not have a parent/);
+      },
       Literal(path) {
         if (path.node.value === 3) {
           const prevSiblings = path.getAllPrevSiblings();
@@ -814,7 +863,7 @@ describe('Methods', () => {
       }
     });
 
-    expect.assertions(2);
+    expect.assertions(3);
   });
 
   test('getAllNextSiblings', () => {
@@ -845,6 +894,9 @@ describe('Methods', () => {
     };
 
     traverse(ast, {
+      ArrayExpression(path) {
+        expect(() => path.getAllNextSiblings()).toThrow(/does not have a parent/);
+      },
       Literal(path) {
         if (path.node.value === 3) {
           const nextSiblings = path.getAllNextSiblings();
@@ -854,7 +906,7 @@ describe('Methods', () => {
       }
     });
 
-    expect.assertions(2);
+    expect.assertions(3);
   });
 
   //#endregion
@@ -940,8 +992,12 @@ describe('Methods', () => {
     };
 
     traverse(ast1, {
+      IfStatement(path) {
+        expect(() => path.remove()).toThrow(/does not have a parent/);
+      },
       ExpressionStatement(path) {
         path.remove();
+        expect(() => path.remove()).toThrow(/already removed/);
       }
     });
 
@@ -1063,6 +1119,9 @@ describe('Methods', () => {
     let mockFn: jest.Mock<void, [NodePath<t.Literal>]>;
 
     traverse(ast, {
+      ArrayExpression(path) {
+        expect(() => path.replaceWith({ type: 'EmptyStatement' })).toThrow(/does not have a parent/);
+      },
       Literal: (mockFn = jest.fn((path) => {
         if (path.node.value === 2) {
           const newPath = path.replaceWith({
@@ -1111,6 +1170,9 @@ describe('Methods', () => {
     let mockFn: jest.Mock<void, [NodePath<t.Literal>]>;
 
     traverse(ast, {
+      ArrayExpression(path) {
+        expect(() => path.replaceWithMultiple([{ type: 'EmptyStatement' }])).toThrow();
+      },
       Literal: (mockFn = jest.fn((path) => {
         if (path.node.value === 0) {
           const newPaths = path.replaceWithMultiple([
@@ -1255,6 +1317,33 @@ describe('Properties', () => {
       ExpressionStatement(path) {
         expect(path.key).toBe(0);
         expect(path.listKey).toBe('body');
+      }
+    });
+
+    expect.assertions(2);
+  });
+
+  test('parentKey', () => {
+    const ast = {
+      type: 'Program',
+      sourceType: 'script',
+      body: [
+        {
+          type: 'ExpressionStatement',
+          expression: {
+            type: 'Literal',
+            value: 0
+          }
+        }
+      ]
+    };
+
+    traverse(ast, {
+      Literal(path) {
+        expect(path.parentKey).toBe('expression');
+      },
+      ExpressionStatement(path) {
+        expect(path.parentKey).toBe('body');
       }
     });
 

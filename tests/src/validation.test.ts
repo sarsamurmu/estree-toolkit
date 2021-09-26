@@ -1,4 +1,4 @@
-import { builders as b, NodePath, traverse, types as t } from '<project>';
+import { builders as b, NodePath, traverse } from '<project>';
 import { NodeT } from '<project>/internal-utils';
 
 describe('identifier', () => {
@@ -27,6 +27,8 @@ describe('identifier', () => {
         expect(() => path.get('property').replaceWith(b.identifier('const'))).toThrow();
       }
     });
+
+    expect.assertions(3);
   });
 
   test('Property and MethodDefinition', () => {
@@ -81,8 +83,10 @@ describe('identifier', () => {
           path.node.computed = true;
           expect(() => path.get('key').replaceWith(b.identifier('if'))).toThrow();
         }
-      })
-    })
+      });
+    });
+
+    expect.assertions(4);
   });
 
   test('ExportSpecifier', () => {
@@ -102,6 +106,8 @@ describe('identifier', () => {
         expect(() => path.get('local').replaceWith(b.identifier('class'))).toThrow();
       }
     });
+
+    expect.assertions(2);
   });
 
   test('ImportSpecifier', () => {
@@ -121,6 +127,8 @@ describe('identifier', () => {
         expect(() => path.get('local').replaceWith(b.identifier('class'))).toThrow();
       }
     });
+
+    expect.assertions(2);
   });
 
   test('MetaProperty', () => {
@@ -142,6 +150,8 @@ describe('identifier', () => {
         expect(() => path.get('meta').replaceWith(b.identifier('import'))).not.toThrow();
       }
     });
+
+    expect.assertions(4);
   });
 });
 
@@ -205,5 +215,7 @@ test('RestElement', () => {
       expect(() => path.pushContainer('params', [node])).not.toThrow();
       expect(() => path.unshiftContainer('params', [node])).toThrow(errRE);
     }
-  })
+  });
+
+  expect.assertions(5);
 });
