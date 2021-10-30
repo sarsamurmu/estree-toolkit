@@ -5,6 +5,9 @@ orbs:
 
 jobs:
   test:
+    branches:
+      ignore:
+        - documentation
     executor:
       name: node/default
       tag: '15.5.1'
