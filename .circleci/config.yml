@@ -24,4 +24,4 @@ workflows:
       - test:
           filters:
             branches:
-              only: documentation
+              only: main
