@@ -22,6 +22,6 @@ workflows:
   run_tests:
     jobs:
       - test:
-          branches:
-            ignore:
-              - documentation
+          filters
+            branches:
+              only: documentation
