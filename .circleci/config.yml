@@ -10,6 +10,10 @@ jobs:
       tag: '15.5.1'
     steps:
       - checkout
+      - run: |
+          if [ "$CIRCLE_BRANCH" == 'documentation' ]; then
+            exit 0
+          fi
       - node/install-packages
       - run:
           name: Run tests
@@ -21,7 +25,4 @@ jobs:
 workflows:
   run_tests:
     jobs:
-      - test:
-          filters:
-            branches:
-              only: main
+      - test
