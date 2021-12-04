@@ -1,0 +1,15 @@
+input: ./src
+output: .retype
+url: https://estree-toolkit.netlify.app
+branding:
+  title: estree-toolkit
+  label: Docs
+links:
+  - text: Issues
+    icon: issue-opened
+    link: https://github.com/sarsamurmu/estree-toolkit/issues
+  - text: GitHub
+    icon: mark-github
+    link: https://github.com/sarsamurmu/estree-toolkit
+footer:
+  copyright: "&copy; Copyright {{ year }} Sarsa Murmu. All rights reserved."

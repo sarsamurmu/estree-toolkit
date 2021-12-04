@@ -1,0 +1,8 @@
+{
+  "scripts": {
+    "build": "retype build"
+  },
+  "dependencies": {
+    "retypeapp": "^1.11.1"
+  }
+}
