@@ -1,0 +1,14 @@
+version: 2.1
+
+jobs:
+  do_stuff:
+    steps:
+      - run: |
+          if [ "$CIRCLE_BRANCH" == 'documentation' ]; then
+            exit 0
+          fi
+
+workflows:
+  run:
+    jobs:
+      - do_stuff
