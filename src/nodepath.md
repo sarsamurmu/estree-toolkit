@@ -17,7 +17,7 @@ Type of the node that is associated the `NodePath`
 
 The current node's key in its parent
 
-```javascript
+```js
 const ast = {
   type: 'IfStatement',
   test: {
@@ -44,7 +44,7 @@ traverse(ast, {
 
 If this node is part of an array, `listKey` would be the key of the array in its parent
 
-```javascript
+```js
 const ast = {
   type: 'ArrayExpression',
   elements: [
@@ -86,7 +86,7 @@ The parent node of the current path
 The container of the node
 
 In this case `container` is an array
-```javascript
+```js
 const ast = {
   type: 'ArrayExpression',
   elements: [
@@ -107,7 +107,7 @@ traverse(ast, {
 ```
 
 In this case `container` is a node object
-```javascript
+```js
 const ast = {
   type: 'IfStatement',
   test: {
@@ -145,7 +145,7 @@ traverse(ast, {
 
 Skips the path from traversal
 
-```javascript
+```js
 const ast = {
   type: 'IfStatement',
   test: {
@@ -200,7 +200,7 @@ Traverse this path and its children with the given `visitor` and `state`
 Starting at the parent path of this path and going up the tree,
 returns first parent path where `predicate` is true
 
-```javascript
+```js
 const ast = {
   type: 'BlockStatement',
   body: [
@@ -236,7 +236,7 @@ traverse(ast, {
 Starting from **this** path and going up the tree,
 returns the first path where `predicate` is true
 
-```javascript
+```js
 const ast = {
   type: 'ExpressionStatement',
   expression: {
@@ -274,7 +274,7 @@ Going up the tree returns the NodePath's closest function parent
 
 Inserts the `nodes` before the current node
 
-```javascript
+```js
 const ast = {
   type: 'ArrayExpression',
   elements: [
@@ -329,7 +329,7 @@ assert.deepEqual(ast, {
 
 Inserts the `nodes` after the current node
 
-```javascript
+```js
 const ast = {
   type: 'ArrayExpression',
   elements: [
@@ -385,7 +385,7 @@ assert.deepEqual(ast, {
 
 Inserts child nodes at the **start** of the container
 
-```javascript
+```js
 const ast = {
   type: 'ArrayExpression',
   elements: [
@@ -439,7 +439,7 @@ assert.deepEqual(ast, {
 
 Inserts child nodes at the **end** of the container
 
-```javascript
+```js
 const ast = {
   type: 'ArrayExpression',
   elements: [
@@ -503,7 +503,7 @@ assert.deepEqual(ast, {
 
 Get the current path's children's path for which the key is `key`
 
-```javascript
+```js
 const ast = {
   type: 'IfStatement',
   test: {
@@ -530,7 +530,7 @@ traverse(ast, {
 
 Get the path of current path's sibling for which the key is `key`
 
-```javascript
+```js
 const ast = {
   type: 'ArrayExpression',
   elements: [
@@ -563,7 +563,7 @@ traverse(ast, {
 
 Get the opposite path of the current path
 
-```javascript
+```js
 const ast = {
   type: 'AssignmentExpression',
   left: {
@@ -591,7 +591,7 @@ traverse(ast, {
 
 The the previous sibling's path of the current path
 
-```javascript
+```js
 const ast = {
   type: 'ArrayExpression',
   elements: [
@@ -624,7 +624,7 @@ traverse(ast, {
 
 The the next sibling's path of the current path
 
-```javascript
+```js
 const ast = {
   type: 'ArrayExpression',
   elements: [
@@ -656,10 +656,13 @@ traverse(ast, {
 - Returns: `NodePath[]` An array containing paths of next siblings
 
 Get all previous siblings' path of the current path
-__NOTE__: Returned paths are reversed (they are sorted in how close
-they are to the current path, see example)
 
-```javascript
+!!!
+Returned paths are reversed (they are sorted in how close
+they are to the current path, see example)
+!!!
+
+```js
 const ast = {
   type: 'ArrayExpression',
   elements: [
@@ -702,7 +705,7 @@ traverse(ast, {
 
 Get all next siblings' path of the current path
 
-```javascript
+```js
 const ast = {
   type: 'ArrayExpression',
   elements: [
@@ -758,8 +761,7 @@ traverse(ast, {
 Checks if the path has the specific property.
 If value of the property is an array, checks if the array is not empty.
 
-***Example - 1***
-```javascript
+```js Example - 1
 const ast = {
   type: 'IfStatement',
   test: {
@@ -780,8 +782,7 @@ traverse(ast, {
 });
 ```
 
-***Example - 2***
-```javascript
+```js Example - 2
 const ast1 = {
   type: 'Program',
   sourceType: 'module',
@@ -819,7 +820,7 @@ traverse(ast2, {
 
 Checks if the path _is_ something
 
-```javascript
+```js
 const ast = {
   type: 'ObjectExpression',
   properties: [
@@ -873,7 +874,7 @@ Removes the node from the tree
 
 Removes the old node and inserts the new node in the old node's position
 
-```javascript
+```js
 const ast = {
   type: 'AssignmentExpression',
   left: {
@@ -920,7 +921,7 @@ assert.deepEqual(ast, {
 
 Removes the old node and inserts the new nodes in the old node's position
 
-```javascript
+```js
 const ast = {
   type: 'ArrayExpression',
   elements: [
