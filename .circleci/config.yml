@@ -2,6 +2,8 @@ version: 2.1
 
 jobs:
   do_stuff:
+    docker:
+      - image: cimg/base:stable
     steps:
       - run: |
           if [ "$CIRCLE_BRANCH" == 'documentation' ]; then
