@@ -202,16 +202,8 @@ There are several static utilities that you can use.
   });
   ```
 
-## More documentation
-This project provides built-in TypeScript definitions with documentation, so you get
-good editor experience with this project (if you are using editors like VS Code or WebStorm),
-just hover on any method to view the method's documentation with examples.
-
-Also you can read more about NodePath by exploring the [`declaration file`](/src/nodepath-doc.ts).
-
-## To-Do
-- More methods and documentation for [`Scope`](/src/scope.ts).
-- Collecting values in `Binding`.
+## Documentation
+The documentation is work in progress. You can find the documentation at https://estree-toolkit.netlify.app/
 
 ## License
 Licensed under the [MIT License](/LICENSE).
