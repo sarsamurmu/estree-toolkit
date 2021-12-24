@@ -1,5 +1,8 @@
+## 1.2.7
+- Fixed issue in `Scope` where parent scope were not being assigned
+
 ## 1.2.6
-- Fix infinite loop in `NodePath`
+- Fixed infinite loop in `NodePath`
 
 ## 1.2.4
 - Improved validators.

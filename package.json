@@ -1,6 +1,6 @@
 {
   "name": "estree-toolkit",
-  "version": "1.2.6",
+  "version": "1.2.7",
   "description": "Traverser, scope tracker, and more tools for working with ESTree AST",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -24,6 +24,7 @@
     "scope"
   ],
   "repository": "github:sarsamurmu/estree-toolkit",
+  "homepage": "https://estree-toolkit.netlify.app/",
   "author": "Sarsa Murmu <sarsamurmu05@gmail.com>",
   "license": "MIT",
   "devDependencies": {
