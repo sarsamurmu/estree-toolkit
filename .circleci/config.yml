@@ -1,16 +1,15 @@
 version: 2.1
 
 jobs:
-  do_stuff:
+  skipper:
     docker:
       - image: cimg/base:stable
     steps:
-      - run: |
-          if [ "$CIRCLE_BRANCH" == 'documentation' ]; then
-            exit 0
-          fi
+      - name: Exit
+        run: 
+          exit 0
 
 workflows:
   run:
     jobs:
-      - do_stuff
+      - skipper
