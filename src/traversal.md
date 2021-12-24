@@ -128,7 +128,7 @@ traverse(ast, {
 ```
 
 For now, therese are the available options
-- `scope`: <`boolean`> If scope tracking should be enabled. [DOCUMENTATION REQUIRED]
+- `scope`: <`boolean`> If scope tracking should be enabled.
 - `validateNodes`: <`boolean`> If the new nodes should be validated, when new
   nodes are inserted into the AST. Generally, you wouldn't need it, but if your
   AST uses modified nodes then you may need to disable node validation.
@@ -399,23 +399,22 @@ You can stop the traversal using visitor context's `stop` method.
 
 !!! Your function has to be bindable
 It won't work if it's not
-||| Bindable example
-```js 
+
+```js Bindable example
 const visitors = {
   Literal() {
     this // { stop() {...} }
   }
 }
 ```
-||| Not bindable example
-```js
+
+```js Not bindable example
 const visitors = {
   Literal: () => {
     this // unknown, can be anything
   }
 }
 ```
-|||
 !!!
 
 ```js Code
