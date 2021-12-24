@@ -5,8 +5,7 @@ jobs:
     docker:
       - image: cimg/base:stable
     steps:
-      - name: Exit
-        run: exit 0
+      - run: exit 0
 
 workflows:
   run:
