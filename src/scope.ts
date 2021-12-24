@@ -1072,7 +1072,9 @@ export class Scope {
     this.initialized = true;
 
     for (let i = 0; i < state.childScopedPaths.length; i++) {
-      state.childScopedPaths[i].init();
+      // Manually pass the parent scope,
+      // as `childScopedPaths` parent node's `scope` property may not be set in this phase
+      state.childScopedPaths[i].init(this);
     }
   }
 

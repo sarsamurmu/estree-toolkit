@@ -116,6 +116,8 @@ export class NodePath<T extends Node = Node, P extends Node = Node> implements N
   readonly ctx: Context;
   scope: Scope | undefined | null;
 
+  // accessKey = '';
+
   private constructor(data: NodePathData<T, P>) {
     this.node = data.node;
     this.type = this.node && this.node.type;
@@ -130,6 +132,8 @@ export class NodePath<T extends Node = Node, P extends Node = Node> implements N
 
     this.ctx = data.ctx;
     this.scope = undefined;
+
+    // this.accessKey = (this.parentPath?.accessKey || '') + '.' + this.type;
   }
 
   /** Get the cached NodePath object or create new if cache is not available */
@@ -145,8 +149,8 @@ export class NodePath<T extends Node = Node, P extends Node = Node> implements N
     return (children.get(data.node) || mapSet(children, data.node, new NodePath<any, any>(data)));
   }
 
-  init() {
-    this.scope = this.ctx.makeScope ? Scope.for(this, this.parentPath?.scope || null) : null;
+  init(parentScope?: Scope) {
+    this.scope = this.ctx.makeScope ? Scope.for(this, parentScope || this.parentPath?.scope || null) : null;
     if (this.scope != null) this.scope.init();
     return this;
   }
