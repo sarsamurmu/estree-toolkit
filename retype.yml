@@ -15,3 +15,6 @@ links:
     link: https://github.com/sarsamurmu/estree-toolkit
 footer:
   copyright: "&copy; Copyright {{ year }} Sarsa Murmu. All rights reserved."
+integrations:
+  googleAnalytics:
+    id: G-7LY2MM92E3
