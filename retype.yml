@@ -4,6 +4,8 @@ url: https://estree-toolkit.netlify.app
 branding:
   title: estree-toolkit
   label: Docs
+meta:
+  title: " | estree-toolkit - Tools for working with ESTree AST"
 links:
   - text: Issues
     icon: issue-opened
