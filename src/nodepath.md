@@ -1,5 +1,20 @@
 # NodePath
 
+`NodePath` is basically a wrapper around any AST node. It provides useful properties and methods
+to manipulate the AST.
+
+```js
+const { traverse } = require('estree-toolkit');
+
+traverse(ast, {
+  Identifier(path) {
+    // `path` is NodePath
+  }
+});
+```
+
+------------------------------------------------
+
 ## Properties
 
 ### `node`
@@ -128,6 +143,12 @@ traverse(ast, {
   }
 });
 ```
+
+### `scope`
+- Type: [`Scope`](scope.md)
+
+`Scope` instance for the scope where the node is located. It's `null` when scope
+tracking is disabled.
 
 -----------------------------------------
 

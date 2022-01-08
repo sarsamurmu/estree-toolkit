@@ -1,5 +1,23 @@
 # Scope
 
+`Scope` contains information about the scope, like all the declared variables (bindings),
+references of a specific variable, labels etc.
+
+By default, scope tracking is disabled. After [enabling it using options](traversal.md#options),
+it would be available in [`NodePath.scope`](nodepath.md#scope).
+```js
+const { traverse } = require('estree-toolkit');
+
+traverse(ast, {
+  $: { scope: true },
+  Program(path) {
+    path.scope // This is our `Scope`
+  }
+});
+```
+
+---------------------------------------------------
+
 ## Properties
 ### `path`
 - Type: `NodePath`
@@ -89,7 +107,7 @@ traverse(ast, {
 - Returns: <`Binding`> The binding with the provided name
 
 Checks the **current scope** for the binding. If found, returns the binding information.
-Returns `null` if no binding can be found.
+Returns `undefined` if no binding can be found.
 
 ```js
 const ast = parseModule(`
@@ -198,7 +216,7 @@ Checks if the global binding exists in the scope.
 
 ```js
 const ast = parseModule(`
-const mod = require('mod');
+const module = require('mod');
 
 window.location.reload();
 `);
@@ -206,7 +224,7 @@ window.location.reload();
 traverse(ast, {
   $: { scope: true },
   Program(path) {
-    path.scope.hasGlobalBinding('mod') // => false
+    path.scope.hasGlobalBinding('module') // => false
     path.scope.hasGlobalBinding('require') // => true
     path.scope.hasGlobalBinding('window') // => true
   }

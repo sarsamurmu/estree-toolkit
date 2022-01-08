@@ -89,7 +89,7 @@ const visitors = {
 ```
 
 You would get two parameters in visitor function - `path` and `state`
-- *`path`*: <`NodePath`> This would be a NodePath for the node that the traverser is currently
+- *`path`*: <[`NodePath`](nodepath.md)> This would be a NodePath for the node that the traverser is currently
   traversing.
 - *`state`*: <`any`> This would be the state that has been passed to the `traverse` function.
   See [this](#passing-states) for more information.
