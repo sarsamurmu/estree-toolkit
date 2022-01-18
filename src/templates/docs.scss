@@ -168,7 +168,9 @@ header {
   left: $sidenav-width;
   right: $toc-width;
   bottom: 0;
-  padding: 10px 50px;
+  --p-v: 10px;
+  --p-h: 50px;
+  padding: var(--p-v) var(--p-h);
 
   @include medium {
     right: 0;
@@ -176,6 +178,7 @@ header {
 
   @include small {
     left: 0;
+    --p-h: 25px;
   }
 }
 
