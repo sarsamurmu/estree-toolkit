@@ -80,6 +80,10 @@ h1, h2, h3, h4, h5, h6 {
   font-family: 'Lexend Deca', sans-serif;
   font-weight: normal;
   scroll-margin-top: calc(var(--header-height) + 18px);
+
+  > code {
+    line-break: anywhere;
+  }
 }
 
 h1 {
