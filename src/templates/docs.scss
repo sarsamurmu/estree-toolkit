@@ -258,6 +258,11 @@ footer {
     transform: translateX(100%);
     z-index: 3;
     top: 0;
+    width: 40vw;
+  }
+
+  @include small {
+    width: 80vw;
   }
 
   &.open {
@@ -290,6 +295,17 @@ footer {
     top: 50px;
     left: 0;
     right: 0;
+  }
+
+  .toc-closer {
+    position: absolute;
+    top: 7px;
+    right: 12px;
+    display: none;
+
+    @include medium {
+      display: inline-block;
+    }
   }
 
   li {

@@ -285,7 +285,7 @@ const TocList = ({ items, headers }) => {
 }
 
 const Toc = ({ content }) => {
-  const { toc: isOpen } = React.useContext(Ctx)
+  const { toc: isOpen, closeToc } = React.useContext(Ctx)
   const tocListProps = React.useMemo(() => {
     const headers = []
     const html = new window.DOMParser().parseFromString(content, 'text/html')
@@ -315,6 +315,9 @@ const Toc = ({ content }) => {
   return (
     <div className={`toc ${isOpen ? 'open' : ''}`}>
       <span>Table of Contents</span>
+      <button className='toc-closer btn-circular' onClick={closeToc}>
+        <Octicons.XIcon size={18} />
+      </button>
       <SimpleBar className='toc-list-wrapper'>
         <TocList {...tocListProps} />
       </SimpleBar>
@@ -341,9 +344,9 @@ export default function Documentation({
   const pageOrder = React.useMemo(() => (
     allMarkdownRemark.edges
       .map(({ node: { id, slug, frontmatter: { title } } }) => ({ title, slug, current: id === markdownRemark.id }))
-      .filter(({ title }) => {
+      .filter(({ slug }) => {
         if (process.env.NODE_ENV === 'production') {
-          return !(/^test/i.test(title))
+          return !(/^__/.test(slug))
         }
         return true
       })

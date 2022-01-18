@@ -79,6 +79,7 @@ exports.createResolvers = ({ createResolvers }) => {
         type: 'String',
         resolve(source) {
           const relPath = path.relative(path.resolve('src/docs/'), source.fileAbsolutePath).replace(/\.md$/, '')
+          if (/^__/.test(relPath)) return `${relPath}/`
           return `${relPath.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '')}/`
         }
       }
