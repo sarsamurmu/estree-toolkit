@@ -43,7 +43,7 @@ const CopyButton = () => {
   }
 
   return (
-    <button className='copy-button' onClick={onClick}>
+    <button className='copy-button' onClick={onClick} aria-label='Copy code block content'>
       {SSR_MODE ? 'COPY' : (copied ? <Octicons.CheckIcon fill="#07bd5f" /> : <Octicons.CopyIcon />)}
     </button>
   )
@@ -146,7 +146,7 @@ const ThemeButton = ({ toggleTheme, isDarkTheme }) => {
   React.useLayoutEffect(() => setLoaded(true), [])
 
   return (
-    <button className='btn-circular theme-btn' onClick={toggleTheme}>
+    <button className='btn-circular theme-btn' onClick={toggleTheme} aria-label='Toggle theme'>
       {loaded && (isDarkTheme ? <Octicons.MoonIcon size={ 20} /> : <Octicons.SunIcon size={20} />)}
     </button>
   )
@@ -164,7 +164,7 @@ const Header = ({ title }) => {
 
   return (
     <header>
-      <button className='btn-circular menu-btn' onClick={openSidenav}>
+      <button className='btn-circular menu-btn' onClick={openSidenav} aria-label='Open navigation menu'>
         <Octicons.ThreeBarsIcon size={20} />
       </button>
       <Link to='/' className='title'>{title}</Link>
@@ -315,7 +315,7 @@ const Toc = ({ content }) => {
   return (
     <div className={`toc ${isOpen ? 'open' : ''}`}>
       <span>Table of Contents</span>
-      <button className='toc-closer btn-circular' onClick={closeToc}>
+      <button className='toc-closer btn-circular' onClick={closeToc} aria-label='Close table of contents side menu'>
         <Octicons.XIcon size={18} />
       </button>
       <SimpleBar className='toc-list-wrapper'>
@@ -370,21 +370,23 @@ export default function Documentation({
     closeSidenav() { setSidenavOpen(false) }
   }
   const metaTitle = `${markdownRemark.frontmatter.title}${site.metaPrefix}`
+  const pageUrl = new window.URL(markdownRemark.slug, site.url).toString()
 
   return (
     <div>
       <Helmet>
+        <html lang='en' />
         <meta charSet='utf-8' />
         <title>{metaTitle}</title>
         <meta name='description' content={site.description} />
-        <link rel='canonical' href={site.url} />
+        <link rel='canonical' href={pageUrl} />
         <meta name='robots' content='index, follow' />
 
         <meta property='og:type' content='documentation' />
         <meta property='og:title' content={metaTitle} />
         <meta property='og:description' content={site.description} />
         {/* <meta property='og:image' content='LINK TO THE IMAGE FILE' /> */}
-        <meta property='og:url' content={new window.URL(markdownRemark.slug, site.url).toString()} />
+        <meta property='og:url' content={pageUrl} />
         <meta property='og:site_name' content={site.title} />
       </Helmet>
 
@@ -398,7 +400,7 @@ export default function Documentation({
           <h1>{markdownRemark.frontmatter.title}</h1>
           <Interweave content={markdownRemark.html} transform={interweaveTransform} />
           <Footer pageOrder={pageOrder} />
-          <button className='toc-opener btn-circular' onClick={openToc}>
+          <button className='toc-opener btn-circular' onClick={openToc} aria-label='Open table of contents side menu'>
             <Octicons.QuoteIcon size={18} />
           </button>
         </div>
