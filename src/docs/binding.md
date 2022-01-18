@@ -1,8 +1,6 @@
 ---
-order: -1
+title: Binding
 ---
-
-# Binding
 
 `Binding` contains information about bindings (declared variables).
 
@@ -169,7 +167,7 @@ y = { b: 0 }
 y.c = 0;
 ```
 
-### constant
+### `constant`
 - Type: `boolean`
 
 If the binding is constant. A binding is constant when it has no

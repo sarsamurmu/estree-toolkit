@@ -1,8 +1,6 @@
 ---
-order: -2
+title: GlobalBinding
 ---
-
-# GlobalBinding
 
 `GlobalBinding` is like `Binding` but for globals. It tracks usage of a variable
 that is not declared, but is being used.
@@ -31,6 +29,8 @@ traverse(ast, {
   }
 });
 ```
+
+-------------------------
 
 ## Properties
 

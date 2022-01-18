@@ -1,4 +1,6 @@
-# NodePath
+---
+title: NodePath
+---
 
 `NodePath` is basically a wrapper around any AST node. It provides useful properties and methods
 to manipulate the AST.

@@ -1,8 +1,6 @@
 ---
-order: 2
+title: Traversal
 ---
-
-# Traversal
 
 You can traverse the AST using the `traverse` function
 
@@ -176,7 +174,8 @@ Name is - d
 You can share a visitor with two or more node types using this shorthand syntax,
 simply by separating them with `|`
 
-+++ Code + Output
+::::Tabs
+:::Tab[Code + Output]
 ```js
 const ast = { /* Check AST tab */ }
 
@@ -208,7 +207,8 @@ h
 i
 j
 ```
-+++ AST input
+:::
+:::Tab[AST input]
 ```js
 function x(a, b, c) {} // => FunctionDeclaration
 
@@ -216,7 +216,8 @@ let y = function (e, f, g) {} // => FunctionExpression
 
 let z = (h, i, j) => {} // => ArrowFunctionExpression
 ```
-+++ AST
+:::
+:::Tab[AST]
 ```js
 {
   type: 'Program',
@@ -325,7 +326,8 @@ let z = (h, i, j) => {} // => ArrowFunctionExpression
   ]
 }
 ```
-+++
+:::
+::::
 
 -----------------------------------------------------
 
@@ -397,8 +399,8 @@ console.log(data2);
 
 You can stop the traversal using visitor context's `stop` method.
 
-!!! Your function has to be bindable
-It won't work if it's not
+:::Alert
+Your function has to be bindable. It won't work if it's not.
 
 ```js Bindable example
 const visitors = {
@@ -407,7 +409,6 @@ const visitors = {
   }
 }
 ```
-
 ```js Not bindable example
 const visitors = {
   Literal: () => {
@@ -415,7 +416,7 @@ const visitors = {
   }
 }
 ```
-!!!
+:::
 
 ```js Code
 const ast = {
@@ -451,7 +452,7 @@ c
 Stopped!
 ```
 
-!!!
+:::Alert
 If you call `stop()` at *`enter`* visitor function, the consequent *`leave`*
 visitor function would not get called.
-!!!
+:::

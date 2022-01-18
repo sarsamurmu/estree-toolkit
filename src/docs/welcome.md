@@ -1,16 +1,21 @@
-# Welcome
+---
+title: Welcome
+---
 
 `estree-toolkit` includes all the necessary tools to start working with ESTree.
 
 ## Quick start
 You can install `estree-toolkit` using `npm` or `yarn`
 
-+++ npm
-```
+::::Tabs
+:::Tab[npm]
+```bash
 npm i estree-toolkit
 ```
-+++ yarn
-```
+:::
+:::Tab[yarn]
+```bash
 yarn add estree-toolkit
 ```
-+++
+:::
+::::
