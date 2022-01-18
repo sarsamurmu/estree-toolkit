@@ -310,8 +310,8 @@ footer {
 
 .toc-opener {
   position: absolute;
-  top: 40px;
-  right: 50px;
+  top: 10px;
+  right: 20px;
 
   @include large {
     display: none;
