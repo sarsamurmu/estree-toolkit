@@ -11,10 +11,13 @@ traverse(ast, visitors, state);
 ```
 
 As you can see `traverse` function takes three arguments - `ast`, `visitors`, `state`.
-- *`ast`*: <`ESTree.Node`> You would pass the AST that you want to traverse. As you may have guessed, the AST
-  has to be **ESTree** compliant.
-- *`visitors`*: <[`Visitors`](#visitors)> An JavaScript object containing node type as its keys and a [visitor](#visitor) as its value. If you want
-  same visitor for more than one node type then you have to separate them using `|` (pipe symbol).
+- *`ast`*: <`ESTree.Node`> You would pass the AST that you want to traverse. As you may have guessed,
+  the AST has to be **ESTree** compliant.
+
+- *`visitors`*: <[`Visitors`](#visitors)> An JavaScript object containing node type as
+  its keys and a [visitor](#visitor) as its value. If you want same visitor for more than
+  one node type then you have to separate them using `|` (pipe symbol).
+
 - *`state`*: <`any`> This can be anything that can store state in it, preferably an JavaScript object. This
   would get passed to the visitor function, and the visitor function can modify it.
 
@@ -38,6 +41,8 @@ const visitors = {
   // more visitors...
 }
 ```
+
+-----------------------------------------------------
 
 ### Visitor
 
@@ -67,6 +72,8 @@ const visitors = {
 }
 ```
 
+-----------------------------------------------------
+
 ### Visitor function
 
 Visitor function is the function that gets called when the traverser *enters* or *leaves* a node
@@ -89,6 +96,7 @@ const visitors = {
 You would get two parameters in visitor function - `path` and `state`
 - *`path`*: <[`NodePath`](nodepath.md)> This would be a NodePath for the node that the traverser is currently
   traversing.
+
 - *`state`*: <`any`> This would be the state that has been passed to the `traverse` function.
   See [this](#passing-states) for more information.
 
@@ -127,6 +135,7 @@ traverse(ast, {
 
 For now, therese are the available options
 - `scope`: <`boolean`> If scope tracking should be enabled.
+  
 - `validateNodes`: <`boolean`> If the new nodes should be validated, when new
   nodes are inserted into the AST. Generally, you wouldn't need it, but if your
   AST uses modified nodes then you may need to disable node validation.
