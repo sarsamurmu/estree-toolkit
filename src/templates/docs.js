@@ -152,6 +152,22 @@ const ThemeButton = ({ toggleTheme, isDarkTheme }) => {
   )
 }
 
+const OtherLinks = () => (
+  <ul className='links'>
+    {[
+      ['Github', Octicons.MarkGithubIcon, 'https://github.com/sarsamurmu/estree-toolkit'],
+      ['npm', Octicons.PackageIcon, 'https://www.npmjs.com/package/estree-toolkit']
+    ].map(([name, Icon, url]) => (
+      <li>
+        <a href={url} target='_blank'>
+          <Icon size={18} />
+          {name}
+        </a>
+      </li>
+    ))}
+  </ul>
+)
+
 const Header = ({ title }) => {
   const { openSidenav } = React.useContext(Ctx)
   const [theme, setTheme] = React.useState(window.localStorage.getItem('theme') || 'light')
@@ -168,6 +184,8 @@ const Header = ({ title }) => {
         <Octicons.ThreeBarsIcon size={20} />
       </button>
       <Link to='/' className='title'>{title}</Link>
+      <i className='divider' />
+      <OtherLinks />
       <ThemeButton {...{ toggleTheme, isDarkTheme: theme === 'dark' }} />
     </header>
   )
@@ -208,13 +226,16 @@ const Sidenav = ({ items }) => {
   const { sidenav } = React.useContext(Ctx);
 
   return (
-    <ul className={`sidenav ${sidenav ? 'open' : ''}`}>
-      {items.map(({ title, slug, current }) => (
-        <li key={slug}>
-          <Link className={current ? 'current' : ''} to={'../' + slug}>{title}</Link>
-        </li>
-      ))}
-    </ul>
+    <div className={`sidenav ${sidenav ? 'open' : ''}`}>
+      <ul>
+        {items.map(({ title, slug, current }) => (
+          <li key={slug}>
+            <Link className={current ? 'current' : ''} to={'../' + slug}>{title}</Link>
+          </li>
+        ))}
+      </ul>
+      <OtherLinks />
+    </div>
   )
 }
 
@@ -369,7 +390,7 @@ export default function Documentation({
     closeToc() { isTocOpen && setTocOpen(false) },
     closeSidenav() { setSidenavOpen(false) }
   }
-  const metaTitle = `${markdownRemark.frontmatter.title}${site.metaPrefix}`
+  const metaTitle = `${markdownRemark.frontmatter.title} | ${site.metaTitle}`
   const pageUrl = new window.URL(markdownRemark.slug, site.url).toString()
 
   return (
@@ -378,16 +399,16 @@ export default function Documentation({
         <html lang='en' />
         <meta charSet='utf-8' />
         <title>{metaTitle}</title>
-        <meta name='description' content={site.description} />
+        {/* <meta name='description' content={site.description} /> */}
         <link rel='canonical' href={pageUrl} />
         <meta name='robots' content='index, follow' />
 
         <meta property='og:type' content='documentation' />
         <meta property='og:title' content={metaTitle} />
-        <meta property='og:description' content={site.description} />
+        {/* <meta property='og:description' content={site.description} /> */}
         {/* <meta property='og:image' content='LINK TO THE IMAGE FILE' /> */}
         <meta property='og:url' content={pageUrl} />
-        <meta property='og:site_name' content={site.title} />
+        <meta property='og:site_name' content={site.metaTitle} />
       </Helmet>
 
       <Ctx.Provider value={providerValue}>
@@ -414,9 +435,8 @@ export const pageQuery = graphql`
     site {
       siteMetadata {
         title
+        metaTitle
         url
-        description
-        metaPrefix
       }
     }
 

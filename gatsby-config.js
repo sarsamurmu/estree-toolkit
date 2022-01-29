@@ -1,9 +1,8 @@
 module.exports = {
   siteMetadata: {
     title: 'estree-toolkit',
-    url: 'https://estree-toolkit.netlify.app',
-    metaPrefix: ' | estree-toolkit - Tools for working with ESTree AST',
-    description: 'estree-toolkit - Tools for working with ESTree AST'
+    metaTitle: 'estree-toolkit - Tools for working with ESTree AST',
+    url: 'https://estree-toolkit.netlify.app'
   },
   plugins: [
     {

@@ -124,7 +124,8 @@ header {
   border-bottom: $border;
   display: flex;
   align-items: center;
-  padding: 0 20px;
+  $pad: 20px;
+  padding: 0 $pad;
 
   @include small {
     justify-content: center;
@@ -135,9 +136,11 @@ header {
     font-family: 'Lexend Deca', sans-serif;
     text-decoration: none;
     color: var(--body-text);
+    min-width: $sidenav-width - $pad;
 
     @include small {
       font-size: 22px;
+      min-width: initial;
     }
   }
 
@@ -154,6 +157,37 @@ header {
   .theme-btn {
     position: absolute;
     right: 20px;
+  }
+
+  @include small {
+    .divider, .links {
+      display: none;
+    }
+  }
+
+  .divider {
+    border-left: $border;
+    margin-right: 50px;
+    padding: 15px 0;
+  }
+
+  .links {
+    margin: 0;
+    padding: 0;
+
+    li {
+      display: inline-block;
+    }
+
+    a {
+      margin-right: 20px;
+      color: var(--sidenav-active-text);
+
+      svg {
+        vertical-align: middle !important;
+        margin-right: 5px;
+      }
+    }
   }
 }
 
@@ -202,12 +236,13 @@ footer {
   top: var(--header-height);
   left: 0;
   bottom: 0;
-  margin: 0;
   width: $sidenav-width;
   background-color: var(--sidenav-bg);
   padding: 30px 0;
   border-right: $border;
   transition: transform 0.3s;
+  display: flex;
+  flex-direction: column;
 
   @include small {
     transform: translateX(-100%);
@@ -219,25 +254,54 @@ footer {
     transform: none;
   }
 
-  li {
-    // padding-left: 20px;
+  ul:not(.links) {
+    margin: 0;
+    padding: 0;
+    flex-grow: 1;
 
-    a {
-      padding: 6px 0px 6px 40px;
-      display: block;
-      color: var(--sidenav-text);
-      text-decoration: none;
-      // border-radius: 6px 0px 0px 6px;
-      font-size: 14px;
+    li {
+      // padding-left: 20px;
 
-      &.current {
-        color: var(--sidenav-active-text);
-        background-color: var(--sidenav-active-bg);
+      a {
+        padding: 6px 0px 6px 40px;
+        display: block;
+        color: var(--sidenav-text);
+        text-decoration: none;
+        // border-radius: 6px 0px 0px 6px;
+        font-size: 14px;
+
+        &.current {
+          color: var(--sidenav-active-text);
+          background-color: var(--sidenav-active-bg);
+        }
+
+        &:hover {
+          color: var(--sidenav-active-text);
+        }
       }
+    }
+  }
 
-      &:hover {
-        color: var(--sidenav-active-text);
-      }
+  .links {
+    margin: 0;
+    padding: 0 10px;
+    align-items: center;
+    justify-content: center;
+    border-top: $border;
+    padding-top: 30px;
+    display: none;
+
+    @include small {
+      display: flex;
+    }
+
+    li {
+      display: inline-block;
+      padding: 0 7.5px;
+    }
+
+    svg {
+      display: none !important;
     }
   }
 }
