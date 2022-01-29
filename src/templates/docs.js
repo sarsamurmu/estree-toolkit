@@ -66,7 +66,7 @@ const CodeWrapper = ({ children, title }) => {
 const Alert = ({ children }) => (
   <div className='alert fromDirective'>
     <div className='wrapper'>{children}</div>
-    <span className='icon'><Octicons.InfoIcon size={24} /></span>
+    <span className='icon'>{!SSR_MODE && <Octicons.InfoIcon size={24} />}</span>
   </div>
 )
 
@@ -80,7 +80,7 @@ const Tabs = ({ children }) => {
           <li
             key={name}
             onClick={() => setActiveTab(name)}
-            className={name === activeTab ? 'active' : ''}>
+            {...(name === activeTab ? { className: 'active' } : {})}>
               {name}
           </li>
         ))}
@@ -159,8 +159,8 @@ const OtherLinks = () => (
       ['npm', Octicons.PackageIcon, 'https://www.npmjs.com/package/estree-toolkit']
     ].map(([name, Icon, url]) => (
       <li>
-        <a href={url} target='_blank'>
-          <Icon size={18} />
+        <a href={url} target='_blank' rel='noopener noreferrer'>
+          {!SSR_MODE && <Icon size={18} />}
           {name}
         </a>
       </li>
@@ -181,7 +181,7 @@ const Header = ({ title }) => {
   return (
     <header>
       <button className='btn-circular menu-btn' onClick={openSidenav} aria-label='Open navigation menu'>
-        <Octicons.ThreeBarsIcon size={20} />
+        {!SSR_MODE && <Octicons.ThreeBarsIcon size={20} />}
       </button>
       <Link to='/' className='title'>{title}</Link>
       <i className='divider' />
@@ -212,7 +212,7 @@ const Footer = ({ pageOrder }) => {
               <span>{type}</span>
               <span>{item && item.title}</span>
             </div>
-            {idx === 0 ? <Octicons.ArrowLeftIcon size={26} /> : <Octicons.ArrowRightIcon size={26} />}
+            {!SSR_MODE && (idx === 0 ? <Octicons.ArrowLeftIcon size={26} /> : <Octicons.ArrowRightIcon size={26} />)}
           </Link>
         ))}
       </div>
@@ -230,7 +230,7 @@ const Sidenav = ({ items }) => {
       <ul>
         {items.map(({ title, slug, current }) => (
           <li key={slug}>
-            <Link className={current ? 'current' : ''} to={'../' + slug}>{title}</Link>
+            <Link {...(current ? { className: 'current' } : {})} to={'../' + slug}>{title}</Link>
           </li>
         ))}
       </ul>
@@ -290,7 +290,7 @@ const renderTocList = (parentUrl, items, activeHeader) => (
     {items.map((item) => (
       <li
         key={parentUrl + item.url}
-        className={activeHeader === item.url.slice(1) ? 'active' : ''}
+        {...(activeHeader === item.url.slice(1) ? { className: 'active' } : {})}
         id={`toc-item-${item.url.slice(1)}`}>
         <a href={item.url}>{item.title}</a>
         {item.items && renderTocList(item.url, item.items, activeHeader)}
@@ -337,7 +337,7 @@ const Toc = ({ content }) => {
     <div className={`toc ${isOpen ? 'open' : ''}`}>
       <span>Table of Contents</span>
       <button className='toc-closer btn-circular' onClick={closeToc} aria-label='Close table of contents side menu'>
-        <Octicons.XIcon size={18} />
+        {!SSR_MODE && <Octicons.XIcon size={18} />}
       </button>
       <SimpleBar className='toc-list-wrapper'>
         <TocList {...tocListProps} />
@@ -422,7 +422,7 @@ export default function Documentation({
           <Interweave content={markdownRemark.html} transform={interweaveTransform} />
           <Footer pageOrder={pageOrder} />
           <button className='toc-opener btn-circular' onClick={openToc} aria-label='Open table of contents side menu'>
-            <Octicons.QuoteIcon size={18} />
+            {!SSR_MODE && <Octicons.QuoteIcon size={18} />}
           </button>
         </div>
       </Ctx.Provider>
