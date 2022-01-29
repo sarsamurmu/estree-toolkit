@@ -67,9 +67,10 @@ $toc-width: 230px;
 $border: 1px solid var(--border-color);
 
 body {
-  font-family: 'Poppins', sans-serif;
+  font-family: 'Sora', sans-serif;
   background-color: var(--body-bg);
   color: var(--body-text);
+  line-height: calc(1em + 0.725rem);
 
   @include small {
     --header-height: 60px;
@@ -317,6 +318,7 @@ footer {
   display: flex;
   flex-direction: column;
   transition: transform 0.3s;
+  line-height: 1.5em;
 
   @include medium {
     transform: translateX(100%);
@@ -389,6 +391,10 @@ footer {
     &:hover {
       color: var(--toc-active-text);
     }
+
+    &.code {
+      font-family: 'JetBrains Mono', monospace;
+    }
   }
 }
 
@@ -404,6 +410,7 @@ footer {
 
 code {
   font-family: 'JetBrains Mono', monospace;
+  font-variant-ligatures: none;
 
   &:not([class*=language-]) {
     background-color: var(--code-bg);
@@ -515,6 +522,7 @@ code {
 .next-prev-container {
   display: flex;
   margin-top: 50px;
+  line-height: 1.6em;
 
   @include small {
     flex-direction: column;

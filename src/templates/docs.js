@@ -158,7 +158,7 @@ const OtherLinks = () => (
       ['Github', Octicons.MarkGithubIcon, 'https://github.com/sarsamurmu/estree-toolkit'],
       ['npm', Octicons.PackageIcon, 'https://www.npmjs.com/package/estree-toolkit']
     ].map(([name, Icon, url]) => (
-      <li>
+      <li key={name}>
         <a href={url} target='_blank' rel='noopener noreferrer'>
           {!SSR_MODE && <Icon size={18} />}
           {name}
@@ -292,7 +292,9 @@ const renderTocList = (parentUrl, items, activeHeader) => (
         key={parentUrl + item.url}
         {...(activeHeader === item.url.slice(1) ? { className: 'active' } : {})}
         id={`toc-item-${item.url.slice(1)}`}>
-        <a href={item.url}>{item.title}</a>
+        <a href={item.url} {...(item.isCode ? { className: 'code' } : {})}>
+          {item.title}
+        </a>
         {item.items && renderTocList(item.url, item.items, activeHeader)}
       </li>
     ))}
@@ -319,6 +321,7 @@ const Toc = ({ content }) => {
         const ul = li.querySelector('ul')
         collection.push({
           title: a.textContent,
+          isCode: a.firstChild.tagName === 'CODE',
           url: a.getAttribute('href'),
           items: ul ? collectItems(ul) : null
         })
