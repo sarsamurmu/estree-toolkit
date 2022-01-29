@@ -4,7 +4,9 @@ title: Welcome
 
 `estree-toolkit` includes all the necessary tools to start working with ESTree.
 
-## Quick start
+------------------------
+
+### Quick start
 You can install `estree-toolkit` using `npm` or `yarn`
 
 ::::Tabs
