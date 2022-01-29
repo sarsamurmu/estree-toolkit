@@ -88,13 +88,13 @@ submitClass(class x() {
 ```
 ```js module
 import { x, a as y } from 'mod';
-// Kind of `x` and `y` is 'imported'
+// Kind of `x` and `y` is 'module'
 
 import x from 'mod';
-// Kind of `x` is 'imported'
+// Kind of `x` is 'module'
 
 import * as x from 'mod';
-// Kind of `x` is 'imported'
+// Kind of `x` is 'module'
 ```
 
 ### `name`
