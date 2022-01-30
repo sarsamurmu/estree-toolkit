@@ -106,7 +106,7 @@ use to completely stop the traversal.
 
 ```js
 const visitors = {
-  Identifier(path, state) => {
+  Identifier(path, state) {
     this // <-- `this` is the visitor context
     this.stop() // would stop the traversal
   }
