@@ -1,5 +1,5 @@
 import { builders as b, NodePath, traverse } from '<project>';
-import { NodeT } from '<project>/internal-utils';
+import { NodeT } from '<project>/estree';
 
 describe('identifier', () => {
   test('basic builder', () => {
