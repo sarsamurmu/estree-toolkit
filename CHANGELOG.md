@@ -1,3 +1,6 @@
+## 1.3.0
+- Added support for JSX
+
 ## 1.2.7
 - Fixed issue in `Scope` where parent scope were not being assigned
 
