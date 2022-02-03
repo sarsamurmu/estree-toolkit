@@ -147,7 +147,7 @@ traverse(ast, {
 ```
 
 ### `scope`
-- Type: [`Scope`](scope.md)
+- Type: [`Scope`](./scope)
 
 `Scope` instance for the scope where the node is located. It's `null` when scope
 tracking is disabled.

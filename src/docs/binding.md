@@ -103,7 +103,7 @@ import * as x from 'mod';
 The name of the binding.
 
 ### `scope`
-- Type: [`Scope`](scope.md)
+- Type: [`Scope`](./scope)
 
 The scope that contains the binding.
 

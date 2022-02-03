@@ -6,7 +6,7 @@ title: Welcome
 
 ------------------------
 
-### Quick start
+## Quick start
 You can install `estree-toolkit` using `npm` or `yarn`
 
 ::::Tabs
