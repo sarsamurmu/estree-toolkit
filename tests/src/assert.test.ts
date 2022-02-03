@@ -36,10 +36,8 @@ describe('OR', () => {
     expect(a.OR(mock1, mock2, mock3)(54)).toBe(null);
     expect(mock1).toBeCalledTimes(1);
     expect(mock1.mock.calls[0][0]).toBe(54);
-    expect(mock2).toBeCalledTimes(1);
-    expect(mock2.mock.calls[0][0]).toBe(54);
-    expect(mock3).toBeCalledTimes(1);
-    expect(mock3.mock.calls[0][0]).toBe(54);
+    expect(mock2).toBeCalledTimes(0);
+    expect(mock3).toBeCalledTimes(0);
   });
 
   test('passes one', () => {
@@ -54,8 +52,7 @@ describe('OR', () => {
     expect(mock1.mock.calls[0][0]).toBe(44);
     expect(mock2).toBeCalledTimes(1);
     expect(mock2.mock.calls[0][0]).toBe(44);
-    expect(mock3).toBeCalledTimes(1);
-    expect(mock3.mock.calls[0][0]).toBe(44);
+    expect(mock3).toBeCalledTimes(0);
   });
 
   test('fails all', () => {
@@ -105,12 +102,15 @@ test('isReserved', () => {
 });
 
 test('isValidIdentifier', () => {
-  expect(a.validIdentifier('a b')).toMatch('not a valid identifier');
-  expect(a.validIdentifier('a-b')).toMatch('not a valid identifier');
-  expect(a.validIdentifier('')).toMatch('not a valid identifier');
-  expect(a.validIdentifier('1_')).toMatch('not a valid identifier');
-  expect(a.validIdentifier('a_b')).toBe(null);
-  expect(a.validIdentifier('try')).toBe(null);
+  const validate = a.validIdentifier(false);
+  expect(validate('a b')).toMatch('not a valid identifier');
+  expect(validate('a-b')).toMatch('not a valid identifier');
+  expect(validate('')).toMatch('not a valid identifier');
+  expect(validate('1_')).toMatch('not a valid identifier');
+  expect(validate('a_b')).toBe(null);
+  expect(validate('try')).toBe(null);
+  const jsxValidate = a.validIdentifier(true);
+  expect(jsxValidate('a-b')).toBe(null);
 });
 
 test('nonNull', () => {

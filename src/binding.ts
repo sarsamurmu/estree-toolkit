@@ -8,18 +8,19 @@ import {
   ImportDefaultSpecifier,
   ImportNamespaceSpecifier,
   ImportSpecifier,
+  JSXIdentifier,
   Pattern,
   VariableDeclarator
-} from 'estree';
+} from 'estree-jsx';
 
 import { NodePath } from './nodepath';
 import { Scope } from './scope';
 
 class BaseBinding {
-  readonly references: NodePath<Identifier>[] = [];
+  readonly references: NodePath<Identifier | JSXIdentifier>[] = [];
   readonly constantViolations: NodePath<Identifier>[] = [];
 
-  addReference(path: NodePath<Identifier>) {
+  addReference(path: NodePath<Identifier | JSXIdentifier>) {
     this.references.push(path);
   }
 

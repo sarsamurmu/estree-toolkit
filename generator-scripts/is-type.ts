@@ -8,13 +8,14 @@ let content = '';
 const nodeTypes = Object.keys(definitions);
 const aliasNames = Object.keys(aliases);
 
-const lowerCase = (str: string) => str[0].toLowerCase() + str.slice(1);
+const lowerCase = (str: string) => (str[0].toLowerCase() + str.slice(1)).replace(/^jsx/i, 'jsx');
 
 content += `
 // Generated file. Do not modify by hands.
 // Run "npm run generate" to re-generate this file.
 
-import { Node, BaseNode, ${nodeTypes.join(', ')} } from 'estree';
+import { Node, BaseNode } from '../estree';
+import { ${nodeTypes.join(', ')} } from 'estree-jsx';
 import { NodePath } from '../nodepath';
 import type { AliasMap } from '../aliases';
 

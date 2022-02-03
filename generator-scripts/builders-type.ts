@@ -19,7 +19,7 @@ content += `
 // Generated file. Do not modify by hands.
 // Run "npm run generate" to re-generate this file.
 
-import { ${nodeNames.join(', ')} } from 'estree';
+import { ${nodeNames.join(', ')} } from 'estree-jsx';
 `.trim();
 
 content += '\n\nexport type Builders = {\n';
@@ -27,7 +27,7 @@ content += '\n\nexport type Builders = {\n';
 const defaultKey: keyof DefinitionField<any, any> = 'default';
 nodeNames.forEach((nodeName) => {
   const definition: Definition = definitions[nodeName];
-  const lowerCasedTypeName = nodeName[0].toLowerCase() + nodeName.slice(1);
+  const lowerCasedTypeName = (nodeName[0].toLowerCase() + nodeName.slice(1)).replace(/^jsx/i, 'jsx');
   const parameters = getFieldsOf(definition, 'builder').map((fieldName) => {
     const field: DefinitionField<any, any> = definition.fields[fieldName];
     const optional = defaultKey in field;

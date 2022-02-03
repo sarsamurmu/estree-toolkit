@@ -9,15 +9,11 @@ let content = `
 // Generated file. Do not modify by hands.
 // Run "npm run generate" to re-generate this file.
 
-export {
-  Node,
-  SimpleLiteral,
-  RegExpLiteral
-} from 'estree';
-export { ${nodeTypes.join(', ')} } from 'estree';
+export { Node } from '../estree';
+export { SimpleLiteral, RegExpLiteral, ${nodeTypes.join(', ')} } from 'estree-jsx';
 `.trim();
 
-content += `import type { AliasMap } from '../aliases';\n\n`;
+content += `\nimport type { AliasMap } from '../aliases';\n\n`;
 
 Object.keys(aliases).forEach((alias) => {
   content += `export type ${alias} = AliasMap['${alias}'];\n`;

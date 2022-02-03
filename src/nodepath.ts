@@ -1,11 +1,9 @@
-import { Node, BaseNode } from 'estree';
-
+import { Node, BaseNode, NodeT, ParentsOf } from './estree';
 import { TraverseOptions, Traverser, Visitors } from './traverse';
 import { Scope } from './scope';
 import { is } from './is';
 import * as t from './generated/types';
 import { NodePathDocs } from './nodepath-doc';
-import { NodeT, ParentsOf } from './internal-utils';
 import { Definition, definitions } from './definitions';
 import { getNodeValidationEnabled } from './builders';
 

@@ -1,5 +1,5 @@
 import { NodePath } from '../nodepath';
-import { assertNever, NodeT } from '../internal-utils';
+import { assertNever, NodeT } from '../estree';
 
 const binaryExpressionEvaluators: {
   [K in NodeT<'BinaryExpression'>['operator']]: (left: any, right: any) => any;

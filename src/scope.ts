@@ -1,13 +1,12 @@
-import { Identifier, Node, Pattern } from 'estree';
-
+import { Identifier, JSXIdentifier, Pattern } from 'estree-jsx';
+import { Node, assertNever, PossibleKeysInParent, NodeMap, NodeT, ParentsOf } from './estree';
 import { NodePath } from './nodepath';
 import { Traverser, ExpandedVisitor, ExpandedVisitors } from './traverse';
-import { assertNever, PossibleKeysInParent, NodeMap, NodeT, ParentsOf } from './internal-utils';
 import { Binding, BindingKind, BindingPathT, GlobalBinding } from './binding';
 import { is } from './is';
 
 type CrawlerState = {
-  references: NodePath<Identifier>[];
+  references: NodePath<Identifier | JSXIdentifier>[];
   constantViolations: NodePath<Identifier>[];
   labelReferences: NodePath<Identifier, NodeT<'BreakStatement' | 'ContinueStatement'>>[];
   scope: Scope;
@@ -71,6 +70,8 @@ const shouldMakeScope = (path: NodePath): boolean => {
 
   return scopedNodesTypesSet.has(path.node.type);
 }
+
+const isIdentifierJSX = (name: string) => !(/^[a-z]/.test(name))
 
 /*
 ```
@@ -570,6 +571,96 @@ const identifierCrawlers: {
       /* istanbul ignore next */
       default: assertNever(key);
     }
+  },
+
+
+  /// JSX
+  JSXExpressionContainer(key, path, state) {
+    switch (key) {
+      case 'expression':
+        state.references.push(path);
+        break;
+      /* istanbul ignore next */
+      default: assertNever(key);
+    }
+  },
+  JSXSpreadAttribute(key, path, state) {
+    switch (key) {
+      case 'argument':
+        state.references.push(path);
+        break;
+      /* istanbul ignore next */
+      default: assertNever(key);
+    }
+  },
+  JSXSpreadChild(key, path, state) {
+    switch (key) {
+      case 'expression':
+        state.references.push(path);
+        break;
+      /* istanbul ignore next */
+      default: assertNever(key);
+    }
+  }
+}
+
+const jsxIdentifierCrawlers: {
+  [Parent in ParentsOf<JSXIdentifier> as `${Parent['type']}`]: (
+    key: PossibleKeysInParent<JSXIdentifier, Parent>,
+    path: NodePath<JSXIdentifier, Parent>,
+    state: CrawlerState
+  ) => void;
+} = {
+  JSXNamespacedName(key, path, state) {
+    switch (key) {
+      case 'name':
+        if (isIdentifierJSX(path.node!.name)) {
+          state.references.push(path)
+        }
+        break;
+      case 'namespace': break;
+      /* istanbul ignore next */
+      default: assertNever(key);
+    }
+  },
+  JSXAttribute(key) {
+    switch (key) {
+      case 'name': break;
+      /* istanbul ignore next */
+      default: assertNever(key);
+    }
+  },
+  JSXClosingElement(key, path, state) {
+    switch (key) {
+      case 'name':
+        if (isIdentifierJSX(path.node!.name)) {
+          state.references.push(path)
+        }
+        break;
+      /* istanbul ignore next */
+      default: assertNever(key);
+    }
+  },
+  JSXMemberExpression(key, path, state) {
+    switch (key) {
+      case 'object':
+        state.references.push(path);
+        break;
+      case 'property': break;
+      /* istanbul ignore next */
+      default: assertNever(key);
+    }
+  },
+  JSXOpeningElement(key, path, state) {
+    switch (key) {
+      case 'name':
+        if (isIdentifierJSX(path.node!.name)) {
+          state.references.push(path)
+        }
+        break;
+      /* istanbul ignore next */
+      default: assertNever(key);
+    }
   }
 }
 
@@ -672,6 +763,14 @@ const inListIdentifierCrawlers: {
     }
   }
 }
+
+const inListJSXIdentifierCrawlers: {
+  [Parent in ParentsOf<JSXIdentifier[]> as `${Parent['type']}`]: (
+    listKey: PossibleKeysInParent<JSXIdentifier[], Parent>,
+    path: NodePath<JSXIdentifier>,
+    state: CrawlerState
+  ) => void;
+} = {}
 
 // From -
 //  const { a, b: [c, { d }], e: f = 0, ...g } = x;
@@ -777,7 +876,7 @@ const registerVariableDeclaration = (path: NodePath<NodeT<'VariableDeclaration'>
 }
 
 const crawlerVisitor: {
-  [K in 'Identifier' | 'AssignmentExpression' | 'VariableDeclaration']: (
+  [K in 'Identifier' | 'JSXIdentifier' | 'AssignmentExpression' | 'VariableDeclaration']: (
     ExpandedVisitor<NodeT<K>, CrawlerState>
   );
 } = {
@@ -794,6 +893,24 @@ const crawlerVisitor: {
         const crawler = identifierCrawlers[parentType as ParentsOf<Identifier>['type']];
         if (crawler != null) {
           crawler(path.key as never, path as NodePath<Identifier, any>, state);
+        }
+      }
+    }
+  },
+  JSXIdentifier: {
+    enter(path, state) {
+      const parentType = path.parentPath!.node?.type;
+
+      if (path.listKey != null) {
+        const crawler = inListJSXIdentifierCrawlers[parentType as ParentsOf<JSXIdentifier[]>['type']];
+        if (crawler != null) {
+          // TODO: Change this if there is any `inListJSXIdentifierCrawlers`
+          (crawler as any)(path.listKey as never, path, state);
+        }
+      } else {
+        const crawler = jsxIdentifierCrawlers[parentType as ParentsOf<JSXIdentifier>['type']];
+        if (crawler != null) {
+          crawler(path.key as never, path as NodePath<JSXIdentifier, any>, state);
         }
       }
     }
@@ -829,7 +946,7 @@ const crawlerVisitor: {
     cVisitors[scopedNodeTypes[i]] = skipToChildNodeVisitor;
   }
 
-  // `crawlerVisitor` stops whenever it founds `FunctionDeclaration` or `ClassDeclaration`
+  // `crawlerVisitor` stops whenever it finds `FunctionDeclaration` or `ClassDeclaration`
   // so it never gets the chance to register the declaration's binding
   // We are making an exception to handle the case
   cVisitors.FunctionDeclaration =

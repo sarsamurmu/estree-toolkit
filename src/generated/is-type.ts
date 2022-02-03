@@ -1,7 +1,8 @@
 // Generated file. Do not modify by hands.
 // Run "npm run generate" to re-generate this file.
 
-import { Node, BaseNode, Identifier, Literal, Program, FunctionDeclaration, FunctionExpression, ArrowFunctionExpression, SwitchCase, CatchClause, VariableDeclarator, ExpressionStatement, BlockStatement, EmptyStatement, DebuggerStatement, WithStatement, ReturnStatement, LabeledStatement, BreakStatement, ContinueStatement, IfStatement, SwitchStatement, ThrowStatement, TryStatement, WhileStatement, DoWhileStatement, ForStatement, ForInStatement, ForOfStatement, VariableDeclaration, ClassDeclaration, ThisExpression, ArrayExpression, ObjectExpression, YieldExpression, UnaryExpression, UpdateExpression, BinaryExpression, AssignmentExpression, LogicalExpression, MemberExpression, ConditionalExpression, CallExpression, NewExpression, SequenceExpression, TemplateLiteral, TaggedTemplateExpression, ClassExpression, MetaProperty, AwaitExpression, ImportExpression, ChainExpression, Property, Super, TemplateElement, SpreadElement, ObjectPattern, ArrayPattern, RestElement, AssignmentPattern, ClassBody, MethodDefinition, ImportDeclaration, ExportNamedDeclaration, ExportDefaultDeclaration, ExportAllDeclaration, ImportSpecifier, ImportDefaultSpecifier, ImportNamespaceSpecifier, ExportSpecifier, PrivateIdentifier, PropertyDefinition } from 'estree';
+import { Node, BaseNode } from '../estree';
+import { Identifier, Literal, Program, FunctionDeclaration, FunctionExpression, ArrowFunctionExpression, SwitchCase, CatchClause, VariableDeclarator, ExpressionStatement, BlockStatement, EmptyStatement, DebuggerStatement, WithStatement, ReturnStatement, LabeledStatement, BreakStatement, ContinueStatement, IfStatement, SwitchStatement, ThrowStatement, TryStatement, WhileStatement, DoWhileStatement, ForStatement, ForInStatement, ForOfStatement, VariableDeclaration, ClassDeclaration, ThisExpression, ArrayExpression, ObjectExpression, YieldExpression, UnaryExpression, UpdateExpression, BinaryExpression, AssignmentExpression, LogicalExpression, MemberExpression, ConditionalExpression, CallExpression, NewExpression, SequenceExpression, TemplateLiteral, TaggedTemplateExpression, ClassExpression, MetaProperty, AwaitExpression, ImportExpression, ChainExpression, Property, Super, TemplateElement, SpreadElement, ObjectPattern, ArrayPattern, RestElement, AssignmentPattern, ClassBody, MethodDefinition, ImportDeclaration, ExportNamedDeclaration, ExportDefaultDeclaration, ExportAllDeclaration, ImportSpecifier, ImportDefaultSpecifier, ImportNamespaceSpecifier, ExportSpecifier, PrivateIdentifier, PropertyDefinition, JSXIdentifier, JSXNamespacedName, JSXMemberExpression, JSXEmptyExpression, JSXExpressionContainer, JSXSpreadAttribute, JSXAttribute, JSXClosingElement, JSXClosingFragment, JSXElement, JSXFragment, JSXOpeningElement, JSXOpeningFragment, JSXSpreadChild, JSXText } from 'estree-jsx';
 import { NodePath } from '../nodepath';
 import type { AliasMap } from '../aliases';
 
@@ -85,6 +86,21 @@ export type Is = {
   exportSpecifier: Checker<ExportSpecifier>;
   privateIdentifier: Checker<PrivateIdentifier>;
   propertyDefinition: Checker<PropertyDefinition>;
+  jsxIdentifier: Checker<JSXIdentifier>;
+  jsxNamespacedName: Checker<JSXNamespacedName>;
+  jsxMemberExpression: Checker<JSXMemberExpression>;
+  jsxEmptyExpression: Checker<JSXEmptyExpression>;
+  jsxExpressionContainer: Checker<JSXExpressionContainer>;
+  jsxSpreadAttribute: Checker<JSXSpreadAttribute>;
+  jsxAttribute: Checker<JSXAttribute>;
+  jsxClosingElement: Checker<JSXClosingElement>;
+  jsxClosingFragment: Checker<JSXClosingFragment>;
+  jsxElement: Checker<JSXElement>;
+  jsxFragment: Checker<JSXFragment>;
+  jsxOpeningElement: Checker<JSXOpeningElement>;
+  jsxOpeningFragment: Checker<JSXOpeningFragment>;
+  jsxSpreadChild: Checker<JSXSpreadChild>;
+  jsxText: Checker<JSXText>;
 
   function: Checker<AliasMap['Function']>;
   statement: Checker<AliasMap['Statement']>;

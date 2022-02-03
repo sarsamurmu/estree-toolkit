@@ -1,7 +1,7 @@
 // Generated file. Do not modify by hands.
 // Run "npm run generate" to re-generate this file.
 
-import { Identifier, Literal, Program, FunctionDeclaration, FunctionExpression, ArrowFunctionExpression, SwitchCase, CatchClause, VariableDeclarator, ExpressionStatement, BlockStatement, EmptyStatement, DebuggerStatement, WithStatement, ReturnStatement, LabeledStatement, BreakStatement, ContinueStatement, IfStatement, SwitchStatement, ThrowStatement, TryStatement, WhileStatement, DoWhileStatement, ForStatement, ForInStatement, ForOfStatement, VariableDeclaration, ClassDeclaration, ThisExpression, ArrayExpression, ObjectExpression, YieldExpression, UnaryExpression, UpdateExpression, BinaryExpression, AssignmentExpression, LogicalExpression, MemberExpression, ConditionalExpression, CallExpression, NewExpression, SequenceExpression, TemplateLiteral, TaggedTemplateExpression, ClassExpression, MetaProperty, AwaitExpression, ImportExpression, ChainExpression, Property, Super, TemplateElement, SpreadElement, ObjectPattern, ArrayPattern, RestElement, AssignmentPattern, ClassBody, MethodDefinition, ImportDeclaration, ExportNamedDeclaration, ExportDefaultDeclaration, ExportAllDeclaration, ImportSpecifier, ImportDefaultSpecifier, ImportNamespaceSpecifier, ExportSpecifier, PrivateIdentifier, PropertyDefinition } from 'estree';
+import { Identifier, Literal, Program, FunctionDeclaration, FunctionExpression, ArrowFunctionExpression, SwitchCase, CatchClause, VariableDeclarator, ExpressionStatement, BlockStatement, EmptyStatement, DebuggerStatement, WithStatement, ReturnStatement, LabeledStatement, BreakStatement, ContinueStatement, IfStatement, SwitchStatement, ThrowStatement, TryStatement, WhileStatement, DoWhileStatement, ForStatement, ForInStatement, ForOfStatement, VariableDeclaration, ClassDeclaration, ThisExpression, ArrayExpression, ObjectExpression, YieldExpression, UnaryExpression, UpdateExpression, BinaryExpression, AssignmentExpression, LogicalExpression, MemberExpression, ConditionalExpression, CallExpression, NewExpression, SequenceExpression, TemplateLiteral, TaggedTemplateExpression, ClassExpression, MetaProperty, AwaitExpression, ImportExpression, ChainExpression, Property, Super, TemplateElement, SpreadElement, ObjectPattern, ArrayPattern, RestElement, AssignmentPattern, ClassBody, MethodDefinition, ImportDeclaration, ExportNamedDeclaration, ExportDefaultDeclaration, ExportAllDeclaration, ImportSpecifier, ImportDefaultSpecifier, ImportNamespaceSpecifier, ExportSpecifier, PrivateIdentifier, PropertyDefinition, JSXIdentifier, JSXNamespacedName, JSXMemberExpression, JSXEmptyExpression, JSXExpressionContainer, JSXSpreadAttribute, JSXAttribute, JSXClosingElement, JSXClosingFragment, JSXElement, JSXFragment, JSXOpeningElement, JSXOpeningFragment, JSXSpreadChild, JSXText } from 'estree-jsx';
 
 export type Builders = {
   identifier(name: Identifier['name']): Identifier;
@@ -74,4 +74,19 @@ export type Builders = {
   exportSpecifier(local: ExportSpecifier['local'], exported?: ExportSpecifier['exported']): ExportSpecifier;
   privateIdentifier(name: PrivateIdentifier['name']): PrivateIdentifier;
   propertyDefinition(key: PropertyDefinition['key'], value: PropertyDefinition['value'], computed?: PropertyDefinition['computed'], _static?: PropertyDefinition['static']): PropertyDefinition;
+  jsxIdentifier(): JSXIdentifier;
+  jsxNamespacedName(namespace: JSXNamespacedName['namespace'], name: JSXNamespacedName['name']): JSXNamespacedName;
+  jsxMemberExpression(object: JSXMemberExpression['object'], property: JSXMemberExpression['property']): JSXMemberExpression;
+  jsxEmptyExpression(): JSXEmptyExpression;
+  jsxExpressionContainer(expression: JSXExpressionContainer['expression']): JSXExpressionContainer;
+  jsxSpreadAttribute(argument: JSXSpreadAttribute['argument']): JSXSpreadAttribute;
+  jsxAttribute(name: JSXAttribute['name'], value: JSXAttribute['value']): JSXAttribute;
+  jsxClosingElement(name: JSXClosingElement['name']): JSXClosingElement;
+  jsxClosingFragment(): JSXClosingFragment;
+  jsxElement(openingElement: JSXElement['openingElement'], closingElement: JSXElement['closingElement'], children?: JSXElement['children']): JSXElement;
+  jsxFragment(openingFragment: JSXFragment['openingFragment'], closingFragment: JSXFragment['closingFragment'], children?: JSXFragment['children']): JSXFragment;
+  jsxOpeningElement(name: JSXOpeningElement['name'], attributes?: JSXOpeningElement['attributes'], selfClosing?: JSXOpeningElement['selfClosing']): JSXOpeningElement;
+  jsxOpeningFragment(): JSXOpeningFragment;
+  jsxSpreadChild(expression: JSXSpreadChild['expression']): JSXSpreadChild;
+  jsxText(value: JSXText['value']): JSXText;
 }

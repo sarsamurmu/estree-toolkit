@@ -1,4 +1,8 @@
-import { Node } from 'estree';
+import type { Node as _Node, JSXSpreadChild, BaseNode } from 'estree-jsx'
+
+export type Node = _Node | JSXSpreadChild;
+
+export { BaseNode }
 
 /**
  * Causes a compiler error if a switch is not exhaustive
@@ -11,11 +15,12 @@ import { Node } from 'estree';
 export const assertNever = (x: never) => x;
 
 export type NodeMap = { [N in Node as `${N['type']}`]: N; }
-export type NodeT<N extends keyof NodeMap> = NodeMap[N];
+export type NodeTypes = keyof NodeMap;
+export type NodeT<N extends NodeTypes> = NodeMap[N];
 
 export type ParentsOf<N extends Node | Node[]> = {
-  [K in keyof NodeMap]: N extends NodeMap[K][keyof NodeMap[K]] ? NodeMap[K] : never;
-}[keyof NodeMap];
+  [K in NodeTypes]: N extends NodeMap[K][keyof NodeMap[K]] ? NodeMap[K] : never;
+}[NodeTypes];
 
 export type PossibleKeysInParent<N extends Node | Node[], P extends Node> = Exclude<{
   [K in keyof P]: N extends P[K] ? K : never;

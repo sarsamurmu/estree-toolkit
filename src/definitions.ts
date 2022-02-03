@@ -1,9 +1,7 @@
-import * as ESTree from 'estree';
-
+import { BaseNode, Node, ParentsOf } from './estree';
 import * as a from './assert';
-import { ParentsOf } from './internal-utils';
 
-type NodeKeys<N> = Exclude<keyof N, keyof ESTree.BaseNode>;
+type NodeKeys<N> = Exclude<keyof N, keyof BaseNode>;
 
 export type DefinitionIndex<T> = T extends true
   ? number | [builderIndex: number | false, visitIndex: number | false]
@@ -11,13 +9,14 @@ export type DefinitionIndex<T> = T extends true
 
 export type DefinitionField<N, V> = {
   default?: V | ((node: N) => V);
-  validate: a.ValidateFn<Exclude<V, undefined>>;
+  validate: a.ValidateFn<Exclude<Exclude<V, undefined>, RegExp>>;
+  // Some node types include RegExp, but in practical it never appears
   type?: string;
 };
 
-export type Definition<N extends ESTree.Node = ESTree.Node> = {
+export type Definition<N extends Node = Node> = {
   indices: {
-    [K in NodeKeys<N>]: DefinitionIndex<N[K] extends ESTree.Node | (ESTree.Node | null)[] | undefined | null ? true : false>;
+    [K in NodeKeys<N>]: DefinitionIndex<N[K] extends Node | (Node | null)[] | undefined | null ? true : false>;
   };
   fields: {
     [F in NodeKeys<N>]: DefinitionField<N, N[F]>;
@@ -27,7 +26,7 @@ export type Definition<N extends ESTree.Node = ESTree.Node> = {
 };
 
 export type Definitions = {
-  [N in ESTree.Node as `${N['type']}`]: Definition<N>;
+  [N in Node as `${N['type']}`]: Definition<N>;
 }
 
 const anyValidate = {
@@ -43,7 +42,7 @@ export const definitions: Definitions = Object.assign<any, Definitions>(Object.c
       name: {
         validate: a.chain(
           a.value('string'),
-          a.validIdentifier
+          a.validIdentifier(false)
         )
       }
     },
@@ -72,7 +71,7 @@ export const definitions: Definitions = Object.assign<any, Definitions>(Object.c
     },
     fields: {
       value: {
-        // @ts-expect-error Practically RegExp would never appear here
+        // ts-expect-error Practically RegExp would never appear here
         validate: a.value('string', 'number', 'bigint', 'boolean', 'null')
       },
       raw: anyValidate
@@ -1081,7 +1080,7 @@ export const definitions: Definitions = Object.assign<any, Definitions>(Object.c
       name: {
         validate: a.chain(
           a.value('string'),
-          a.validIdentifier
+          a.validIdentifier(false)
         )
       }
     }
@@ -1108,6 +1107,185 @@ export const definitions: Definitions = Object.assign<any, Definitions>(Object.c
         default: false,
         validate: a.value('boolean')
       }
+    }
+  },
+
+  /// JSX
+  JSXIdentifier: {
+    indices: {
+      name: false
+    },
+    fields: {
+      name: {
+        validate: a.chain(
+          a.value('string'),
+          a.validIdentifier(true)
+        )
+      }
+    }
+  },
+  JSXNamespacedName: {
+    indices: {
+      namespace: 0,
+      name: 1,
+    },
+    fields: {
+      namespace: {
+        validate: a.node('JSXIdentifier')
+      },
+      name: {
+        validate: a.node('JSXIdentifier')
+      }
+    }
+  },
+  JSXMemberExpression: {
+    indices: {
+      object: 0,
+      property: 0
+    },
+    fields: {
+      object: {
+        validate: a.OR(a.node('JSXIdentifier'), a.node('JSXMemberExpression'))
+      },
+      property: {
+        validate: a.node('JSXIdentifier')
+      }
+    }
+  },
+  JSXEmptyExpression: {
+    indices: {},
+    fields: {}
+  },
+  JSXExpressionContainer: {
+    indices: {
+      expression: 0
+    },
+    fields: {
+      expression: {
+        validate: a.OR(a.nodeAlias('Expression'), a.node('JSXEmptyExpression'))
+      }
+    }
+  },
+  JSXSpreadAttribute: {
+    indices: {
+      argument: 0
+    },
+    fields: {
+      argument: {
+        validate: a.nodeAlias('Expression')
+      }
+    }
+  },
+  JSXAttribute: {
+    indices: {
+      name: 0,
+      value: 1
+    },
+    fields: {
+      name: {
+        validate: a.OR(a.node('JSXIdentifier'), a.node('JSXNamespacedName'))
+      },
+      value: {
+        validate: a.nullable(a.OR(a.node('Literal'), a.node('JSXExpressionContainer'), a.node('JSXElement'), a.node('JSXFragment')))
+      }
+    }
+  },
+  JSXClosingElement: {
+    indices: {
+      name: 0
+    },
+    fields: {
+      name: {
+        validate: a.OR(a.node('JSXIdentifier'), a.node('JSXNamespacedName'), a.node('JSXMemberExpression'))
+      }
+    }
+  },
+  JSXClosingFragment: {
+    indices: {},
+    fields: {}
+  },
+  JSXElement: {
+    indices: {
+      openingElement: 0,
+      children: [2, 1],
+      closingElement: [1, 2]
+    },
+    fields: {
+      openingElement: {
+        validate: a.node('JSXOpeningElement')
+      },
+      children: {
+        validate: a.arrayOf(a.node('JSXExpressionContainer', 'JSXElement', 'JSXFragment', 'JSXText', 'JSXSpreadChild')),
+        default: []
+      },
+      closingElement: {
+        validate: a.nullable(a.node('JSXClosingElement'))
+      }
+    }
+  },
+  JSXFragment: {
+    indices: {
+      openingFragment: 0,
+      children: [2, 1],
+      closingFragment: [1, 2]
+    },
+    fields: {
+      openingFragment: {
+        validate: a.node('JSXOpeningFragment')
+      },
+      children: {
+        validate: a.arrayOf(a.node('JSXExpressionContainer', 'JSXElement', 'JSXFragment', 'JSXText', 'JSXSpreadChild')),
+        default: []
+      },
+      closingFragment: {
+        validate: a.node('JSXClosingFragment')
+      }
+    }
+  },
+  JSXOpeningElement: {
+    indices: {
+      name: 0,
+      attributes: 1,
+      selfClosing: [2, false]
+    },
+    fields: {
+      name: {
+        validate: a.node('JSXIdentifier', 'JSXNamespacedName', 'JSXMemberExpression')
+      },
+      attributes: {
+        validate: a.arrayOf(a.node('JSXSpreadAttribute', 'JSXAttribute')),
+        default: []
+      },
+      selfClosing: {
+        validate: a.value('boolean'),
+        default: false
+      }
+    }
+  },
+  JSXOpeningFragment: {
+    indices: {},
+    fields: {}
+  },
+  JSXSpreadChild: {
+    indices: {
+      expression: 0
+    },
+    fields: {
+      expression: {
+        validate: a.nodeAlias('Expression')
+      }
+    }
+  },
+  JSXText: {
+    indices: {
+      value: [0, false],
+      raw: false
+    },
+    fields: {
+      value: {
+        validate: a.value('string')
+      },
+      raw: anyValidate
     }
   }
 });

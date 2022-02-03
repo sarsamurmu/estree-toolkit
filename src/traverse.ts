@@ -1,4 +1,4 @@
-import { Node } from 'estree';
+import { Node } from './estree';
 
 import { Context, NodePath } from './nodepath';
 import { visitorKeys } from './definitions';

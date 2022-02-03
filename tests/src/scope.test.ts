@@ -44,6 +44,20 @@ test('reference collection', () => {
     export { ExportSpecifier_local as x }
     export * as exportAllDeclaration_exported from '';
     class x { propertyDefinition_key = PropertyDefinition_value }
+    // --------------------- JSX ----------------------------
+    <a b={JSXExpressionContainer_expression} />;
+    <a {...JSXSpreadAttribute_argument} />;
+    <a>{...JSXSpreadChild_expression}</a>;
+
+    // ----------------------------
+    //   jsxIdentifierCrawlers
+    // ----------------------------
+    <JSXNamespacedName_name:jsxNamespacedName_namespace />;
+    <jsxNamespacedName_name:x />;
+    <a jsxAttribute_name={x} />;
+    <JSXClosingElement_nameOne></JSXClosingElement_nameOne>;
+    <JSXMemberExpression_object.jsxMemberExpression_property />;
+    <JSXOpeningElement_nameOne />;
 
     // ----------------------------
     //   inListIdentifierCrawlers
@@ -54,7 +68,7 @@ test('reference collection', () => {
     (SequenceExpression_expressions, x);
     \`\${TemplateLiteral_expressions}\`;
   `;
-  const ast = parseModule(source, { next: true });
+  const ast = parseModule(source, { next: true, jsx: true });
   const referencedIdentifiers = [...source.matchAll(/\b([A-Z][a-z]+)+_[A-Za-z]+\b/gm)].map((m) => m[0]);
 
   traverse(ast, {

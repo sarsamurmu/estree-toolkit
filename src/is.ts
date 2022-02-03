@@ -1,4 +1,4 @@
-import { Node } from 'estree';
+import { Node } from './estree';
 
 import { Is, Matcher } from './generated/is-type';
 import { definitions } from './definitions';
