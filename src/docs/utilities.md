@@ -89,8 +89,8 @@ traverse(parseModule(`!0`), {
 - Returns: `boolean` If the binding is available in the current position
 
 You can easily track scopes by enabling [`Scope`](./scope) when [traversing](./traversal#options).
-But if you need to check if a binding is available only one or two times, using `Scope` can decrease
-performance, because scope builds all graphs that you may not need. So using `hasBinding` is that
+But if you need to check if a binding is available only one or two times, using `Scope` can be
+overkill, because scope builds all the graphs that you may not need. So using `hasBinding` in this
 case would be more preferable.
 
 This function starts walking up the tree from the `path` and finds if there is any binding
