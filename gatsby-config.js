@@ -4,7 +4,6 @@ module.exports = {
     metaTitle: 'estree-toolkit - Tools for working with ESTree AST',
     url: 'https://estree-toolkit.netlify.app'
   },
-  trailingSlash: 'never',
   plugins: [
     {
       resolve: 'gatsby-source-filesystem',
