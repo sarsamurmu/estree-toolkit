@@ -1,3 +1,7 @@
+## 1.3.1
+- Added `ObjectExpression` and `ArrayExpression` evaluators
+- Improved code
+
 ## 1.3.0
 - Added support for JSX
 
