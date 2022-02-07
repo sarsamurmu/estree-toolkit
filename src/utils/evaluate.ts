@@ -1,32 +1,34 @@
 import { NodePath } from '../nodepath';
 import { assertNever, NodeT } from '../estree';
 
-const binaryExpressionEvaluators: {
-  [K in NodeT<'BinaryExpression'>['operator']]: (left: any, right: any) => any;
-} = {
-  '==':   (left, right) => left == right, // eslint-disable-line eqeqeq
-  '!=':   (left, right) => left != right, // eslint-disable-line eqeqeq
-  '===':  (left, right) => left === right,
-  '!==':  (left, right) => left !== right,
-  '<':    (left, right) => left < right,
-  '<=':   (left, right) => left <= right,
-  '>':    (left, right) => left > right,
-  '>=':   (left, right) => left >= right,
-  '<<':   (left, right) => left << right,
-  '>>':   (left, right) => left >> right,
-  '>>>':  (left, right) => left >>> right,
-  '+':    (left, right) => left + right,
-  '-':    (left, right) => left - right,
-  '*':    (left, right) => left * right,
-  '/':    (left, right) => left / right,
-  '%':    (left, right) => left % right,
-  '**':   (left, right) => left ** right,
-  '|':    (left, right) => left | right,
-  '^':    (left, right) => left ^ right,
-  '&':    (left, right) => left & right,
+const evaluateBinaryExpr = (left: any, right: any, operator: NodeT<'BinaryExpression'>['operator']) => {
+  switch (operator) {
+    case '==':  return left == right; // eslint-disable-line eqeqeq
+    case '!=':  return left != right; // eslint-disable-line eqeqeq
+    case '===': return left === right;
+    case '!==': return left !== right;
+    case '<':   return left < right;
+    case '<=':  return left <= right;
+    case '>':   return left > right;
+    case '>=':  return left >= right;
+    case '<<':  return left << right;
+    case '>>':  return left >> right;
+    case '>>>': return left >>> right;
+    case '+':   return left + right;
+    case '-':   return left - right;
+    case '*':   return left * right;
+    case '/':   return left / right;
+    case '%':   return left % right;
+    case '**':  return left ** right;
+    case '|':   return left | right;
+    case '^':   return left ^ right;
+    case '&':   return left & right;
+    case 'in':  return left in right;
 
-  in: (left, right) => left in right,
-  instanceof: (left, right) => left instanceof right,
+    case 'instanceof': return;
+    /* istanbul ignore next */
+    default: assertNever(operator)
+  }
 }
 
 type EvaluationResult = { value: unknown };
@@ -46,7 +48,7 @@ class Evaluator {
   }
 
   evaluate(path: NodePath): EvaluationResult | undefined {
-    switch (path.node?.type) {
+    switch (/* istanbul ignore next */ path.node?.type) {
       case 'Identifier':
         if (path.node.name === 'undefined') return { value: undefined };
         break;
@@ -61,9 +63,10 @@ class Evaluator {
         const right = this.getEvaluated(aPath.get('right'));
         if (right == null) return;
 
-        return {
-          value: binaryExpressionEvaluators[aPath.node!.operator](left.value, right.value)
-        }
+        const value = evaluateBinaryExpr(left.value, right.value, aPath.node!.operator);
+        if (value == null) return;
+
+        return { value }
       }
 
       case 'UnaryExpression': {
@@ -149,6 +152,58 @@ class Evaluator {
           /* istanbul ignore next */
           default: assertNever(aPath.node!.operator)
         }
+
+        break;
+      }
+
+      case 'ObjectExpression': {
+        const aPath = path as NodePath<NodeT<'ObjectExpression'>>;
+        const object: Record<string, any> = {};
+        const properties = aPath.get('properties');
+
+        for (let i = 0; i < properties.length; i++) {
+          const property = properties[i];
+
+          if (property.type === 'Property') {
+            /* istanbul ignore if: never going to happen, but just in case */
+            if (property.node == null) return;
+            if (property.node.kind !== 'init') return;
+
+            const key = property.node.computed
+              ? this.getEvaluated(property.get('key'))?.value as string
+              : (property.node.key as NodeT<'Identifier'>).name;
+            
+            if (key != null) {
+              const value = this.getEvaluated(property.get('value'));
+              if (value == null) return;
+              object[key] = value.value;
+            } else {
+              return;
+            }
+          } else /* istanbul ignore else */ if (property.type === 'SpreadElement') {
+            const argument = this.getEvaluated(property.get('argument'));
+            if (argument == null) return;
+            Object.assign(object, argument.value);
+          } else {
+            return;
+          }
+        }
+
+        return { value: object }
+      }
+
+      case 'ArrayExpression': {
+        const aPath = path as NodePath<NodeT<'ArrayExpression'>>;
+        const array = [];
+        const elements = aPath.get('elements');
+
+        for (let i = 0; i < elements.length; i++) {
+          const value = this.getEvaluated(elements[i]);
+          if (value == null) return;
+          array.push(value.value);
+        }
+
+        return { value: array }
       }
     }
   }

@@ -48,7 +48,8 @@ describe('evaluate', () => {
       ['**', '2', '3', 8],
       ['|', '2', '1', 3],
       ['^', '2', '2', 0],
-      ['&', '2', '2', 2]
+      ['&', '2', '2', 2],
+      ['in', "'a'", '({ a: 0 })', true]
     ])('%s', (operator, left, right, expected) => {
       const ast = parseModule(`${left} ${operator} ${right}`);
 
@@ -61,7 +62,19 @@ describe('evaluate', () => {
       expect.assertions(1);
     });
 
-    test.todo('in');
+    test('instanceof', () => {
+      // The code is not right, anyway `instanceof` evaluation is not supported,
+      // so it would return `undefined` no matter what
+      const ast = parseModule('1 instanceof 2');
+
+      traverse(ast, {
+        BinaryExpression(path) {
+          expect(u.evaluate(path)).toBeUndefined();
+        }
+      })
+
+      expect.assertions(1);
+    });
 
     test('unknown binding', () => {
       ['1 - unknown', 'unknown / 2'].forEach((expression) => {
@@ -177,6 +190,127 @@ describe('evaluate', () => {
 
       expect.assertions(5);
     });
+  });
+
+  describe('ObjectExpression', () => {
+    test('basic', () => {
+      const ast = parseModule(`
+        ({
+          a: 1, b: 2,
+          m: {
+            c: 1, d: 2,
+            x: { e: 0, f: 5 }
+          }
+        })
+      `);
+
+      traverse(ast, {
+        ObjectExpression(path) {
+          if (path.parent.type !== 'ExpressionStatement') return;
+          expect(u.evaluate(path)).toEqual({
+            value: {
+              a: 1, b: 2,
+              m: {
+                c: 1, d: 2,
+                x: { e: 0, f: 5 }
+              }
+            }
+          });
+        }
+      });
+
+      expect.assertions(1);
+    });
+
+    test('computed key', () => {
+      const ast = parseModule(`
+        ({
+          ['a' + 'b']: 2 + 2,
+          [1 + 2]: 4 / 2
+        })
+      `);
+
+      traverse(ast, {
+        ObjectExpression(path) {
+          expect(u.evaluate(path)).toEqual({
+            value: { ab: 4, 3: 2 }
+          });
+        }
+      });
+
+      expect.assertions(1);
+    });
+
+    test('spread element', () => {
+      const ast = parseModule(`
+        ({
+          a: 1,
+          b: 2,
+          ...({ c: 0, d: 1, x: { p: 0 } })
+        })
+      `);
+
+      traverse(ast, {
+        ObjectExpression(path) {
+          if (path.parent.type !== 'ExpressionStatement') return;
+          expect(u.evaluate(path)).toEqual({
+            value: { a: 1, b: 2, c: 0, d: 1, x: { p: 0 } }
+          });
+        }
+      });
+
+      expect.assertions(1);
+    });
+
+    test('unknown binding', () => {
+      [
+        '({ a: 1, b: x })',
+        '({ ...x })',
+        '({ set x(v) {} })',
+        '({ [x]: 0 })'
+      ].forEach((code) => {
+        traverse(parseModule(code), {
+          ObjectExpression(path) {
+            if (path.parent.type !== 'ExpressionStatement') return;
+            expect(u.evaluate(path)).toBeUndefined();
+          }
+        })
+      });
+
+      expect.assertions(4);
+    });
+  });
+
+  describe('ArrayExpression', () => {
+    test('basic', () => {
+      const ast = parseModule(`
+        [1, 2, ['3', '4'], 5, 6]
+      `);
+
+      traverse(ast, {
+        ArrayExpression(path) {
+          if (path.parent.type !== 'ExpressionStatement') return;
+          expect(u.evaluate(path)).toEqual({ value: [1, 2, ['3', '4'], 5, 6] });
+        }
+      });
+
+      expect.assertions(1);
+    })
+  });
+
+  test('unknown binding', () => {
+    const ast = parseModule(`
+        [1, 2, ['3', x], 5, 6]
+      `);
+
+    traverse(ast, {
+      ArrayExpression(path) {
+        if (path.parent.type !== 'ExpressionStatement') return;
+        expect(u.evaluate(path)).toBeUndefined();
+      }
+    });
+
+    expect.assertions(1);
   });
 });
 
