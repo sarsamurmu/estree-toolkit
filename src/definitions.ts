@@ -9,7 +9,7 @@ export type DefinitionIndex<T> = T extends true
 
 export type DefinitionField<N, V> = {
   default?: V | ((node: N) => V);
-  validate: a.ValidateFn<Exclude<Exclude<V, undefined>, RegExp>>;
+  validate: a.ValidateFn<Exclude<V, undefined | RegExp>>;
   // Some node types include RegExp, but in practical it never appears
   type?: string;
 };
@@ -521,7 +521,7 @@ export const definitions: Definitions = Object.assign<any, Definitions>(Object.c
     },
     fields: {
       properties: {
-        validate: a.arrayOf(a.OR(a.node('Property'), a.node('SpreadElement')))
+        validate: a.arrayOf(a.node('Property', 'SpreadElement'))
       }
     }
   },
@@ -608,7 +608,7 @@ export const definitions: Definitions = Object.assign<any, Definitions>(Object.c
       operator: {
         validate: a.oneOf([
           '=', '+=', '-=', '*=', '/=', '%=', '**=', '<<=', '>>=', '>>>=',
-          '|=', '^=', '&='
+          '|=', '^=', '&=',
         ] as const)
       },
       left: {
@@ -810,7 +810,7 @@ export const definitions: Definitions = Object.assign<any, Definitions>(Object.c
     },
     fields: {
       expression: {
-        validate: a.OR(a.node('CallExpression'), a.node('MemberExpression'))
+        validate: a.node('CallExpression', 'MemberExpression')
       }
     }
   },
@@ -880,7 +880,7 @@ export const definitions: Definitions = Object.assign<any, Definitions>(Object.c
     },
     fields: {
       properties: {
-        validate: a.arrayOf(a.OR(a.node('Property'), a.node('RestElement')))
+        validate: a.arrayOf(a.node('Property', 'RestElement'))
       }
     }
   },
@@ -931,7 +931,7 @@ export const definitions: Definitions = Object.assign<any, Definitions>(Object.c
     },
     fields: {
       body: {
-        validate: a.arrayOf(a.OR(a.node('PropertyDefinition'), a.node('MethodDefinition')))
+        validate: a.arrayOf(a.node('PropertyDefinition', 'MethodDefinition'))
       }
     }
   },
@@ -970,7 +970,7 @@ export const definitions: Definitions = Object.assign<any, Definitions>(Object.c
     },
     fields: {
       specifiers: {
-        validate: a.arrayOf(a.OR(a.node('ImportSpecifier'), a.node('ImportDefaultSpecifier'), a.node('ImportNamespaceSpecifier')))
+        validate: a.arrayOf(a.node('ImportSpecifier', 'ImportDefaultSpecifier', 'ImportNamespaceSpecifier'))
       },
       source: {
         validate: a.node('Literal')
@@ -1145,7 +1145,7 @@ export const definitions: Definitions = Object.assign<any, Definitions>(Object.c
     },
     fields: {
       object: {
-        validate: a.OR(a.node('JSXIdentifier'), a.node('JSXMemberExpression'))
+        validate: a.node('JSXIdentifier', 'JSXMemberExpression')
       },
       property: {
         validate: a.node('JSXIdentifier')
@@ -1183,10 +1183,10 @@ export const definitions: Definitions = Object.assign<any, Definitions>(Object.c
     },
     fields: {
       name: {
-        validate: a.OR(a.node('JSXIdentifier'), a.node('JSXNamespacedName'))
+        validate: a.node('JSXIdentifier', 'JSXNamespacedName')
       },
       value: {
-        validate: a.nullable(a.OR(a.node('Literal'), a.node('JSXExpressionContainer'), a.node('JSXElement'), a.node('JSXFragment')))
+        validate: a.nullable(a.node('Literal', 'JSXExpressionContainer', 'JSXElement', 'JSXFragment'))
       }
     }
   },
@@ -1196,7 +1196,7 @@ export const definitions: Definitions = Object.assign<any, Definitions>(Object.c
     },
     fields: {
       name: {
-        validate: a.OR(a.node('JSXIdentifier'), a.node('JSXNamespacedName'), a.node('JSXMemberExpression'))
+        validate: a.node('JSXIdentifier', 'JSXNamespacedName', 'JSXMemberExpression')
       }
     }
   },
