@@ -19,10 +19,30 @@ about the evaluation it would return an object with the evaluated value stored
 in `value` property. If it's not sure about the evaluation it would return `undefined`.
 
 For now it only supports logical, binary and unary operations.
+These AST Nodes are supported for now
+- `Identifier` - with `undefined` as value
+- `Literal`
+- `BinaryExpression` - except `instanceof` operator
+- `UnaryExpression` - except `delete` operator
+- `LogicalExpression`
+- `ObjectExpression`
+- `ArrayExpression`
 
 ```js
 import { utils as u, traverse } from 'estree-toolkit';
 import { parseModule } from 'meriyah';
+
+traverse(parseModule(`undefined`), {
+  Identifier(path) {
+    u.evaluate(path) // => { value: undefined }
+  }
+});
+
+traverse(parseModule(`'some string'`), {
+  Literal(path) {
+    u.evaluate(path) // => { value: 'some string' }
+  }
+});
 
 traverse(parseModule(`1 + 2`), {
   BinaryExpression(path) {
@@ -30,15 +50,39 @@ traverse(parseModule(`1 + 2`), {
   }
 });
 
-traverse(parseModule(`'1' + '2'`), {
-  BinaryExpression(path) {
-    u.evaluate(path) // => { value: '12' }
+traverse(parseModule(`!(1 === 2)`), {
+  UnaryExpression(path) {
+    u.evaluate(path) // => { value: true }
   }
 });
 
-traverse(parseModule(`1 === 2`), {
-  BinaryExpression(path) {
+traverse(parseModule(`false && unknown`), {
+  LogicalExpression(path) {
     u.evaluate(path) // => { value: false }
+  }
+});
+
+traverse(parseModule(`
+  ({ a: 1, b: 2, m: { c: 1 } })
+`), {
+  ObjectExpression(path) {
+    if (path.parent.type !== 'ExpressionStatement') return;
+
+    u.evaluate(path) // => { a: 1, b: 2, m: { c: 1 } }
+  }
+});
+
+traverse(parseModule(`[1, 2, '3']`), {
+  ArrayExpression(path) {
+    u.evaluate(path) // => [1, 2, '3']
+  }
+});
+
+// Whenever unknown binding is involved, it returns `undefined`
+
+traverse(parseModule(`unknownVariable`), {
+  Identifier(path) {
+    u.evaluate(path) // => undefined
   }
 });
 
