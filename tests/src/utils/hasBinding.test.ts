@@ -109,10 +109,11 @@ test('class declaration', () => {
     Identifier(path) {
       if (path.node.name !== 'targetNode') return;
       expect(u.hasBinding(path, 'a')).toBe(true);
+      expect(u.hasBinding(path, 'b')).toBe(false);
     }
   });
 
-  expect.assertions(2 * 1);
+  expect.assertions(2 * 2);
 });
 
 test('function and class expression', () => {
@@ -176,10 +177,11 @@ test('for statement', () => {
       if (path.node.name !== 'targetNode') return;
       expect(u.hasBinding(path, 'a')).toBe(true);
       expect(u.hasBinding(path, 'b')).toBe(true);
+      expect(u.hasBinding(path, 'c')).toBe(false);
     }
   });
 
-  expect.assertions(2);
+  expect.assertions(3);
 });
 
 test('for..in and for..of statement', () => {

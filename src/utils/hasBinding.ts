@@ -21,6 +21,7 @@ export const hasBinding = (() => {
           if (property.type === 'RestElement') {
             if (findInPattern(property.argument, bindingName)) return true;
           } else {
+            /* istanbul ignore else */
             if (property.value != null) {
               if (findInPattern(property.value, bindingName)) return true;
             } else {
@@ -76,6 +77,7 @@ export const hasBinding = (() => {
           break;
         
         case 'ImportSpecifier':
+          /* istanbul ignore else */
           if (specifier.local != null) {
             if (specifier.local.name === bindingName) return true;
           } else {
@@ -149,6 +151,7 @@ export const hasBinding = (() => {
         }
 
         case 'ForStatement': {
+          /* istanbul ignore else */
           if (node.init != null && node.init.type === 'VariableDeclaration') {
             if (findInVariableDeclaration(node.init, bindingName)) {
               return true;
@@ -159,6 +162,7 @@ export const hasBinding = (() => {
 
         case 'ForInStatement':
         case 'ForOfStatement': {
+          /* istanbul ignore else */
           if (node.left.type === 'VariableDeclaration') {
             if (findInVariableDeclaration(node.left, bindingName)) {
               return true;
@@ -185,6 +189,7 @@ export const hasBinding = (() => {
 
         case 'ClassExpression':
         case 'ClassDeclaration': {
+          /* istanbul ignore else */
           if (node.id?.name === bindingName) return true;
           break;
         }
