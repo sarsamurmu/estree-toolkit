@@ -149,7 +149,7 @@ There are several static utilities that you can use.
 - `evaluate`\
   Evaluates the given path. For now it only supports evaluation of logical, binary and unary operations.
   ```js
-  const { utils: u } = require('estree-toolkit');
+  const { utils: u, traverse } = require('estree-toolkit');
   // We are using `meriyah` but you can use any parser (like `acorn`)
   const { parseModule } = require('meriyah');
 
@@ -177,7 +177,7 @@ There are several static utilities that you can use.
 - `hasBinding`\
   Checks if any binding with the name is available in the containing scope.
   ```js
-  const { utils: u } = require('estree-toolkit');
+  const { utils: u, traverse } = require('estree-toolkit');
   const { parseModule } = require('meriyah');
 
   const ast = parseModule(`
