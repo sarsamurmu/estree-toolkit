@@ -931,7 +931,7 @@ export const definitions: Definitions = Object.assign<any, Definitions>(Object.c
     },
     fields: {
       body: {
-        validate: a.arrayOf(a.node('PropertyDefinition', 'MethodDefinition'))
+        validate: a.arrayOf(a.node('StaticBlock', 'PropertyDefinition', 'MethodDefinition'))
       }
     }
   },
@@ -1107,6 +1107,18 @@ export const definitions: Definitions = Object.assign<any, Definitions>(Object.c
         default: false,
         validate: a.value('boolean')
       }
+    }
+  },
+  StaticBlock: {
+    indices: {
+      body: 0,
+      innerComments: false
+    },
+    fields: {
+      body: {
+        validate: a.arrayOf(a.nodeAlias('Statement'))
+      },
+      innerComments: anyValidate
     }
   },
 

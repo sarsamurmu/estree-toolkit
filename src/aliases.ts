@@ -51,7 +51,8 @@ export const aliases: {
     ForInStatement: 0,
     ForOfStatement: 0,
     VariableDeclaration: 0,
-    ClassDeclaration: 0
+    ClassDeclaration: 0,
+    StaticBlock: 0
   }),
   Declaration: clean({
     FunctionDeclaration: 0,

@@ -295,22 +295,57 @@ describe('evaluate', () => {
       });
 
       expect.assertions(1);
-    })
-  });
+    });
 
-  test('unknown binding', () => {
-    const ast = parseModule(`
+    test('unknown binding', () => {
+      const ast = parseModule(`
         [1, 2, ['3', x], 5, 6]
       `);
 
-    traverse(ast, {
-      ArrayExpression(path) {
-        if (path.parent.type !== 'ExpressionStatement') return;
-        expect(u.evaluate(path)).toBeUndefined();
-      }
+      traverse(ast, {
+        ArrayExpression(path) {
+          if (path.parent.type !== 'ExpressionStatement') return;
+          expect(u.evaluate(path)).toBeUndefined();
+        }
+      });
+
+      expect.assertions(1);
+    });
+  });
+
+  describe('ConditionalExpression', () => {
+    test('basic', () => {
+      ([
+        ['true ? 1 : 2', 1],
+        ['false ? 1 : 2', 2],
+        ['1 ? 1 : x', 1],
+        ['0 ? x : 0', 0]
+      ] as const).forEach(([code, expected]) => {
+        traverse(parseModule(code), {
+          ConditionalExpression(path) {
+            expect(u.evaluate(path)).toEqual({ value: expected });
+          }
+        });
+      });
+
+      expect.assertions(4);
     });
 
-    expect.assertions(1);
+    test('unknown binding', () => {
+      ([
+        'x ? 1 : 2',
+        'true ? x : 2',
+        'false ? 1 : x'
+      ]).forEach((code) => {
+        traverse(parseModule(code), {
+          ConditionalExpression(path) {
+            expect(u.evaluate(path)).toBeUndefined();
+          }
+        });
+      });
+
+      expect.assertions(3);
+    });
   });
 });
 

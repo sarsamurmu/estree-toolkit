@@ -205,6 +205,14 @@ class Evaluator {
 
         return { value: array }
       }
+
+      case 'ConditionalExpression': {
+        const aPath = path as NodePath<NodeT<'ConditionalExpression'>>;
+        const test = this.getEvaluated(aPath.get('test'));
+        if (test == null) return;
+
+        return this.getEvaluated(aPath.get(test.value ? 'consequent' : 'alternate'));
+      }
     }
   }
 }
