@@ -1,6 +1,6 @@
-import { parseModule } from 'meriyah';
+import { parseModule } from 'meriyah'
 
-import { traverse } from '<project>';
+import { traverse } from '<project>'
 
 test('reference collection', () => {
   const source = `
@@ -67,24 +67,24 @@ test('reference collection', () => {
     new x(NewExpression_arguments);
     (SequenceExpression_expressions, x);
     \`\${TemplateLiteral_expressions}\`;
-  `;
-  const ast = parseModule(source, { next: true, jsx: true });
-  const referencedIdentifiers = [...source.matchAll(/\b([A-Z][a-z]+)+_[A-Za-z]+\b/gm)].map((m) => m[0]);
+  `
+  const ast = parseModule(source, { next: true, jsx: true })
+  const referencedIdentifiers = [...source.matchAll(/\b([A-Z][a-z]+)+_[A-Za-z]+\b/gm)].map((m) => m[0])
 
   traverse(ast, {
     $: { scope: true },
     Program(path) {
-      const bindingNames = Object.keys(path.scope.globalBindings);
-      expect(bindingNames).toEqual(expect.arrayContaining(referencedIdentifiers));
-      expect(bindingNames).not.toEqual(expect.arrayContaining(['import']));
+      const bindingNames = Object.keys(path.scope.globalBindings)
+      expect(bindingNames).toEqual(expect.arrayContaining(referencedIdentifiers))
+      expect(bindingNames).not.toEqual(expect.arrayContaining(['import']))
       expect(
         Object.values(path.scope.globalBindings).map((b) => b.kind)
-      ).toEqual(Array(bindingNames.length).fill('global'));
+      ).toEqual(Array(bindingNames.length).fill('global'))
     }
-  });
+  })
 
-  expect.assertions(3);
-});
+  expect.assertions(3)
+})
 
 describe('label', () => {
   describe('registration', () => {
@@ -92,40 +92,40 @@ describe('label', () => {
       const ast = parseModule(`
         forOf: for (i of x);
         forIn: for (i in x);
-      `);
+      `)
 
       traverse(ast, {
         $: { scope: true },
         ForOfStatement(path) {
-          expect(path.scope.labels.forOf).toBeTruthy();
-          expect(path.scope.labels.forIn).toBe(undefined);
+          expect(path.scope.labels.forOf).toBeTruthy()
+          expect(path.scope.labels.forIn).toBe(undefined)
         },
         ForInStatement(path) {
-          expect(path.scope.labels.forIn).toBeTruthy();
-          expect(path.scope.labels.forOf).toBe(undefined);
+          expect(path.scope.labels.forIn).toBeTruthy()
+          expect(path.scope.labels.forOf).toBe(undefined)
         }
-      });
+      })
 
-      expect.assertions(2 * 2);
-    });
+      expect.assertions(2 * 2)
+    })
 
     test('block statement', () => {
       const ast = parseModule(`
         blockLabel: {
           undefined
         }
-      `);
+      `)
 
       traverse(ast, {
         $: { scope: true },
         BlockStatement(path) {
-          expect(path.scope.labels.blockLabel).toBeTruthy();
+          expect(path.scope.labels.blockLabel).toBeTruthy()
         }
-      });
+      })
 
-      expect.assertions(1);
-    });
-  });
+      expect.assertions(1)
+    })
+  })
 
   test('reference', () => {
     const ast = parseModule(`
@@ -144,338 +144,338 @@ describe('label', () => {
         break forIn;
         continue forIn;
       }
-    `);
+    `)
 
     traverse(ast, {
       $: { scope: true },
       BlockStatement(path) {
-        if (path.parent.type !== 'LabeledStatement') return;
-        const { references } = path.scope.labels.block;
-        expect(references).toHaveLength(1);
-        expect(references[0].parent.type).toBe('BreakStatement');
+        if (path.parent.type !== 'LabeledStatement') return
+        const { references } = path.scope.labels.block
+        expect(references).toHaveLength(1)
+        expect(references[0].parent.type).toBe('BreakStatement')
       },
       ForStatement(path) {
-        const { references } = path.scope.labels.forS;
-        expect(references).toHaveLength(2);
-        expect(references.map((ref) => ref.parent.type)).toEqual(['BreakStatement', 'ContinueStatement']);
+        const { references } = path.scope.labels.forS
+        expect(references).toHaveLength(2)
+        expect(references.map((ref) => ref.parent.type)).toEqual(['BreakStatement', 'ContinueStatement'])
       },
       ForOfStatement(path) {
-        const { references } = path.scope.labels.forOf;
-        expect(references).toHaveLength(2);
-        expect(references.map((ref) => ref.parent.type)).toEqual(['BreakStatement', 'ContinueStatement']);
+        const { references } = path.scope.labels.forOf
+        expect(references).toHaveLength(2)
+        expect(references.map((ref) => ref.parent.type)).toEqual(['BreakStatement', 'ContinueStatement'])
       },
       ForInStatement(path) {
-        const { references } = path.scope.labels.forIn;
-        expect(references).toHaveLength(2);
-        expect(references.map((ref) => ref.parent.type)).toEqual(['BreakStatement', 'ContinueStatement']);
+        const { references } = path.scope.labels.forIn
+        expect(references).toHaveLength(2)
+        expect(references.map((ref) => ref.parent.type)).toEqual(['BreakStatement', 'ContinueStatement'])
       }
-    });
+    })
 
-    expect.assertions(4 * 2);
-  });
-});
+    expect.assertions(4 * 2)
+  })
+})
 
 describe('binding registration', () => {
   test('from variable declaration', () => {
     const ast = parseModule(`
       const { a, b: [, c, { d }], e: f = 0, ...g } = x;
-    `);
+    `)
 
     traverse(ast, {
       $: { scope: true },
       Program(path) {
-        const bindingNames = Object.keys(path.scope.bindings);
-        expect(bindingNames).toHaveLength(5);
-        expect(bindingNames).toEqual(expect.arrayContaining(['a', 'c', 'd', 'f', 'g']));
-        expect(Object.values(path.scope.bindings).map((b) => b.kind)).toEqual(Array(5).fill('const'));
+        const bindingNames = Object.keys(path.scope.bindings)
+        expect(bindingNames).toHaveLength(5)
+        expect(bindingNames).toEqual(expect.arrayContaining(['a', 'c', 'd', 'f', 'g']))
+        expect(Object.values(path.scope.bindings).map((b) => b.kind)).toEqual(Array(5).fill('const'))
       }
-    });
+    })
 
-    expect.assertions(3);
-  });
+    expect.assertions(3)
+  })
 
   test('from ImportSpecifier', () => {
     const ast = parseModule(`
       import { a as b } from '';
-    `);
+    `)
 
     traverse(ast, {
       $: { scope: true },
       Program(path) {
-        const { a: aBinding, b: bBinding } = path.scope.bindings;
-        expect(aBinding).toBeUndefined();
-        expect(bBinding.kind).toBe('module');
-        expect(bBinding.identifierPath.type).toBe('Identifier');
-        expect(bBinding.identifierPath.node.name).toBe('b');
-        expect(bBinding.path.type).toBe('ImportSpecifier');
+        const { a: aBinding, b: bBinding } = path.scope.bindings
+        expect(aBinding).toBeUndefined()
+        expect(bBinding.kind).toBe('module')
+        expect(bBinding.identifierPath.type).toBe('Identifier')
+        expect(bBinding.identifierPath.node.name).toBe('b')
+        expect(bBinding.path.type).toBe('ImportSpecifier')
       }
-    });
+    })
 
-    expect.assertions(5);
-  });
+    expect.assertions(5)
+  })
 
   test('from ImportDefaultSpecifier', () => {
     const ast = parseModule(`
       import a from '';
-    `);
+    `)
 
     traverse(ast, {
       $: { scope: true },
       Program(path) {
-        const binding = path.scope.bindings.a;
-        expect(binding.kind).toBe('module');
-        expect(binding.identifierPath.type).toBe('Identifier');
-        expect(binding.identifierPath.node.name).toBe('a');
-        expect(binding.path.type).toBe('ImportDefaultSpecifier');
+        const binding = path.scope.bindings.a
+        expect(binding.kind).toBe('module')
+        expect(binding.identifierPath.type).toBe('Identifier')
+        expect(binding.identifierPath.node.name).toBe('a')
+        expect(binding.path.type).toBe('ImportDefaultSpecifier')
       }
-    });
+    })
 
-    expect.assertions(4);
-  });
+    expect.assertions(4)
+  })
 
   test('from ImportNamespaceSpecifier', () => {
     const ast = parseModule(`
       import * as a from '';
-    `);
+    `)
 
     traverse(ast, {
       $: { scope: true },
       Program(path) {
-        const binding = path.scope.bindings.a;
-        expect(binding.kind).toBe('module');
-        expect(binding.identifierPath.type).toBe('Identifier');
-        expect(binding.identifierPath.node.name).toBe('a');
-        expect(binding.path.type).toBe('ImportNamespaceSpecifier');
+        const binding = path.scope.bindings.a
+        expect(binding.kind).toBe('module')
+        expect(binding.identifierPath.type).toBe('Identifier')
+        expect(binding.identifierPath.node.name).toBe('a')
+        expect(binding.path.type).toBe('ImportNamespaceSpecifier')
       }
-    });
+    })
 
-    expect.assertions(4);
-  });
+    expect.assertions(4)
+  })
 
   test('from for, for..in and for..of statement', () => {
     const ast = parseModule(`
       for (var { a, b: [, c, { d }], e: f = 0, ...g } = x;;);
       for (let { h, i: [, j, { k }], l: m = 0, ...n } in x);
       for (const { o, p: [, q, { r }], s: t = 0, ...u } of x);
-    `);
+    `)
 
     traverse(ast, {
       $: { scope: true },
       ForStatement(path) {
-        const bindingNames = Object.keys(path.scope.bindings);
-        expect(bindingNames).toHaveLength(5);
-        expect(bindingNames).toEqual(expect.arrayContaining(['a', 'c', 'd', 'f', 'g']));
+        const bindingNames = Object.keys(path.scope.bindings)
+        expect(bindingNames).toHaveLength(5)
+        expect(bindingNames).toEqual(expect.arrayContaining(['a', 'c', 'd', 'f', 'g']))
         expect(
           Object.values(path.scope.bindings).map((b) => b.kind)
-        ).toEqual(Array(bindingNames.length).fill('var'));
+        ).toEqual(Array(bindingNames.length).fill('var'))
       },
       ForInStatement(path) {
-        const bindingNames = Object.keys(path.scope.bindings);
-        expect(bindingNames).toHaveLength(5);
-        expect(bindingNames).toEqual(expect.arrayContaining(['h', 'j', 'k', 'm', 'n']));
+        const bindingNames = Object.keys(path.scope.bindings)
+        expect(bindingNames).toHaveLength(5)
+        expect(bindingNames).toEqual(expect.arrayContaining(['h', 'j', 'k', 'm', 'n']))
         expect(
           Object.values(path.scope.bindings).map((b) => b.kind)
-        ).toEqual(Array(bindingNames.length).fill('let'));
+        ).toEqual(Array(bindingNames.length).fill('let'))
       },
       ForOfStatement(path) {
-        const bindingNames = Object.keys(path.scope.bindings);
-        expect(bindingNames).toHaveLength(5);
-        expect(bindingNames).toEqual(expect.arrayContaining(['o', 'q', 'r', 't', 'u']));
+        const bindingNames = Object.keys(path.scope.bindings)
+        expect(bindingNames).toHaveLength(5)
+        expect(bindingNames).toEqual(expect.arrayContaining(['o', 'q', 'r', 't', 'u']))
         expect(
           Object.values(path.scope.bindings).map((b) => b.kind)
-        ).toEqual(Array(bindingNames.length).fill('const'));
+        ).toEqual(Array(bindingNames.length).fill('const'))
       }
-    });
+    })
 
-    expect.assertions(3 * 3);
-  });
+    expect.assertions(3 * 3)
+  })
 
   test('from FunctionDeclaration', () => {
     const ast = parseModule(`
       {
         function fnDec() {}
       }
-    `);
+    `)
 
     traverse(ast, {
       $: { scope: true },
       BlockStatement(path) {
-        if (path.parent.type !== 'Program') return;
-        const fnBinding = path.scope.bindings.fnDec;
-        expect(fnBinding.kind).toBe('hoisted');
-        expect(fnBinding.identifierPath.type).toBe('Identifier');
-        expect(fnBinding.identifierPath.node.name).toBe('fnDec');
-        expect(fnBinding.path.type).toBe('FunctionDeclaration');
+        if (path.parent.type !== 'Program') return
+        const fnBinding = path.scope.bindings.fnDec
+        expect(fnBinding.kind).toBe('hoisted')
+        expect(fnBinding.identifierPath.type).toBe('Identifier')
+        expect(fnBinding.identifierPath.node.name).toBe('fnDec')
+        expect(fnBinding.path.type).toBe('FunctionDeclaration')
       }
-    });
+    })
 
-    expect.assertions(4);
-  });
+    expect.assertions(4)
+  })
 
   test('from ClassDeclaration', () => {
     const ast = parseModule(`
       {
         class classDec {}
       }
-    `);
+    `)
 
     traverse(ast, {
       $: { scope: true },
       BlockStatement(path) {
-        if (path.parent.type !== 'Program') return;
-        const classBinding = path.scope.bindings.classDec;
-        expect(classBinding.kind).toBe('hoisted');
-        expect(classBinding.identifierPath.type).toBe('Identifier');
-        expect(classBinding.identifierPath.node.name).toBe('classDec');
-        expect(classBinding.path.type).toBe('ClassDeclaration');
+        if (path.parent.type !== 'Program') return
+        const classBinding = path.scope.bindings.classDec
+        expect(classBinding.kind).toBe('hoisted')
+        expect(classBinding.identifierPath.type).toBe('Identifier')
+        expect(classBinding.identifierPath.node.name).toBe('classDec')
+        expect(classBinding.path.type).toBe('ClassDeclaration')
       }
-    });
+    })
 
-    expect.assertions(4);
-  });
+    expect.assertions(4)
+  })
 
   test('from FunctionExpression', () => {
     const ast = parseModule(`
       (function fnExp() {})
-    `);
+    `)
 
     traverse(ast, {
       $: { scope: true },
       Program(path) {
-        const fnBinding = path.scope.bindings.fnExp;
-        expect(fnBinding).toBeUndefined();
+        const fnBinding = path.scope.bindings.fnExp
+        expect(fnBinding).toBeUndefined()
       },
       FunctionExpression(path) {
-        const fnBinding = path.scope.bindings.fnExp;
-        expect(fnBinding.kind).toBe('local');
-        expect(fnBinding.identifierPath.type).toBe('Identifier');
-        expect(fnBinding.identifierPath.node.name).toBe('fnExp');
-        expect(fnBinding.path.type).toBe('FunctionExpression');
+        const fnBinding = path.scope.bindings.fnExp
+        expect(fnBinding.kind).toBe('local')
+        expect(fnBinding.identifierPath.type).toBe('Identifier')
+        expect(fnBinding.identifierPath.node.name).toBe('fnExp')
+        expect(fnBinding.path.type).toBe('FunctionExpression')
       }
-    });
+    })
 
-    expect.assertions(5);
-  });
+    expect.assertions(5)
+  })
 
   test('from ClassExpression', () => {
     const ast = parseModule(`
       (class classExp {})
-    `);
+    `)
 
     traverse(ast, {
       $: { scope: true },
       Program(path) {
-        const classBinding = path.scope.bindings.fn;
-        expect(classBinding).toBeUndefined();
+        const classBinding = path.scope.bindings.fn
+        expect(classBinding).toBeUndefined()
       },
       ClassExpression(path) {
-        const classBinding = path.scope.bindings.classExp;
-        expect(classBinding.kind).toBe('local');
-        expect(classBinding.identifierPath.type).toBe('Identifier');
-        expect(classBinding.identifierPath.node.name).toBe('classExp');
-        expect(classBinding.path.type).toBe('ClassExpression');
+        const classBinding = path.scope.bindings.classExp
+        expect(classBinding.kind).toBe('local')
+        expect(classBinding.identifierPath.type).toBe('Identifier')
+        expect(classBinding.identifierPath.node.name).toBe('classExp')
+        expect(classBinding.path.type).toBe('ClassExpression')
       }
-    });
+    })
 
-    expect.assertions(5);
-  });
+    expect.assertions(5)
+  })
 
   test('from function parameters', () => {
     const ast = parseModule(`
       function fn({ a, b: c }, [, d, e], f = 0, ...g) {}
 
       (function ({ h, i: j }, [, k, l], m = 0, ...n) {})
-    `);
+    `)
 
     traverse(ast, {
       $: { scope: true },
       FunctionDeclaration(path) {
-        const bindingNames = Object.keys(path.scope.bindings);
-        expect(bindingNames).toHaveLength(6);
-        expect(bindingNames).toEqual(expect.arrayContaining(['a', 'c', 'd', 'e', 'f', 'g']));
+        const bindingNames = Object.keys(path.scope.bindings)
+        expect(bindingNames).toHaveLength(6)
+        expect(bindingNames).toEqual(expect.arrayContaining(['a', 'c', 'd', 'e', 'f', 'g']))
         expect(
           Object.values(path.scope.bindings).map((b) => b.kind)
-        ).toEqual(Array(bindingNames.length).fill('param'));
+        ).toEqual(Array(bindingNames.length).fill('param'))
       },
       FunctionExpression(path) {
-        const bindingNames = Object.keys(path.scope.bindings);
-        expect(bindingNames).toHaveLength(6);
-        expect(bindingNames).toEqual(expect.arrayContaining(['h', 'j', 'k', 'l', 'm', 'n']));
+        const bindingNames = Object.keys(path.scope.bindings)
+        expect(bindingNames).toHaveLength(6)
+        expect(bindingNames).toEqual(expect.arrayContaining(['h', 'j', 'k', 'l', 'm', 'n']))
         expect(
           Object.values(path.scope.bindings).map((b) => b.kind)
-        ).toEqual(Array(bindingNames.length).fill('param'));
+        ).toEqual(Array(bindingNames.length).fill('param'))
       }
-    });
+    })
 
-    expect.assertions(2 * 3);
-  });
+    expect.assertions(2 * 3)
+  })
 
   test('from CatchClause', () => {
     const ast = parseModule(`
       try {} catch ({ message }) {}
-    `);
+    `)
 
     traverse(ast, {
       $: { scope: true },
       CatchClause(path) {
-        const binding = path.scope.bindings.message;
-        expect(binding.kind).toBe('let');
-        expect(binding.identifierPath.type).toBe('Identifier');
-        expect(binding.identifierPath.node.name).toBe('message');
-        expect(binding.path.type).toBe('CatchClause');
+        const binding = path.scope.bindings.message
+        expect(binding.kind).toBe('let')
+        expect(binding.identifierPath.type).toBe('Identifier')
+        expect(binding.identifierPath.node.name).toBe('message')
+        expect(binding.path.type).toBe('CatchClause')
       }
-    });
+    })
 
-    expect.assertions(4);
-  });
-});
+    expect.assertions(4)
+  })
+})
 
 describe('constant violations', () => {
   test('in AssignmentExpression and UpdateExpression', () => {
     const ast = parseModule(`
       ({ a, b: [, c, { d }], e: f = 0, ...g } = x);
       h++;
-    `);
+    `)
 
     traverse(ast, {
       $: { scope: true },
       Program(path) {
-        const { globalBindings } = path.scope;
-        delete globalBindings.x;
+        const { globalBindings } = path.scope
+        delete globalBindings.x
 
-        const bindingNames = Object.keys(globalBindings);
-        expect(bindingNames).toHaveLength(6);
-        expect(bindingNames).toEqual(expect.arrayContaining(['a', 'c', 'd', 'f', 'g', 'h']));
+        const bindingNames = Object.keys(globalBindings)
+        expect(bindingNames).toHaveLength(6)
+        expect(bindingNames).toEqual(expect.arrayContaining(['a', 'c', 'd', 'f', 'g', 'h']))
 
         for (const bindingName in globalBindings) {
-          expect(globalBindings[bindingName].constantViolations).toHaveLength(1);
+          expect(globalBindings[bindingName].constantViolations).toHaveLength(1)
         }
       }
-    });
+    })
 
-    expect.assertions(2 + 6);
-  });
+    expect.assertions(2 + 6)
+  })
 
   test('in for..in and for..of statement', () => {
     const ast = parseModule(`
       for ({ a, b: [, c, { d }], e: f = 0, ...g } in x);
       for ({ a, b: [, c, { d }], e: f = 0, ...g } of x);
-    `);
+    `)
 
     traverse(ast, {
       $: { scope: true },
       Program(path) {
-        const { globalBindings } = path.scope;
-        delete globalBindings.x;
+        const { globalBindings } = path.scope
+        delete globalBindings.x
 
-        const bindingNames = Object.keys(globalBindings);
-        expect(bindingNames).toHaveLength(5);
-        expect(bindingNames).toEqual(expect.arrayContaining(['a', 'c', 'd', 'f', 'g']));
+        const bindingNames = Object.keys(globalBindings)
+        expect(bindingNames).toHaveLength(5)
+        expect(bindingNames).toEqual(expect.arrayContaining(['a', 'c', 'd', 'f', 'g']))
 
         for (const bindingName in globalBindings) {
-          expect(globalBindings[bindingName].constantViolations).toHaveLength(2);
+          expect(globalBindings[bindingName].constantViolations).toHaveLength(2)
         }
       }
-    });
-  });
-});
+    })
+  })
+})

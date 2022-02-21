@@ -1,32 +1,32 @@
-import { Node } from './estree';
+import { Node } from './estree'
 
-import { Is, Matcher } from './generated/is-type';
-import { definitions } from './definitions';
-import { aliases } from './aliases';
-import { NodePath } from './nodepath';
+import { Is, Matcher } from './generated/is-type'
+import { definitions } from './definitions'
+import { aliases } from './aliases'
+import { NodePath } from './nodepath'
 
 const matches = (object: Record<string, any>, toMatch: Matcher<Node>) => {
   for (const key in toMatch) {
-    const value = (toMatch as any)[key];
+    const value = (toMatch as any)[key]
     if (typeof value == 'function') {
-      if (!value(object[key])) return false;
+      if (!value(object[key])) return false
     } else if (value !== object[key]) {
-      return false;
+      return false
     }
   }
-  return true;
+  return true
 }
 
-const lowerCase = (str: string) => str[0].toLowerCase() + str.slice(1);
+const lowerCase = (str: string) => str[0].toLowerCase() + str.slice(1)
 
-export const is: Is = {} as any;
+export const is: Is = {} as any
 
 for (const nodeType in definitions) {
   (is as any)[lowerCase(nodeType)] = (
     nodeOrNodePath: Node | NodePath | null | undefined,
     toMatch?: Matcher<Node>
   ) => {
-    if (nodeOrNodePath == null) return false;
+    if (nodeOrNodePath == null) return false
 
     // We shouldn't believe in micro-benchmarks but it seems that
     // checking for a property is faster than `instanceof` calls
@@ -34,7 +34,7 @@ for (const nodeType in definitions) {
 
     const node: Node | null = (nodeOrNodePath as NodePath).ctx != null
       ? (nodeOrNodePath as NodePath).node
-      : (nodeOrNodePath as Node);
+      : (nodeOrNodePath as Node)
     
     return (
       node != null && node.type === nodeType &&
@@ -48,11 +48,11 @@ for (const aliasName in aliases) {
     nodeOrNodePath: Node | NodePath | null | undefined,
     toMatch?: Matcher<Node>
   ) => {
-    if (nodeOrNodePath == null) return false;
+    if (nodeOrNodePath == null) return false
 
     const node: Node | null = (nodeOrNodePath as NodePath).ctx != null
       ? (nodeOrNodePath as NodePath).node
-      : (nodeOrNodePath as Node);
+      : (nodeOrNodePath as Node)
 
     return (
       node != null && (node.type in aliases[aliasName as keyof typeof aliases]) &&

@@ -1,97 +1,97 @@
-import { Node, BaseNode, NodeT, ParentsOf } from './estree';
-import { TraverseOptions, Traverser, Visitors } from './traverse';
-import { Scope } from './scope';
-import { is } from './is';
-import * as t from './generated/types';
-import { NodePathDocs } from './nodepath-doc';
-import { Definition, definitions } from './definitions';
-import { getNodeValidationEnabled } from './builders';
+import { Node, BaseNode, NodeT, ParentsOf } from './estree'
+import { TraverseOptions, Traverser, Visitors } from './traverse'
+import { Scope } from './scope'
+import { is } from './is'
+import * as t from './generated/types'
+import { NodePathDocs } from './nodepath-doc'
+import { Definition, definitions } from './definitions'
+import { getNodeValidationEnabled } from './builders'
 
 // * Tip: Fold the regions for better experience
 
 const mapSet = <K, V>(map: Map<K, V>, key: K, value: V): V => {
-  map.set(key, value);
-  return value;
+  map.set(key, value)
+  return value
 }
 
 export class Context {
-  pathCache = new Map<NodePath | null, Map<Node | null, NodePath>>();
-  scopeCache = new Map<NodePath, Scope>();
-  makeScope = false;
-  shouldValidateNodes = getNodeValidationEnabled();
-  private currentSkipPaths = new Set<NodePath>();
-  private readonly skipPathSetStack = [this.currentSkipPaths];
+  pathCache = new Map<NodePath | null, Map<Node | null, NodePath>>()
+  scopeCache = new Map<NodePath, Scope>()
+  makeScope = false
+  shouldValidateNodes = getNodeValidationEnabled()
+  private currentSkipPaths = new Set<NodePath>()
+  private readonly skipPathSetStack = [this.currentSkipPaths]
   /** Store newly added nodes to this queue for traversal */
   private readonly queueStack: {
     new: NodePath[];
     unSkipped: NodePath[];
-  }[] = [];
+  }[] = []
 
   constructor(options?: TraverseOptions) {
-    this.makeScope = options?.scope === true;
+    this.makeScope = options?.scope === true
     if (options?.validateNodes != null) {
-      this.shouldValidateNodes = options.validateNodes;
+      this.shouldValidateNodes = options.validateNodes
     }
   }
 
   setSkipped(path: NodePath) {
-    this.currentSkipPaths.add(path);
+    this.currentSkipPaths.add(path)
   }
 
   setNotSkipped(path: NodePath) {
-    this.currentSkipPaths.delete(path);
+    this.currentSkipPaths.delete(path)
   }
 
   shouldSkip(path: NodePath) {
-    return this.currentSkipPaths.has(path);
+    return this.currentSkipPaths.has(path)
   }
 
   private updateCurrentSkipPaths() {
-    this.currentSkipPaths = this.skipPathSetStack[this.skipPathSetStack.length - 1];
+    this.currentSkipPaths = this.skipPathSetStack[this.skipPathSetStack.length - 1]
   }
 
   newSkipPathStack() {
-    this.skipPathSetStack.push(new Set());
-    this.updateCurrentSkipPaths();
+    this.skipPathSetStack.push(new Set())
+    this.updateCurrentSkipPaths()
   }
 
   restorePrevSkipPathStack() {
-    this.skipPathSetStack.pop();
-    this.updateCurrentSkipPaths();
+    this.skipPathSetStack.pop()
+    this.updateCurrentSkipPaths()
   }
 
   pushToQueue(paths: NodePath[], stackName: keyof Context['queueStack'][number]) {
-    const last = this.queueStack[this.queueStack.length - 1];
-    if (last != null) last[stackName].push(...paths);
+    const last = this.queueStack[this.queueStack.length - 1]
+    if (last != null) last[stackName].push(...paths)
   }
 
   newQueue() {
     this.queueStack.push({
       new: [],
       unSkipped: []
-    });
+    })
   }
 
   popQueue() {
-    return this.queueStack.pop()!;
+    return this.queueStack.pop()!
   }
 }
 
 const runInsertionValidation = (node: Node, key: string | number, listKey: string | null, parent: Node) => {
-  if (!getNodeValidationEnabled()) return;
-  const definition: Definition = definitions[node.type] as any;
+  if (!getNodeValidationEnabled()) return
+  const definition: Definition = definitions[node.type] as any
   if (definition != null && definition.insertionValidate != null) {
-    const errorMsg = definition.insertionValidate(node, key, listKey, parent as ParentsOf<Node>);
+    const errorMsg = definition.insertionValidate(node, key, listKey, parent as ParentsOf<Node>)
     if (errorMsg != null) {
-      throw new Error(errorMsg);
+      throw new Error(errorMsg)
     }
   }
 }
 
-type Keys<N extends Node> = Exclude<keyof N, keyof BaseNode>;
+type Keys<N extends Node> = Exclude<keyof N, keyof BaseNode>
 type PickKeysWithValue<N extends Node, Condition> = {
   [K in keyof N]: N[K] extends Condition ? K : never;
-}[keyof N];
+}[keyof N]
 
 type NodePathData<T extends Node, P extends Node> = {
   node: NodePath<T>['node'];
@@ -99,37 +99,37 @@ type NodePathData<T extends Node, P extends Node> = {
   listKey: NodePath['listKey'];
   parentPath: NodePath<T, P>['parentPath'];
   ctx: Context;
-};
+}
 
 export class NodePath<T extends Node = Node, P extends Node = Node> implements NodePathDocs {
-  readonly node: T | null;
-  readonly type: T['type'] | null;
-  key: string | number | null;
-  listKey: string | null;
-  removed: boolean;
-  readonly parentPath: NodePath<P> | null;
-  readonly parent: P | null;
-  readonly container: P | Node[] | null;
+  readonly node: T | null
+  readonly type: T['type'] | null
+  key: string | number | null
+  listKey: string | null
+  removed: boolean
+  readonly parentPath: NodePath<P> | null
+  readonly parent: P | null
+  readonly container: P | Node[] | null
 
-  readonly ctx: Context;
-  scope: Scope | undefined | null;
+  readonly ctx: Context
+  scope: Scope | undefined | null
 
   // accessKey = '';
 
   private constructor(data: NodePathData<T, P>) {
-    this.node = data.node;
-    this.type = this.node && this.node.type;
-    this.key = data.key;
-    this.listKey = data.listKey;
-    this.parentPath = data.parentPath;
-    this.parent = this.parentPath && this.parentPath.node;
+    this.node = data.node
+    this.type = this.node && this.node.type
+    this.key = data.key
+    this.listKey = data.listKey
+    this.parentPath = data.parentPath
+    this.parent = this.parentPath && this.parentPath.node
     this.container = this.listKey
       ? (this.parent as any as Record<string, Node[]>)[this.listKey]
-      : this.parent;
-    this.removed = false;
+      : this.parent
+    this.removed = false
 
-    this.ctx = data.ctx;
-    this.scope = undefined;
+    this.ctx = data.ctx
+    this.scope = undefined
 
     // this.accessKey = (this.parentPath?.accessKey || '') + '.' + this.type;
   }
@@ -138,53 +138,53 @@ export class NodePath<T extends Node = Node, P extends Node = Node> implements N
   static for<T extends Node = Node, P extends Node = Node>(data: NodePathData<T, P>): NodePath<T, P> {
     if (data.node == null) {
       // Don't cache a null NodePath
-      return new this(data);
+      return new this(data)
     }
 
-    const pathCache = data.ctx.pathCache;
-    const { parentPath } = data;
-    const children = pathCache.get(parentPath) || mapSet(pathCache, parentPath, new Map<Node, NodePath>());
-    return (children.get(data.node) || mapSet(children, data.node, new NodePath<any, any>(data)));
+    const pathCache = data.ctx.pathCache
+    const { parentPath } = data
+    const children = pathCache.get(parentPath) || mapSet(pathCache, parentPath, new Map<Node, NodePath>())
+    return (children.get(data.node) || mapSet(children, data.node, new NodePath<any, any>(data)))
   }
 
   init(parentScope?: Scope) {
-    this.scope = this.ctx.makeScope ? Scope.for(this, parentScope || this.parentPath?.scope || null) : null;
-    if (this.scope != null) this.scope.init();
-    return this;
+    this.scope = this.ctx.makeScope ? Scope.for(this, parentScope || this.parentPath?.scope || null) : null
+    if (this.scope != null) this.scope.init()
+    return this
   }
 
   protected throwNoParent(methodName: string): never {
-    throw new Error(`Can not use \`${methodName}\` on a NodePath which does not have a parent`);
+    throw new Error(`Can not use \`${methodName}\` on a NodePath which does not have a parent`)
   }
 
   protected assertNotRemoved(): void {
     if (this.removed) {
-      throw new Error('Path is removed and it is now read-only');
+      throw new Error('Path is removed and it is now read-only')
     }
   }
 
   get parentKey(): string | null {
-    return this.listKey != null ? this.listKey : (this.key as string);
+    return this.listKey != null ? this.listKey : (this.key as string)
   }
 
   //#region Traversal
 
   skip() {
-    this.ctx.setSkipped(this);
+    this.ctx.setSkipped(this)
   }
 
   unSkip() {
-    this.ctx.setNotSkipped(this);
-    this.ctx.pushToQueue([this], 'unSkipped');
+    this.ctx.setNotSkipped(this)
+    this.ctx.pushToQueue([this], 'unSkipped')
   }
 
   unskip() {
-    this.unSkip();
+    this.unSkip()
   }
 
   traverse<S>(visitors: Visitors<S>, state?: S) {
     if (this.node == null) {
-      throw new Error('Can not use method `traverse` on a null NodePath');
+      throw new Error('Can not use method `traverse` on a null NodePath')
     }
 
     Traverser.traverseNode({
@@ -194,7 +194,7 @@ export class NodePath<T extends Node = Node, P extends Node = Node> implements N
       state,
       ctx: this.ctx,
       expand: true
-    });
+    })
   }
 
   //#endregion
@@ -202,26 +202,26 @@ export class NodePath<T extends Node = Node, P extends Node = Node> implements N
   //#region Ancestry
 
   findParent<N extends Node>(predicate: (path: NodePath<N>) => boolean): NodePath<N> | null {
-    let parent: NodePath<any> | null = this.parentPath;
+    let parent: NodePath<any> | null = this.parentPath
     while (parent != null) {
-      if (predicate(parent)) return parent;
-      parent = parent.parentPath;
+      if (predicate(parent)) return parent
+      parent = parent.parentPath
     }
-    return null;
+    return null
   }
 
   find<N extends Node>(predicate: (path: NodePath<N>) => boolean): NodePath<N> | null {
     // eslint-disable-next-line @typescript-eslint/no-this-alias
-    let nodePath: NodePath<any> | null = this;
+    let nodePath: NodePath<any> | null = this
     while (nodePath != null) {
-      if (predicate(nodePath)) return nodePath;
-      nodePath = nodePath.parentPath;
+      if (predicate(nodePath)) return nodePath
+      nodePath = nodePath.parentPath
     }
-    return null;
+    return null
   }
 
   getFunctionParent(): NodePath<t.Function> | null {
-    return this.findParent((p) => is.function(p));
+    return this.findParent((p) => is.function(p))
   }
 
   //#endregion
@@ -229,32 +229,32 @@ export class NodePath<T extends Node = Node, P extends Node = Node> implements N
   //#region Modification
 
   protected updateSiblingIndex(fromIndex: number, incrementBy: number): void {
-    if ((this.container as any[]).length === 0) return;
+    if ((this.container as any[]).length === 0) return
 
     this.ctx.pathCache.get(this.parentPath)?.forEach((path) => {
       if ((path.key as number) >= fromIndex) {
-        (path.key as number) += incrementBy;
+        (path.key as number) += incrementBy
       }
-    });
+    })
   }
 
   insertBefore(nodes: readonly Node[]): NodePath[] {
-    this.assertNotRemoved();
+    this.assertNotRemoved()
 
     // TODO: Handle more cases
 
     if (!Array.isArray(this.container)) {
-      throw new Error('Can not insert before a node where `container` is not an Array');
+      throw new Error('Can not insert before a node where `container` is not an Array')
     }
 
-    const key = this.key as number;
+    const key = this.key as number
 
     for (let i = 0; i < nodes.length; i++) {
-      runInsertionValidation(nodes[i], key + i, this.listKey, this.parent!);
+      runInsertionValidation(nodes[i], key + i, this.listKey, this.parent!)
     }
 
-    this.container.splice(key, 0, ...nodes);
-    this.updateSiblingIndex(key, nodes.length);
+    this.container.splice(key, 0, ...nodes)
+    this.updateSiblingIndex(key, nodes.length)
 
     const newPaths = nodes.map((node, idx) => (
       NodePath.for({
@@ -264,30 +264,30 @@ export class NodePath<T extends Node = Node, P extends Node = Node> implements N
         parentPath: this.parentPath,
         ctx: this.ctx
       }).init()
-    ));
+    ))
 
-    this.ctx.pushToQueue(newPaths, 'new');
+    this.ctx.pushToQueue(newPaths, 'new')
 
-    return newPaths;
+    return newPaths
   }
 
   insertAfter(nodes: readonly Node[]): NodePath[] {
-    this.assertNotRemoved();
+    this.assertNotRemoved()
 
     // TODO: Handle more cases
 
     if (!Array.isArray(this.container)) {
-      throw new Error('Can not insert after a node where `container` is not an Array');
+      throw new Error('Can not insert after a node where `container` is not an Array')
     }
 
-    const key = this.key as number;
+    const key = this.key as number
 
     for (let i = 0; i < nodes.length; i++) {
-      runInsertionValidation(nodes[i], key + i + 1, this.listKey, this.parent!);
+      runInsertionValidation(nodes[i], key + i + 1, this.listKey, this.parent!)
     }
 
-    this.container.splice(key + 1, 0, ...nodes);
-    this.updateSiblingIndex(key + 1, nodes.length);
+    this.container.splice(key + 1, 0, ...nodes)
+    this.updateSiblingIndex(key + 1, nodes.length)
 
     const newPaths = nodes.map((node, idx) => (
       NodePath.for({
@@ -297,11 +297,11 @@ export class NodePath<T extends Node = Node, P extends Node = Node> implements N
         parentPath: this.parentPath,
         ctx: this.ctx
       }).init()
-    ));
+    ))
 
-    this.ctx.pushToQueue(newPaths, 'new');
+    this.ctx.pushToQueue(newPaths, 'new')
 
-    return newPaths;
+    return newPaths
   }
 
   unshiftContainer<K extends PickKeysWithValue<T, Node[]>>(
@@ -312,11 +312,11 @@ export class NodePath<T extends Node = Node, P extends Node = Node> implements N
       ? Node
       : T[K] extends Node[] ? T[K][number] : Node,
     T
-  >[];
+  >[]
   unshiftContainer(listKey: string, nodes: readonly Node[]): NodePath[] {
-    this.assertNotRemoved();
+    this.assertNotRemoved()
 
-    const firstNode = (this.node as any as Record<string, Node[]>)[listKey][0];
+    const firstNode = (this.node as any as Record<string, Node[]>)[listKey][0]
     // Create a virtual NodePath
     const lastNodePath = NodePath.for({
       node: firstNode,
@@ -324,10 +324,10 @@ export class NodePath<T extends Node = Node, P extends Node = Node> implements N
       listKey,
       parentPath: this,
       ctx: this.ctx
-    });
-    const newPaths = lastNodePath.insertBefore(nodes);
+    })
+    const newPaths = lastNodePath.insertBefore(nodes)
 
-    return newPaths;
+    return newPaths
   }
 
   pushContainer<K extends PickKeysWithValue<T, Node[]>>(
@@ -338,12 +338,12 @@ export class NodePath<T extends Node = Node, P extends Node = Node> implements N
       ? Node
       : T[K] extends Node[] ? T[K][number] : Node,
     T
-  >[];
+  >[]
   pushContainer(listKey: string, nodes: readonly Node[]): NodePath[] {
-    this.assertNotRemoved();
+    this.assertNotRemoved()
 
-    const container = (this.node as any as Record<string, Node[]>)[listKey];
-    const lastNode = container[container.length - 1];
+    const container = (this.node as any as Record<string, Node[]>)[listKey]
+    const lastNode = container[container.length - 1]
     // Create a virtual NodePath
     const lastNodePath = NodePath.for({
       node: lastNode,
@@ -351,10 +351,10 @@ export class NodePath<T extends Node = Node, P extends Node = Node> implements N
       listKey,
       parentPath: this,
       ctx: this.ctx
-    });
-    const newPaths = lastNodePath.insertAfter(nodes);
+    })
+    const newPaths = lastNodePath.insertAfter(nodes)
 
-    return newPaths;
+    return newPaths
   }
 
   //#endregion
@@ -365,21 +365,21 @@ export class NodePath<T extends Node = Node, P extends Node = Node> implements N
     key: K
   ): T[K] extends (infer U | null)[]
     ? U extends Node ? NodePath<U, T>[] : NodePath<never, T>[]
-    : T[K] extends Node ? NodePath<T[K], T> : NodePath<never, T>;
+    : T[K] extends Node ? NodePath<T[K], T> : NodePath<never, T>
   get<N extends Node | Node[] | unknown = unknown>(
     key: string
   ): unknown extends N
     ? NodePath | NodePath[]
     : N extends Node[]
       ? NodePath<N[number]>[]
-      : N extends Node ? NodePath<N> : NodePath<never>;
+      : N extends Node ? NodePath<N> : NodePath<never>
   
   get(key: string): NodePath | NodePath[] {
     if (this.node == null) {
-      throw new Error('Can not use method `get` on a null NodePath');
+      throw new Error('Can not use method `get` on a null NodePath')
     }
 
-    const value = (this.node as any as Record<string, Node | Node[] | null>)[key];
+    const value = (this.node as any as Record<string, Node | Node[] | null>)[key]
 
     if (Array.isArray(value)) {
       return value.map((node, index) => (
@@ -390,7 +390,7 @@ export class NodePath<T extends Node = Node, P extends Node = Node> implements N
           parentPath: this as any as NodePath,
           ctx: this.ctx
         }).init()
-      )) as NodePath[];
+      )) as NodePath[]
     } else if (value != null && typeof value.type == 'string') {
       return NodePath.for({
         node: value as any as Node,
@@ -398,7 +398,7 @@ export class NodePath<T extends Node = Node, P extends Node = Node> implements N
         listKey: null,
         parentPath: this as any as NodePath,
         ctx: this.ctx
-      }).init() as NodePath;
+      }).init() as NodePath
     }
 
     return NodePath.for({
@@ -407,73 +407,73 @@ export class NodePath<T extends Node = Node, P extends Node = Node> implements N
       listKey: null,
       parentPath: this as any as NodePath,
       ctx: this.ctx
-    }).init() as NodePath;
+    }).init() as NodePath
   }
 
   getSibling<N extends Node = Node>(key: string | number): NodePath<N> | undefined | never {
     if (this.parentPath == null) {
-      this.throwNoParent('getSibling');
+      this.throwNoParent('getSibling')
     }
 
     if (typeof key === 'string') {
-      return this.parentPath.get(key) as NodePath<N>;
+      return this.parentPath.get(key) as NodePath<N>
     } else if (this.listKey != null) {
-      return (this.parentPath.get(this.listKey) as NodePath[])[key] as NodePath<N>;
+      return (this.parentPath.get(this.listKey) as NodePath[])[key] as NodePath<N>
     }
   }
 
   getOpposite() {
     switch (this.key) {
-      case 'left': return this.getSibling('right');
-      case 'right': return this.getSibling('left');
+      case 'left': return this.getSibling('right')
+      case 'right': return this.getSibling('left')
     }
   }
 
   getPrevSibling(): NodePath | undefined | never {
-    return this.getSibling((this.key as number) - 1);
+    return this.getSibling((this.key as number) - 1)
   }
 
   getNextSibling(): NodePath | undefined | never {
-    return this.getSibling((this.key as number) + 1);
+    return this.getSibling((this.key as number) + 1)
   }
 
   getAllPrevSiblings(): NodePath[] | undefined | never {
     if (this.parentPath == null) {
-      this.throwNoParent('getAllPrevSiblings');
+      this.throwNoParent('getAllPrevSiblings')
     }
 
     return this.parentPath
       .get<Node[]>(this.listKey as string)
       .slice(0, this.key as number)
-      .reverse();
+      .reverse()
   }
 
   getAllNextSiblings(): NodePath[] | undefined | never {
     if (this.parentPath == null) {
-      this.throwNoParent('getAllNextSiblings');
+      this.throwNoParent('getAllNextSiblings')
     }
 
     return this.parentPath
       .get<Node[]>(this.listKey as string)
-      .slice((this.key as number) + 1);
+      .slice((this.key as number) + 1)
   }
 
   //#endregion
 
   //#region Introspection
 
-  has(key: Keys<T> extends never ? string : Keys<T>): boolean;
+  has(key: Keys<T> extends never ? string : Keys<T>): boolean
   has(key: any): boolean {
-    const value = (this.node as Record<string, any>)?.[key];
+    const value = (this.node as Record<string, any>)?.[key]
     if (value != null && Array.isArray(value) && value.length === 0) {
-      return false;
+      return false
     }
-    return !!value;
+    return !!value
   }
 
-  is(key: Keys<T> extends never ? string : Keys<T>): boolean;
+  is(key: Keys<T> extends never ? string : Keys<T>): boolean
   is(key: any): boolean {
-    return !!(this.node as Record<string, any>)?.[key];
+    return !!(this.node as Record<string, any>)?.[key]
   }
 
   //#endregion
@@ -481,9 +481,9 @@ export class NodePath<T extends Node = Node, P extends Node = Node> implements N
   //#region Removal
 
   private onRemove(): boolean {
-    const { parent, key, listKey } = this;
-    const parentT = parent!.type;
-    const parentPath = this.parentPath!;
+    const { parent, key, listKey } = this
+    const parentT = parent!.type
+    const parentPath = this.parentPath!
 
     switch (true) {
       case parentT === 'ExpressionStatement' && key === 'expression':
@@ -491,58 +491,58 @@ export class NodePath<T extends Node = Node, P extends Node = Node> implements N
       case (parentT === 'WhileStatement' || parentT === 'SwitchCase') && key === 'test':
       case parentT === 'LabeledStatement' && key === 'body':
       case (parentT === 'VariableDeclaration' && listKey === 'declarations' && (parent as NodeT<'VariableDeclaration'>).declarations.length === 1):
-        parentPath.remove();
-        return true;
+        parentPath.remove()
+        return true
 
       case parentT === 'BinaryExpression':
         parentPath.replaceWith(
           (parent as NodeT<'BinaryExpression'>)[key === 'right' ? 'left' : 'right']
-        );
-        return true;
+        )
+        return true
       
       case parentT === 'IfStatement' && key === 'consequent':
       case (parentT === 'ArrowFunctionExpression' || is.loop(parent)) && key === 'body':
         if (parentT === 'ArrowFunctionExpression') {
-          (parent as NodeT<'ArrowFunctionExpression'>).expression = false;
+          (parent as NodeT<'ArrowFunctionExpression'>).expression = false
         }
         this.replaceWith({
           type: 'BlockStatement',
           body: []
-        });
-        return true;
+        })
+        return true
     }
 
-    return false;
+    return false
   }
 
   private markRemoved() {
-    this.ctx.pathCache.get(this.parentPath)?.delete(this.node);
-    this.removed = true;
+    this.ctx.pathCache.get(this.parentPath)?.delete(this.node)
+    this.removed = true
   }
 
   remove(): void {
     if (this.removed) {
-      throw new Error('Node is already removed');
+      throw new Error('Node is already removed')
     }
 
     if (this.container == null) {
-      this.throwNoParent('remove');
+      this.throwNoParent('remove')
     }
 
     if (this.onRemove()) {
       // Things are handled by `onRemove` function.
-      return this.markRemoved();
+      return this.markRemoved()
     }
 
     if (this.listKey != null) {
-      const key = this.key as number;
-      const container = this.container as Node[];
-      container.splice(key, 1);
-      this.markRemoved();
-      this.updateSiblingIndex(key + 1, -1);
+      const key = this.key as number
+      const container = this.container as Node[]
+      container.splice(key, 1)
+      this.markRemoved()
+      this.updateSiblingIndex(key + 1, -1)
     } else if (this.key != null) {
-      (this.container as any as Record<string, Node | null>)[this.key] = null;
-      this.markRemoved();
+      (this.container as any as Record<string, Node | null>)[this.key] = null
+      this.markRemoved()
     }
   }
 
@@ -552,16 +552,16 @@ export class NodePath<T extends Node = Node, P extends Node = Node> implements N
 
   replaceWith<N extends Node = Node>(node: N): NodePath<N> {
     if (this.container == null) {
-      this.throwNoParent('replaceWith');
+      this.throwNoParent('replaceWith')
     }
     if (this.removed) {
-      throw new Error('Node is already removed');
+      throw new Error('Node is already removed')
     }
 
     runInsertionValidation(node, this.key!, this.listKey, this.parent!);
 
-    (this.container as any as Record<string | number, Node>)[this.key!] = node;
-    this.markRemoved();
+    (this.container as any as Record<string | number, Node>)[this.key!] = node
+    this.markRemoved()
 
     const newPath = NodePath.for({
       node,
@@ -569,23 +569,23 @@ export class NodePath<T extends Node = Node, P extends Node = Node> implements N
       listKey: this.listKey,
       parentPath: this.parentPath,
       ctx: this.ctx
-    }).init();
+    }).init()
 
-    this.ctx.pushToQueue([newPath], 'new');
+    this.ctx.pushToQueue([newPath], 'new')
 
-    return newPath;
+    return newPath
   }
 
   replaceWithMultiple<N extends readonly Node[]>(nodes: N): NodePath<N[number]>[] {
     if (this.container == null) {
-      this.throwNoParent('replaceWith');
+      this.throwNoParent('replaceWith')
     }
     if (this.removed) {
-      throw new Error('Node is already removed');
+      throw new Error('Node is already removed')
     }
 
-    const newPath = this.replaceWith(nodes[0]);
-    return [newPath].concat(newPath.insertAfter(nodes.slice(1)));
+    const newPath = this.replaceWith(nodes[0])
+    return [newPath].concat(newPath.insertAfter(nodes.slice(1)))
   } 
 
   //#endregion

@@ -11,25 +11,25 @@ import {
   JSXIdentifier,
   Pattern,
   VariableDeclarator
-} from 'estree-jsx';
+} from 'estree-jsx'
 
-import { NodePath } from './nodepath';
-import { Scope } from './scope';
+import { NodePath } from './nodepath'
+import { Scope } from './scope'
 
 class BaseBinding {
-  readonly references: NodePath<Identifier | JSXIdentifier>[] = [];
-  readonly constantViolations: NodePath<Identifier>[] = [];
+  readonly references: NodePath<Identifier | JSXIdentifier>[] = []
+  readonly constantViolations: NodePath<Identifier>[] = []
 
   addReference(path: NodePath<Identifier | JSXIdentifier>) {
-    this.references.push(path);
+    this.references.push(path)
   }
 
   addConstantViolation(path: NodePath<Identifier>) {
-    this.constantViolations.push(path);
+    this.constantViolations.push(path)
   }
 }
 
-export type BindingKind = 'var' | 'let' | 'const' | 'param' | 'unknown' | 'hoisted' | 'local' | 'module';
+export type BindingKind = 'var' | 'let' | 'const' | 'param' | 'unknown' | 'hoisted' | 'local' | 'module'
 export type BindingPathT<T extends BindingKind> = (
   {
     hoisted: NodePath<FunctionDeclaration | ClassDeclaration>;
@@ -41,14 +41,14 @@ export type BindingPathT<T extends BindingKind> = (
   } & {
     [_ in 'var' | 'const']: NodePath<VariableDeclarator>;
   }
-)[T];
+)[T]
 
 export class Binding<T extends BindingKind = BindingKind> extends BaseBinding {
-  readonly kind: BindingKind;
-  readonly name: string;
-  readonly scope: Scope;
-  readonly identifierPath: NodePath<Identifier>;
-  readonly path: BindingPathT<T>;
+  readonly kind: BindingKind
+  readonly name: string
+  readonly scope: Scope
+  readonly identifierPath: NodePath<Identifier>
+  readonly path: BindingPathT<T>
 
   constructor(data: {
     kind: Binding['kind'],
@@ -57,28 +57,28 @@ export class Binding<T extends BindingKind = BindingKind> extends BaseBinding {
     identifierPath: Binding['identifierPath'];
     path: BindingPathT<T>;
   }) {
-    super();
-    this.kind = data.kind;
-    this.name = data.name;
-    this.scope = data.scope;
-    this.identifierPath = data.identifierPath;
-    this.path = data.path;
+    super()
+    this.kind = data.kind
+    this.name = data.name
+    this.scope = data.scope
+    this.identifierPath = data.identifierPath
+    this.path = data.path
   }
 
   get constant() {
-    return this.constantViolations.length === 0;
+    return this.constantViolations.length === 0
   }
 }
 
 export class GlobalBinding extends BaseBinding {
-  readonly kind = 'global';
-  readonly constant = false;
-  readonly name: string;
+  readonly kind = 'global'
+  readonly constant = false
+  readonly name: string
 
   constructor(data: {
     name: string;
   }) {
-    super();
-    this.name = data.name;
+    super()
+    this.name = data.name
   }
 }

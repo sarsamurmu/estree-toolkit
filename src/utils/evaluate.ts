@@ -1,80 +1,80 @@
-import { NodePath } from '../nodepath';
-import { assertNever, NodeT } from '../estree';
+import { NodePath } from '../nodepath'
+import { assertNever, NodeT } from '../estree'
 
 const evaluateBinaryExpr = (left: any, right: any, operator: NodeT<'BinaryExpression'>['operator']) => {
   switch (operator) {
-    case '==':  return left == right; // eslint-disable-line eqeqeq
-    case '!=':  return left != right; // eslint-disable-line eqeqeq
-    case '===': return left === right;
-    case '!==': return left !== right;
-    case '<':   return left < right;
-    case '<=':  return left <= right;
-    case '>':   return left > right;
-    case '>=':  return left >= right;
-    case '<<':  return left << right;
-    case '>>':  return left >> right;
-    case '>>>': return left >>> right;
-    case '+':   return left + right;
-    case '-':   return left - right;
-    case '*':   return left * right;
-    case '/':   return left / right;
-    case '%':   return left % right;
-    case '**':  return left ** right;
-    case '|':   return left | right;
-    case '^':   return left ^ right;
-    case '&':   return left & right;
-    case 'in':  return left in right;
+    case '==':  return left == right // eslint-disable-line eqeqeq
+    case '!=':  return left != right // eslint-disable-line eqeqeq
+    case '===': return left === right
+    case '!==': return left !== right
+    case '<':   return left < right
+    case '<=':  return left <= right
+    case '>':   return left > right
+    case '>=':  return left >= right
+    case '<<':  return left << right
+    case '>>':  return left >> right
+    case '>>>': return left >>> right
+    case '+':   return left + right
+    case '-':   return left - right
+    case '*':   return left * right
+    case '/':   return left / right
+    case '%':   return left % right
+    case '**':  return left ** right
+    case '|':   return left | right
+    case '^':   return left ^ right
+    case '&':   return left & right
+    case 'in':  return left in right
 
-    case 'instanceof': return;
+    case 'instanceof': return
     /* istanbul ignore next */
     default: assertNever(operator)
   }
 }
 
-type EvaluationResult = { value: unknown };
+type EvaluationResult = { value: unknown }
 
 class Evaluator {
-  private cache = new Map<NodePath, EvaluationResult | undefined>();
+  private cache = new Map<NodePath, EvaluationResult | undefined>()
 
   getEvaluated(path: NodePath): EvaluationResult | undefined {
     if (this.cache.has(path)) {
-      const cachedResult = this.cache.get(path);
-      return cachedResult!;
+      const cachedResult = this.cache.get(path)
+      return cachedResult!
     } else {
-      const result = this.evaluate(path);
-      this.cache.set(path, result);
-      return result;
+      const result = this.evaluate(path)
+      this.cache.set(path, result)
+      return result
     }
   }
 
   evaluate(path: NodePath): EvaluationResult | undefined {
     switch (/* istanbul ignore next */ path.node?.type) {
       case 'Identifier':
-        if (path.node.name === 'undefined') return { value: undefined };
-        break;
+        if (path.node.name === 'undefined') return { value: undefined }
+        break
 
       case 'Literal':
-        return { value: path.node.value };
+        return { value: path.node.value }
 
       case 'BinaryExpression': {
-        const aPath = path as NodePath<NodeT<'BinaryExpression'>>;
-        const left = this.getEvaluated(aPath.get('left'));
-        if (left == null) return;
-        const right = this.getEvaluated(aPath.get('right'));
-        if (right == null) return;
+        const aPath = path as NodePath<NodeT<'BinaryExpression'>>
+        const left = this.getEvaluated(aPath.get('left'))
+        if (left == null) return
+        const right = this.getEvaluated(aPath.get('right'))
+        if (right == null) return
 
-        const value = evaluateBinaryExpr(left.value, right.value, aPath.node!.operator);
-        if (value == null) return;
+        const value = evaluateBinaryExpr(left.value, right.value, aPath.node!.operator)
+        if (value == null) return
 
         return { value }
       }
 
       case 'UnaryExpression': {
-        const aPath = path as NodePath<NodeT<'UnaryExpression'>>;
-        const arg = this.getEvaluated(aPath.get('argument'));
-        if (arg == null) return;
+        const aPath = path as NodePath<NodeT<'UnaryExpression'>>
+        const arg = this.getEvaluated(aPath.get('argument'))
+        if (arg == null) return
 
-        const argVal = arg.value as any;
+        const argVal = arg.value as any
 
         switch (aPath.node!.operator) {
           case '+':
@@ -89,18 +89,18 @@ class Evaluator {
             return { value: typeof argVal }
           case 'void':
             return { value: undefined }
-          case 'delete': break;
+          case 'delete': break
           /* istanbul ignore next */
           default: assertNever(aPath.node!.operator)
         }
 
-        break;
+        break
       }
 
       case 'LogicalExpression': {
-        const aPath = path as NodePath<NodeT<'LogicalExpression'>>;
-        const left = this.getEvaluated(aPath.get('left'));
-        const right = this.getEvaluated(aPath.get('right'));
+        const aPath = path as NodePath<NodeT<'LogicalExpression'>>
+        const left = this.getEvaluated(aPath.get('left'))
+        const right = this.getEvaluated(aPath.get('right'))
 
         switch (aPath.node!.operator) {
           case '&&': {
@@ -118,7 +118,7 @@ class Evaluator {
             ) {
               return { value: true }
             }
-            break;
+            break
           }
           case '||': {
             // If any of them is truthy, the expression will always return `true`
@@ -135,57 +135,57 @@ class Evaluator {
             ) {
               return { value: false }
             }
-            break;
+            break
           }
           case '??': {
             // Return left if it's not nullish
             // Return right if left is nullish
             if (left != null) {
               if (left.value != null) {
-                return left;
+                return left
               } else if (right != null) {
-                return right;
+                return right
               }
             }
-            break;
+            break
           }
           /* istanbul ignore next */
           default: assertNever(aPath.node!.operator)
         }
 
-        break;
+        break
       }
 
       case 'ObjectExpression': {
-        const aPath = path as NodePath<NodeT<'ObjectExpression'>>;
-        const object: Record<string, any> = {};
-        const properties = aPath.get('properties');
+        const aPath = path as NodePath<NodeT<'ObjectExpression'>>
+        const object: Record<string, any> = {}
+        const properties = aPath.get('properties')
 
         for (let i = 0; i < properties.length; i++) {
-          const property = properties[i];
+          const property = properties[i]
 
           if (property.type === 'Property') {
             /* istanbul ignore if: never going to happen, but just in case */
-            if (property.node == null) return;
-            if (property.node.kind !== 'init') return;
+            if (property.node == null) return
+            if (property.node.kind !== 'init') return
 
             const key = property.node.computed
               ? this.getEvaluated(property.get('key'))?.value as string
-              : (property.node.key as NodeT<'Identifier'>).name;
+              : (property.node.key as NodeT<'Identifier'>).name
             
             if (key != null) {
-              const value = this.getEvaluated(property.get('value'));
-              if (value == null) return;
-              object[key] = value.value;
+              const value = this.getEvaluated(property.get('value'))
+              if (value == null) return
+              object[key] = value.value
             } else {
-              return;
+              return
             }
           } else /* istanbul ignore else */ if (property.type === 'SpreadElement') {
-            const argument = this.getEvaluated(property.get('argument'));
-            if (argument == null) return;
-            Object.assign(object, argument.value);
+            const argument = this.getEvaluated(property.get('argument'))
+            if (argument == null) return
+            Object.assign(object, argument.value)
           } else {
-            return;
+            return
           }
         }
 
@@ -193,25 +193,25 @@ class Evaluator {
       }
 
       case 'ArrayExpression': {
-        const aPath = path as NodePath<NodeT<'ArrayExpression'>>;
-        const array = [];
-        const elements = aPath.get('elements');
+        const aPath = path as NodePath<NodeT<'ArrayExpression'>>
+        const array = []
+        const elements = aPath.get('elements')
 
         for (let i = 0; i < elements.length; i++) {
-          const value = this.getEvaluated(elements[i]);
-          if (value == null) return;
-          array.push(value.value);
+          const value = this.getEvaluated(elements[i])
+          if (value == null) return
+          array.push(value.value)
         }
 
         return { value: array }
       }
 
       case 'ConditionalExpression': {
-        const aPath = path as NodePath<NodeT<'ConditionalExpression'>>;
-        const test = this.getEvaluated(aPath.get('test'));
-        if (test == null) return;
+        const aPath = path as NodePath<NodeT<'ConditionalExpression'>>
+        const test = this.getEvaluated(aPath.get('test'))
+        if (test == null) return
 
-        return this.getEvaluated(aPath.get(test.value ? 'consequent' : 'alternate'));
+        return this.getEvaluated(aPath.get(test.value ? 'consequent' : 'alternate'))
       }
     }
   }
@@ -222,8 +222,8 @@ class Evaluator {
  * @returns An object with property `value` if evaluation is successful, otherwise `undefined`
  */
 export const evaluate = (path: NodePath): { value: unknown } | undefined => {
-  const result = new Evaluator().evaluate(path);
-  if (result != null) return { value: result.value };
+  const result = new Evaluator().evaluate(path)
+  if (result != null) return { value: result.value }
 }
 
 /**
@@ -231,6 +231,6 @@ export const evaluate = (path: NodePath): { value: unknown } | undefined => {
  * @returns `true` or `false` if the evaluation is successful, otherwise `undefined`
  */
 export const evaluateTruthy = (path: NodePath): boolean | undefined => {
-  const result = evaluate(path);
-  if (result != null) return !!result.value;
+  const result = evaluate(path)
+  if (result != null) return !!result.value
 }

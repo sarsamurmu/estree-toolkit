@@ -1,6 +1,6 @@
-import { parseModule } from 'meriyah';
+import { parseModule } from 'meriyah'
 
-import { traverse, utils as u } from '<project>';
+import { traverse, utils as u } from '<project>'
 
 test('variable declaration', () => {
   const ast = parseModule(`
@@ -10,23 +10,23 @@ test('variable declaration', () => {
     {
       targetNode
     }
-  `);
+  `)
 
   traverse(ast, {
     Identifier(path) {
-      if (path.node.name !== 'targetNode') return;
-      expect(u.hasBinding(path, 'a')).toBe(true);
-      expect(u.hasBinding(path, 'b')).toBe(false);
-      expect(u.hasBinding(path, 'c')).toBe(true);
-      expect(u.hasBinding(path, 'd')).toBe(true);
-      expect(u.hasBinding(path, 'e')).toBe(true);
-      expect(u.hasBinding(path, 'f')).toBe(true);
-      expect(u.hasBinding(path, 'g')).toBe(true);
+      if (path.node.name !== 'targetNode') return
+      expect(u.hasBinding(path, 'a')).toBe(true)
+      expect(u.hasBinding(path, 'b')).toBe(false)
+      expect(u.hasBinding(path, 'c')).toBe(true)
+      expect(u.hasBinding(path, 'd')).toBe(true)
+      expect(u.hasBinding(path, 'e')).toBe(true)
+      expect(u.hasBinding(path, 'f')).toBe(true)
+      expect(u.hasBinding(path, 'g')).toBe(true)
     }
-  });
+  })
 
-  expect.assertions(7);
-});
+  expect.assertions(7)
+})
 
 test('function parameters', () => {
   const ast = parseModule(`
@@ -47,23 +47,23 @@ test('function parameters', () => {
         targetNode;
       }
     }
-  `);
+  `)
 
   traverse(ast, {
     Identifier(path) {
-      if (path.node.name !== 'targetNode') return;
-      expect(u.hasBinding(path, 'a')).toBe(true);
-      expect(u.hasBinding(path, 'b')).toBe(false);
-      expect(u.hasBinding(path, 'c')).toBe(true);
-      expect(u.hasBinding(path, 'd')).toBe(true);
-      expect(u.hasBinding(path, 'e')).toBe(true);
-      expect(u.hasBinding(path, 'f')).toBe(true);
-      expect(u.hasBinding(path, 'g')).toBe(true);
+      if (path.node.name !== 'targetNode') return
+      expect(u.hasBinding(path, 'a')).toBe(true)
+      expect(u.hasBinding(path, 'b')).toBe(false)
+      expect(u.hasBinding(path, 'c')).toBe(true)
+      expect(u.hasBinding(path, 'd')).toBe(true)
+      expect(u.hasBinding(path, 'e')).toBe(true)
+      expect(u.hasBinding(path, 'f')).toBe(true)
+      expect(u.hasBinding(path, 'g')).toBe(true)
     }
-  });
+  })
 
-  expect.assertions(3 * 7);
-});
+  expect.assertions(3 * 7)
+})
 
 test('function declaration', () => {
   const ast = parseModule(`
@@ -77,17 +77,17 @@ test('function declaration', () => {
       function a() {}
       targetNode;
     }
-  `);
+  `)
 
   traverse(ast, {
     Identifier(path) {
-      if (path.node.name !== 'targetNode') return;
-      expect(u.hasBinding(path, 'a')).toBe(true);
+      if (path.node.name !== 'targetNode') return
+      expect(u.hasBinding(path, 'a')).toBe(true)
     }
-  });
+  })
 
-  expect.assertions(2 * 1);
-});
+  expect.assertions(2 * 1)
+})
 
 test('class declaration', () => {
   const ast = parseModule(`
@@ -103,18 +103,18 @@ test('class declaration', () => {
       class a {}
       targetNode;
     }
-  `);
+  `)
 
   traverse(ast, {
     Identifier(path) {
-      if (path.node.name !== 'targetNode') return;
-      expect(u.hasBinding(path, 'a')).toBe(true);
-      expect(u.hasBinding(path, 'b')).toBe(false);
+      if (path.node.name !== 'targetNode') return
+      expect(u.hasBinding(path, 'a')).toBe(true)
+      expect(u.hasBinding(path, 'b')).toBe(false)
     }
-  });
+  })
 
-  expect.assertions(2 * 2);
-});
+  expect.assertions(2 * 2)
+})
 
 test('function and class expression', () => {
   const ast = parseModule(`
@@ -131,17 +131,17 @@ test('function and class expression', () => {
         }
       })
     }
-  `);
+  `)
 
   traverse(ast, {
     Identifier(path) {
-      if (path.node.name !== 'targetNode') return;
-      expect(u.hasBinding(path, 'a')).toBe(true);
+      if (path.node.name !== 'targetNode') return
+      expect(u.hasBinding(path, 'a')).toBe(true)
     }
-  });
+  })
 
-  expect.assertions(1 * 2);
-});
+  expect.assertions(1 * 2)
+})
 
 test('import declaration', () => {
   const ast = parseModule(`
@@ -149,40 +149,40 @@ test('import declaration', () => {
     import * as e from '';
 
     targetNode;
-  `);
+  `)
 
   traverse(ast, {
     Identifier(path) {
-      if (path.node.name !== 'targetNode') return;
-      expect(u.hasBinding(path, 'a')).toBe(true);
-      expect(u.hasBinding(path, 'b')).toBe(true);
-      expect(u.hasBinding(path, 'c')).toBe(false);
-      expect(u.hasBinding(path, 'd')).toBe(true);
-      expect(u.hasBinding(path, 'e')).toBe(true);
+      if (path.node.name !== 'targetNode') return
+      expect(u.hasBinding(path, 'a')).toBe(true)
+      expect(u.hasBinding(path, 'b')).toBe(true)
+      expect(u.hasBinding(path, 'c')).toBe(false)
+      expect(u.hasBinding(path, 'd')).toBe(true)
+      expect(u.hasBinding(path, 'e')).toBe(true)
     }
-  });
+  })
 
-  expect.assertions(5);
-});
+  expect.assertions(5)
+})
 
 test('for statement', () => {
   const ast = parseModule(`
     for (let a = 0, b = 0;;) {
       targetNode;
     }
-  `);
+  `)
 
   traverse(ast, {
     Identifier(path) {
-      if (path.node.name !== 'targetNode') return;
-      expect(u.hasBinding(path, 'a')).toBe(true);
-      expect(u.hasBinding(path, 'b')).toBe(true);
-      expect(u.hasBinding(path, 'c')).toBe(false);
+      if (path.node.name !== 'targetNode') return
+      expect(u.hasBinding(path, 'a')).toBe(true)
+      expect(u.hasBinding(path, 'b')).toBe(true)
+      expect(u.hasBinding(path, 'c')).toBe(false)
     }
-  });
+  })
 
-  expect.assertions(3);
-});
+  expect.assertions(3)
+})
 
 test('for..in and for..of statement', () => {
   const ast = parseModule(`
@@ -193,19 +193,19 @@ test('for..in and for..of statement', () => {
     for (const { a: [, b, { c }], d, e = 0, ...f } of o) {
       targetNode;
     }
-  `);
+  `)
 
   traverse(ast, {
     Identifier(path) {
-      if (path.node.name !== 'targetNode') return;
-      expect(u.hasBinding(path, 'a')).toBe(false);
-      expect(u.hasBinding(path, 'b')).toBe(true);
-      expect(u.hasBinding(path, 'c')).toBe(true);
-      expect(u.hasBinding(path, 'd')).toBe(true);
-      expect(u.hasBinding(path, 'e')).toBe(true);
-      expect(u.hasBinding(path, 'f')).toBe(true);
+      if (path.node.name !== 'targetNode') return
+      expect(u.hasBinding(path, 'a')).toBe(false)
+      expect(u.hasBinding(path, 'b')).toBe(true)
+      expect(u.hasBinding(path, 'c')).toBe(true)
+      expect(u.hasBinding(path, 'd')).toBe(true)
+      expect(u.hasBinding(path, 'e')).toBe(true)
+      expect(u.hasBinding(path, 'f')).toBe(true)
     }
-  });
+  })
 
-  expect.assertions(2 * 6);
-});
+  expect.assertions(2 * 6)
+})

@@ -1,18 +1,18 @@
-import { BaseNode, Node, ParentsOf } from './estree';
-import * as a from './assert';
+import { BaseNode, Node, ParentsOf } from './estree'
+import * as a from './assert'
 
-type NodeKeys<N> = Exclude<keyof N, keyof BaseNode>;
+type NodeKeys<N> = Exclude<keyof N, keyof BaseNode>
 
 export type DefinitionIndex<T> = T extends true
   ? number | [builderIndex: number | false, visitIndex: number | false]
-  : false | [builderIndex: number | false, visitIndex: false];
+  : false | [builderIndex: number | false, visitIndex: false]
 
 export type DefinitionField<N, V> = {
   default?: V | ((node: N) => V);
   validate: a.ValidateFn<Exclude<V, undefined | RegExp>>;
   // Some node types include RegExp, but in practical it never appears
   type?: string;
-};
+}
 
 export type Definition<N extends Node = Node> = {
   indices: {
@@ -23,7 +23,7 @@ export type Definition<N extends Node = Node> = {
   };
   finalValidate?: a.ValidateFn<N>;
   insertionValidate?: (node: N, key: string | number, listKey: string | null, parent: ParentsOf<N>) => string | null;
-};
+}
 
 export type Definitions = {
   [N in Node as `${N['type']}`]: Definition<N>;
@@ -54,14 +54,14 @@ export const definitions: Definitions = Object.assign<any, Definitions>(Object.c
         (parent.type === 'ImportSpecifier' && key === 'imported') ||
         (parent.type === 'MetaProperty' && (key === 'meta' && node.name === 'import' || key === 'property' && node.name === 'meta'))
       ) {
-        return null;
+        return null
       }
 
       if (a.isReserved(node.name)) {
         return `${JSON.stringify(node.name)} is not a valid identifier.`
       }
 
-      return null;
+      return null
     }
   },
   Literal: {
@@ -375,7 +375,7 @@ export const definitions: Definitions = Object.assign<any, Definitions>(Object.c
       if (node.handler == null && node.finalizer == null) {
         return 'If `handler` is null then `finalizer` must be not null'
       }
-      return null;
+      return null
     }
   },
   WhileStatement: {
@@ -905,10 +905,10 @@ export const definitions: Definitions = Object.assign<any, Definitions>(Object.c
     },
     insertionValidate(node, key, listKey, parent) {
       if (((parent as unknown as Record<string, unknown[]>)[listKey as string]).length > key) {
-        return `RestElement should be the last children of "${listKey}"`;
+        return `RestElement should be the last children of "${listKey}"`
       }
 
-      return null;
+      return null
     }
   },
   AssignmentPattern: {
@@ -1300,34 +1300,34 @@ export const definitions: Definitions = Object.assign<any, Definitions>(Object.c
       raw: anyValidate
     }
   }
-});
+})
 
 export const getFieldsOf = ({ indices }: Definition, type: 'builder' | 'visitor'): string[] => {
-  const fields: { name: string, index: number }[] = [];
+  const fields: { name: string, index: number }[] = []
 
   Object.keys(indices).forEach((fieldName) => {
-    const indexValue: DefinitionIndex<true | false> = (indices as any)[fieldName];
-    if (indexValue === false) return;
+    const indexValue: DefinitionIndex<true | false> = (indices as any)[fieldName]
+    if (indexValue === false) return
     switch (typeof indexValue) {
       case 'number':
-        return fields.push({ name: fieldName, index: indexValue });
+        return fields.push({ name: fieldName, index: indexValue })
       case 'object': {
-        const index = indexValue[type === 'builder' ? 0 : 1];
-        if (index === false) return;
-        return fields.push({ name: fieldName, index: index });
+        const index = indexValue[type === 'builder' ? 0 : 1]
+        if (index === false) return
+        return fields.push({ name: fieldName, index: index })
       }
     }
-  });
+  })
 
-  return fields.sort((a, b) => a.index - b.index).map(({ name }) => name);
+  return fields.sort((a, b) => a.index - b.index).map(({ name }) => name)
 }
 
 export const visitorKeys = (() => {
-  const record: Record<string, readonly string[] | undefined> = Object.create(null);
+  const record: Record<string, readonly string[] | undefined> = Object.create(null)
 
   for (const nodeType in definitions) {
-    record[nodeType] = getFieldsOf((definitions as Record<string, Definition>)[nodeType], 'visitor');
+    record[nodeType] = getFieldsOf((definitions as Record<string, Definition>)[nodeType], 'visitor')
   }
 
-  return record as Readonly<typeof record>;
-})();
+  return record as Readonly<typeof record>
+})()

@@ -1,27 +1,27 @@
-import { Node } from './estree';
+import { Node } from './estree'
 
-import { Context, NodePath } from './nodepath';
-import { visitorKeys } from './definitions';
-import { aliases, AliasMap } from './aliases';
-import { getNodeValidationEnabled, setNodeValidationEnabled } from './builders';
+import { Context, NodePath } from './nodepath'
+import { visitorKeys } from './definitions'
+import { aliases, AliasMap } from './aliases'
+import { getNodeValidationEnabled, setNodeValidationEnabled } from './builders'
 
 export type VisitorContext = {
   stopped: boolean;
   stop(): void;
-};
+}
 
 export type VisitorFn<T extends Node = Node, S = unknown> = (
   this: VisitorContext,
   path: NodePath<T>,
   state: S
-) => void;
+) => void
 
 export type ExpandedVisitor<T extends Node, S> = {
   enter?: VisitorFn<T, S>;
   leave?: VisitorFn<T, S>;
 }
 
-export type Visitor<T extends Node = Node, S = unknown> = VisitorFn<T, S> | ExpandedVisitor<T, S>;
+export type Visitor<T extends Node = Node, S = unknown> = VisitorFn<T, S> | ExpandedVisitor<T, S>
 
 export type Visitors<S> = {
   [K in Node as `${K['type']}`]?: Visitor<K, S>;
@@ -37,13 +37,13 @@ export type TraverseOptions = {
   scope?: boolean;
   /** Enable/disable validation in `Node` builders */
   validateNodes?: boolean;
-};
+}
 
 export class Traverser {
-  private readonly visitors: ExpandedVisitors;
+  private readonly visitors: ExpandedVisitors
 
   constructor(visitors: ExpandedVisitors<any>) {
-    this.visitors = visitors;
+    this.visitors = visitors
   }
 
   visitPath<S>(
@@ -53,41 +53,41 @@ export class Traverser {
     visitedPaths: WeakSet<NodePath>,
     visitOnlyChildren = false
   ) {
-    const { node, ctx } = path;
+    const { node, ctx } = path
     if (
       visitedPaths.has(path) ||
       path.removed ||
       node == null
     ) {
-      return;
+      return
     }
 
-    const nodeType = node.type;
-    const visitor = this.visitors[nodeType] || {};
+    const nodeType = node.type
+    const visitor = this.visitors[nodeType] || {}
 
-    ctx.newQueue();
-    const cleanup = () => ctx.popQueue();
+    ctx.newQueue()
+    const cleanup = () => ctx.popQueue()
 
     if (!visitOnlyChildren) {
       // NOTE: If ctx.makeScope is `false`, it can cause the parent scope to reset to `null`
-      path.init();
+      path.init()
 
-      if (ctx.shouldSkip(path)) return cleanup();
+      if (ctx.shouldSkip(path)) return cleanup()
 
       if (visitor.enter != null) {
-        visitor.enter.call(visitorCtx, path, state);
+        visitor.enter.call(visitorCtx, path, state)
 
-        if (ctx.shouldSkip(path) || visitorCtx.stopped) return cleanup();
+        if (ctx.shouldSkip(path) || visitorCtx.stopped) return cleanup()
       }
     }
 
-    const keys = visitorKeys[nodeType] || Object.keys(node);
+    const keys = visitorKeys[nodeType] || Object.keys(node)
 
     for (let i = 0; i < keys.length; i++) {
-      const key = keys[i];
-      const value: Node | Node[] | null | undefined = (node as any)[key];
+      const key = keys[i]
+      const value: Node | Node[] | null | undefined = (node as any)[key]
 
-      if (value == null) continue;
+      if (value == null) continue
 
       if (Array.isArray(value)) {
         const childNodePaths = value.map((childNode, index) => (
@@ -98,12 +98,12 @@ export class Traverser {
             parentPath: path,
             ctx: ctx
           }).init()
-        ));
+        ))
 
         for (let i = 0; i < childNodePaths.length; i++) {
-          this.visitPath(visitorCtx, childNodePaths[i], state, visitedPaths);
+          this.visitPath(visitorCtx, childNodePaths[i], state, visitedPaths)
 
-          if (visitorCtx.stopped) return cleanup();
+          if (visitorCtx.stopped) return cleanup()
         }
       } else if (typeof value.type === 'string') {
         this.visitPath(
@@ -117,34 +117,34 @@ export class Traverser {
           }).init(),
           state,
           visitedPaths
-        );
+        )
 
-        if (visitorCtx.stopped) return cleanup();
+        if (visitorCtx.stopped) return cleanup()
       }
     }
 
     if (!visitOnlyChildren && visitor.leave != null) {
-      visitor.leave.call(visitorCtx, path, state);
+      visitor.leave.call(visitorCtx, path, state)
 
-      if (visitorCtx.stopped) return cleanup();
+      if (visitorCtx.stopped) return cleanup()
     }
 
-    visitedPaths.add(path);
+    visitedPaths.add(path)
 
-    const { new: newPaths, unSkipped: unSkippedPaths } = cleanup();
+    const { new: newPaths, unSkipped: unSkippedPaths } = cleanup()
     
     for (let i = 0; i < newPaths.length; i++) {
-      if (visitorCtx.stopped) break;
-      this.visitPath(visitorCtx, newPaths[i], state, visitedPaths);
+      if (visitorCtx.stopped) break
+      this.visitPath(visitorCtx, newPaths[i], state, visitedPaths)
     }
     for (let i = 0; i < unSkippedPaths.length; i++) {
-      if (visitorCtx.stopped) break;
-      this.visitPath(visitorCtx, unSkippedPaths[i], state, visitedPaths);
+      if (visitorCtx.stopped) break
+      this.visitPath(visitorCtx, unSkippedPaths[i], state, visitedPaths)
     }
   }
 
   static expandVisitors<S = unknown>(visitors: Visitors<S>): ExpandedVisitors<S> {
-    const expandedVisitors: ExpandedVisitors = Object.create(null);
+    const expandedVisitors: ExpandedVisitors = Object.create(null)
 
     // You can use functional approach here
     // Because this code won't run many times like other code does
@@ -152,23 +152,23 @@ export class Traverser {
     Object.keys(visitors).forEach((keyName) => {
       const keys = ([] as string[]).concat(...keyName.split('|').map(
         (key) => key in aliases ? Object.keys((aliases as any)[key]) : [key]
-      ));
-      const visitor = (visitors as Record<string, Visitor<Node>>)[keyName];
+      ))
+      const visitor = (visitors as Record<string, Visitor<Node>>)[keyName]
       if (typeof visitor == 'function') {
         keys.forEach((key) => {
-          expandedVisitors[key] = { enter: visitor };
-        });
+          expandedVisitors[key] = { enter: visitor }
+        })
       } else if (typeof visitor == 'object') {
         keys.forEach((key) => {
           expandedVisitors[key] = {
             enter: visitor.enter,
             leave: visitor.leave
           }
-        });
+        })
       }
-    });
+    })
 
-    return expandedVisitors;
+    return expandedVisitors
   }
 
   static traverseNode<S = unknown>(data: {
@@ -187,12 +187,12 @@ export class Traverser {
     const visitorCtx: VisitorContext = {
       stopped: false,
       stop() {
-        this.stopped = true;
+        this.stopped = true
       }
-    };
+    }
 
-    const prevNodeValidationEnabled = getNodeValidationEnabled();
-    setNodeValidationEnabled(data.ctx.shouldValidateNodes);
+    const prevNodeValidationEnabled = getNodeValidationEnabled()
+    setNodeValidationEnabled(data.ctx.shouldValidateNodes)
 
     new Traverser(
       data.expand ? this.expandVisitors(data.visitors) : data.visitors
@@ -208,9 +208,9 @@ export class Traverser {
       data.state,
       new WeakSet(),
       data.visitOnlyChildren
-    );
+    )
 
-    setNodeValidationEnabled(prevNodeValidationEnabled);
+    setNodeValidationEnabled(prevNodeValidationEnabled)
   }
 }
 
@@ -219,10 +219,10 @@ export const traverse = <NodeT, StateT>(
   visitors: Visitors<StateT> & { $?: TraverseOptions },
   state?: StateT
 ) => {
-  const ctx = new Context(visitors.$);
+  const ctx = new Context(visitors.$)
 
   if ((node as unknown as Node).type !== 'Program') {
-    ctx.makeScope = false;
+    ctx.makeScope = false
   }
 
   Traverser.traverseNode({
@@ -232,5 +232,5 @@ export const traverse = <NodeT, StateT>(
     state,
     ctx,
     expand: true,
-  });
+  })
 }

@@ -1,4 +1,4 @@
-import { NodePath, traverse, types as t } from '<project>';
+import { NodePath, traverse, types as t } from '<project>'
 
 describe('Methods', () => {
   //#region Traversal
@@ -10,21 +10,21 @@ describe('Methods', () => {
         type: 'Identifier',
         name: 'x'
       }
-    };
+    }
 
     const expressionMock = jest.fn<void, [NodePath]>((path) => {
-      path.get<t.Identifier>('expression').skip();
-    });
-    const identifierMock = jest.fn<void, [NodePath]>();
+      path.get<t.Identifier>('expression').skip()
+    })
+    const identifierMock = jest.fn<void, [NodePath]>()
 
     traverse(ast, {
       ExpressionStatement: expressionMock,
       Identifier: identifierMock
-    });
+    })
 
-    expect(expressionMock).toBeCalledTimes(1);
-    expect(identifierMock).toBeCalledTimes(0);
-  });
+    expect(expressionMock).toBeCalledTimes(1)
+    expect(identifierMock).toBeCalledTimes(0)
+  })
 
   describe('unSkip', () => {
     test('traverses the unSkipped path when in visiting phase', () => {
@@ -34,23 +34,23 @@ describe('Methods', () => {
           type: 'Identifier',
           name: 'x'
         }
-      };
+      }
 
       const expressionMock = jest.fn<void, [NodePath]>((path) => {
-        const identifierPath = path.get<t.Identifier>('expression');
-        identifierPath.skip();
-        identifierPath.unSkip();
-      });
-      const identifierMock = jest.fn<void, [NodePath]>();
+        const identifierPath = path.get<t.Identifier>('expression')
+        identifierPath.skip()
+        identifierPath.unSkip()
+      })
+      const identifierMock = jest.fn<void, [NodePath]>()
 
       traverse(ast, {
         ExpressionStatement: expressionMock,
         Identifier: identifierMock
-      });
+      })
 
-      expect(expressionMock).toBeCalledTimes(1);
-      expect(identifierMock).toBeCalledTimes(1);
-    });
+      expect(expressionMock).toBeCalledTimes(1)
+      expect(identifierMock).toBeCalledTimes(1)
+    })
 
     test('does not traverses the unSkipped path when not in visiting phase', () => {
       const ast = {
@@ -59,26 +59,26 @@ describe('Methods', () => {
           type: 'Identifier',
           name: 'x'
         }
-      };
+      }
 
-      let identifierPath: NodePath;
+      let identifierPath: NodePath
       const expressionMock = jest.fn<void, [NodePath]>((path) => {
-        identifierPath = path.get<t.Identifier>('expression');
-        identifierPath.skip();
-      });
-      const identifierMock = jest.fn<void, [NodePath]>();
+        identifierPath = path.get<t.Identifier>('expression')
+        identifierPath.skip()
+      })
+      const identifierMock = jest.fn<void, [NodePath]>()
 
       traverse(ast, {
         ExpressionStatement: expressionMock,
         Identifier: identifierMock
-      });
+      })
 
-      identifierPath.unskip();
+      identifierPath.unskip()
 
-      expect(expressionMock).toBeCalledTimes(1);
-      expect(identifierMock).toBeCalledTimes(0);
-    });
-  });
+      expect(expressionMock).toBeCalledTimes(1)
+      expect(identifierMock).toBeCalledTimes(0)
+    })
+  })
 
   //#endregion
 
@@ -101,18 +101,18 @@ describe('Methods', () => {
           ]
         }
       ]
-    };
+    }
 
     traverse(ast, {
       Literal(path) {
         expect(
           path.findParent((parent) => parent.type === 'BlockStatement').node
-        ).toBe(ast.body[0]);
+        ).toBe(ast.body[0])
       }
-    });
+    })
 
-    expect.assertions(1);
-  });
+    expect.assertions(1)
+  })
 
   test('find', () => {
     const ast = {
@@ -121,17 +121,17 @@ describe('Methods', () => {
         type: 'Literal',
         value: 0
       }
-    };
+    }
 
     traverse(ast, {
       Literal(path) {
-        expect(path.find((p) => p.type === 'Literal').node).toBe(ast.expression);
-        expect(path.find((p) => p.type === 'ExpressionStatement').node).toBe(ast);
+        expect(path.find((p) => p.type === 'Literal').node).toBe(ast.expression)
+        expect(path.find((p) => p.type === 'ExpressionStatement').node).toBe(ast)
       }
-    });
+    })
 
-    expect.assertions(2);
-  });
+    expect.assertions(2)
+  })
 
   test('getFunctionParent', () => {
     const ast = {
@@ -204,23 +204,23 @@ describe('Methods', () => {
           generator: false
         }
       ]
-    } as const;
+    } as const
 
     traverse(ast, {
       Literal(path) {
-        const { node: { value } } = path;
+        const { node: { value } } = path
         if (value === 'arrow') {
-          expect(path.getFunctionParent().node).toBe(ast.body[0].expression);
+          expect(path.getFunctionParent().node).toBe(ast.body[0].expression)
         } else if (value === 'expression') {
-          expect(path.getFunctionParent().node).toBe(ast.body[1].expression.right);
+          expect(path.getFunctionParent().node).toBe(ast.body[1].expression.right)
         } else if (value === 'declaration') {
-          expect(path.getFunctionParent().node).toBe(ast.body[2]);
+          expect(path.getFunctionParent().node).toBe(ast.body[2])
         }
       }
-    });
+    })
 
-    expect.assertions(3);
-  });
+    expect.assertions(3)
+  })
 
   //#endregion
 
@@ -243,8 +243,8 @@ describe('Methods', () => {
           value: 3
         }
       ]
-    };
-    let mockFn: jest.Mock<void, [NodePath<t.Literal>]>;
+    }
+    let mockFn: jest.Mock<void, [NodePath<t.Literal>]>
 
     traverse(ast, {
       Literal: (mockFn = jest.fn((path) => {
@@ -258,18 +258,18 @@ describe('Methods', () => {
               type: 'Literal',
               value: null
             }
-          ]);
-          expect(path.key).toBe(3);
-          expect(nodePaths[0].key).toBe(1);
-          expect(nodePaths[1].key).toBe(2);
+          ])
+          expect(path.key).toBe(3)
+          expect(nodePaths[0].key).toBe(1)
+          expect(nodePaths[1].key).toBe(2)
         }
         if (path.node.value === 3) {
-          expect(path.key).toBe(4);
+          expect(path.key).toBe(4)
         }
       }))
-    });
+    })
 
-    expect(mockFn).toBeCalledTimes(5);
+    expect(mockFn).toBeCalledTimes(5)
     expect(ast).toEqual({
       type: 'ArrayExpression',
       elements: [
@@ -294,7 +294,7 @@ describe('Methods', () => {
           value: 3
         }
       ]
-    });
+    })
 
     expect(() => {
       traverse({
@@ -310,11 +310,11 @@ describe('Methods', () => {
         alternate: null
       }, {
         Identifier(path) {
-          path.insertBefore([{ type: 'EmptyStatement' }]);
+          path.insertBefore([{ type: 'EmptyStatement' }])
         }
-      });
-    }).toThrow(/`container` is not an Array/);
-  });
+      })
+    }).toThrow(/`container` is not an Array/)
+  })
 
   test('insertAfter', () => {
     const ast = {
@@ -333,8 +333,8 @@ describe('Methods', () => {
           value: 3
         }
       ]
-    };
-    let mockFn: jest.Mock<void, [NodePath<t.Literal>]>;
+    }
+    let mockFn: jest.Mock<void, [NodePath<t.Literal>]>
 
     traverse(ast, {
       Literal: (mockFn = jest.fn((path) => {
@@ -348,18 +348,18 @@ describe('Methods', () => {
               type: 'Literal',
               value: null
             },
-          ]);
-          expect(path.key).toBe(1);
-          expect(nodePaths[0].key).toBe(2);
-          expect(nodePaths[1].key).toBe(3);
+          ])
+          expect(path.key).toBe(1)
+          expect(nodePaths[0].key).toBe(2)
+          expect(nodePaths[1].key).toBe(3)
         }
         if (path.node.value === 3) {
-          expect(path.key).toBe(4);
+          expect(path.key).toBe(4)
         }
       }))
-    });
+    })
 
-    expect(mockFn).toBeCalledTimes(5);
+    expect(mockFn).toBeCalledTimes(5)
     expect(ast).toEqual({
       type: 'ArrayExpression',
       elements: [
@@ -384,7 +384,7 @@ describe('Methods', () => {
           value: 3
         }
       ]
-    });
+    })
 
     expect(() => {
       traverse({
@@ -400,11 +400,11 @@ describe('Methods', () => {
         alternate: null
       }, {
         Identifier(path) {
-          path.insertAfter([{ type: 'EmptyStatement' }]);
+          path.insertAfter([{ type: 'EmptyStatement' }])
         }
-      });
-    }).toThrow(/`container` is not an Array/);
-  });
+      })
+    }).toThrow(/`container` is not an Array/)
+  })
 
   test('unshiftContainer', () => {
     const ast1 = {
@@ -419,8 +419,8 @@ describe('Methods', () => {
           value: 3
         }
       ]
-    };
-    const mockFn1 = jest.fn();
+    }
+    const mockFn1 = jest.fn()
 
     traverse(ast1, {
       ArrayExpression(path) {
@@ -433,16 +433,16 @@ describe('Methods', () => {
             type: 'Literal',
             value: 1
           },
-        ]);
-        expect(nodePaths[0].key).toBe(0);
-        expect(nodePaths[1].key).toBe(1);
-        expect(nodePaths[0].listKey).toBe('elements');
-        expect(nodePaths[1].listKey).toBe('elements');
+        ])
+        expect(nodePaths[0].key).toBe(0)
+        expect(nodePaths[1].key).toBe(1)
+        expect(nodePaths[0].listKey).toBe('elements')
+        expect(nodePaths[1].listKey).toBe('elements')
       },
       Literal: mockFn1
-    });
+    })
 
-    expect(mockFn1).toBeCalledTimes(4);
+    expect(mockFn1).toBeCalledTimes(4)
     expect(ast1).toEqual({
       type: 'ArrayExpression',
       elements: [
@@ -463,13 +463,13 @@ describe('Methods', () => {
           value: 3
         }
       ]
-    });
+    })
 
     const ast2 = {
       type: 'ArrayExpression',
       elements: []
-    };
-    const mockFn2 = jest.fn();
+    }
+    const mockFn2 = jest.fn()
 
     traverse(ast2, {
       ArrayExpression(path) {
@@ -482,16 +482,16 @@ describe('Methods', () => {
             type: 'Literal',
             value: 1
           },
-        ]);
-        expect(nodePaths[0].key).toBe(0);
-        expect(nodePaths[1].key).toBe(1);
-        expect(nodePaths[0].listKey).toBe('elements');
-        expect(nodePaths[1].listKey).toBe('elements');
+        ])
+        expect(nodePaths[0].key).toBe(0)
+        expect(nodePaths[1].key).toBe(1)
+        expect(nodePaths[0].listKey).toBe('elements')
+        expect(nodePaths[1].listKey).toBe('elements')
       },
       Literal: mockFn2
-    });
+    })
 
-    expect(mockFn2).toBeCalledTimes(2);
+    expect(mockFn2).toBeCalledTimes(2)
     expect(ast2).toEqual({
       type: 'ArrayExpression',
       elements: [
@@ -504,8 +504,8 @@ describe('Methods', () => {
           value: 1
         }
       ]
-    });
-  });
+    })
+  })
 
   test('insertContainer', () => {
     const ast1 = {
@@ -520,8 +520,8 @@ describe('Methods', () => {
           value: 1
         }
       ]
-    };
-    const mockFn1 = jest.fn();
+    }
+    const mockFn1 = jest.fn()
 
     traverse(ast1, {
       ArrayExpression(path) {
@@ -534,16 +534,16 @@ describe('Methods', () => {
             type: 'Literal',
             value: 3
           },
-        ]);
-        expect(nodePaths[0].key).toBe(2);
-        expect(nodePaths[1].key).toBe(3);
-        expect(nodePaths[0].listKey).toBe('elements');
-        expect(nodePaths[1].listKey).toBe('elements');
+        ])
+        expect(nodePaths[0].key).toBe(2)
+        expect(nodePaths[1].key).toBe(3)
+        expect(nodePaths[0].listKey).toBe('elements')
+        expect(nodePaths[1].listKey).toBe('elements')
       },
       Literal: mockFn1
-    });
+    })
 
-    expect(mockFn1).toBeCalledTimes(4);
+    expect(mockFn1).toBeCalledTimes(4)
     expect(ast1).toEqual({
       type: 'ArrayExpression',
       elements: [
@@ -564,13 +564,13 @@ describe('Methods', () => {
           value: 3
         }
       ]
-    });
+    })
 
     const ast2 = {
       type: 'ArrayExpression',
       elements: []
-    };
-    const mockFn2 = jest.fn();
+    }
+    const mockFn2 = jest.fn()
 
     traverse(ast2, {
       ArrayExpression(path) {
@@ -583,16 +583,16 @@ describe('Methods', () => {
             type: 'Literal',
             value: 1
           },
-        ]);
-        expect(nodePaths[0].key).toBe(0);
-        expect(nodePaths[1].key).toBe(1);
-        expect(nodePaths[0].listKey).toBe('elements');
-        expect(nodePaths[1].listKey).toBe('elements');
+        ])
+        expect(nodePaths[0].key).toBe(0)
+        expect(nodePaths[1].key).toBe(1)
+        expect(nodePaths[0].listKey).toBe('elements')
+        expect(nodePaths[1].listKey).toBe('elements')
       },
       Literal: mockFn2
-    });
+    })
 
-    expect(mockFn2).toBeCalledTimes(2);
+    expect(mockFn2).toBeCalledTimes(2)
     expect(ast2).toEqual({
       type: 'ArrayExpression',
       elements: [
@@ -605,8 +605,8 @@ describe('Methods', () => {
           value: 1
         }
       ]
-    });
-  });
+    })
+  })
 
   //#endregion
 
@@ -637,37 +637,37 @@ describe('Methods', () => {
           }
         }
       ]
-    } as const;
+    } as const
 
     traverse(ast, {
       Program(path) {
-        const bodyNodePaths = path.get('body');
+        const bodyNodePaths = path.get('body')
 
-        expect(bodyNodePaths[0].node).toBe(ast.body[0]);
-        expect(bodyNodePaths[0].key).toBe(0);
-        expect(bodyNodePaths[0].parent).toBe(ast);
-        expect(bodyNodePaths[0].listKey).toBe('body');
+        expect(bodyNodePaths[0].node).toBe(ast.body[0])
+        expect(bodyNodePaths[0].key).toBe(0)
+        expect(bodyNodePaths[0].parent).toBe(ast)
+        expect(bodyNodePaths[0].listKey).toBe('body')
 
-        expect(bodyNodePaths[1].node).toBe(ast.body[1]);
-        expect(bodyNodePaths[1].key).toBe(1);
-        expect(bodyNodePaths[1].parent).toBe(ast);
-        expect(bodyNodePaths[1].listKey).toBe('body');
+        expect(bodyNodePaths[1].node).toBe(ast.body[1])
+        expect(bodyNodePaths[1].key).toBe(1)
+        expect(bodyNodePaths[1].parent).toBe(ast)
+        expect(bodyNodePaths[1].listKey).toBe('body')
 
         expect(() => {
           // @ts-expect-error `get` function is invisible in the type system for null NodePaths, but it's there
-          path.get('invalidKey').get('something');
-        }).toThrow(/Can not use method `get` on a null NodePath/);
+          path.get('invalidKey').get('something')
+        }).toThrow(/Can not use method `get` on a null NodePath/)
       },
       IfStatement(path) {
-        const ifStatement = ast.body[0];
-        expect(path.get('test').node).toBe(ifStatement.test);
-        expect(path.get('test').key).toBe('test');
-        expect(path.get('test').parent).toBe(ifStatement);
+        const ifStatement = ast.body[0]
+        expect(path.get('test').node).toBe(ifStatement.test)
+        expect(path.get('test').key).toBe('test')
+        expect(path.get('test').parent).toBe(ifStatement)
       }
-    });
+    })
 
-    expect.assertions(12);
-  });
+    expect.assertions(12)
+  })
 
   test('getSibling', () => {
     const ast = {
@@ -711,30 +711,30 @@ describe('Methods', () => {
           }
         }
       ]
-    } as const;
+    } as const
 
     traverse(ast, {
       Program(path) {
-        expect(() => path.getSibling('some')).toThrow(/does not have a parent/);
+        expect(() => path.getSibling('some')).toThrow(/does not have a parent/)
       },
       ExpressionStatement(path) {
         if (
           path.node.expression.type === 'Literal' &&
           path.node.expression.value === 2
         ) {
-          expect(path.getSibling(0).node).toBe(ast.body[0]);
-          expect(path.getSibling(2).node).toBe(ast.body[2]);
+          expect(path.getSibling(0).node).toBe(ast.body[0])
+          expect(path.getSibling(2).node).toBe(ast.body[2])
         }
       },
       Identifier(path) {
         if (path.node.name === 'a') {
-          expect(path.getSibling('right').node).toBe((path.parentPath.node as t.AssignmentExpression).right);
+          expect(path.getSibling('right').node).toBe((path.parentPath.node as t.AssignmentExpression).right)
         }
       }
-    });
+    })
 
-    expect.assertions(4);
-  });
+    expect.assertions(4)
+  })
 
   test('getOpposite', () => {
     const ast = {
@@ -748,20 +748,20 @@ describe('Methods', () => {
         type: 'Identifier',
         name: 'b'
       }
-    };
+    }
 
     traverse(ast, {
       Identifier(path) {
         if (path.key === 'left') {
-          expect(path.getOpposite().node).toBe(ast.right);
+          expect(path.getOpposite().node).toBe(ast.right)
         } else if (path.key === 'right') {
-          expect(path.getOpposite().node).toBe(ast.left);
+          expect(path.getOpposite().node).toBe(ast.left)
         }
       }
-    });
+    })
 
-    expect.assertions(2);
-  });
+    expect.assertions(2)
+  })
 
   test('getPrevSibling', () => {
     const ast = {
@@ -780,18 +780,18 @@ describe('Methods', () => {
           value: 3
         }
       ]
-    };
+    }
 
     traverse(ast, {
       Literal(path) {
         if (path.node.value === 2) {
-          expect(path.getPrevSibling().node).toBe(ast.elements[0]);
+          expect(path.getPrevSibling().node).toBe(ast.elements[0])
         }
       }
-    });
+    })
 
-    expect.assertions(1);
-  });
+    expect.assertions(1)
+  })
 
   test('getNextSibling', () => {
     const ast = {
@@ -810,18 +810,18 @@ describe('Methods', () => {
           value: 3
         }
       ]
-    };
+    }
 
     traverse(ast, {
       Literal(path) {
         if (path.node.value === 2) {
-          expect(path.getNextSibling().node).toBe(ast.elements[2]);
+          expect(path.getNextSibling().node).toBe(ast.elements[2])
         }
       }
-    });
+    })
 
-    expect.assertions(1);
-  });
+    expect.assertions(1)
+  })
 
   test('getAllPrevSiblings', () => {
     const ast = {
@@ -848,23 +848,23 @@ describe('Methods', () => {
           value: 5
         }
       ]
-    };
+    }
 
     traverse(ast, {
       ArrayExpression(path) {
-        expect(() => path.getAllPrevSiblings()).toThrow(/does not have a parent/);
+        expect(() => path.getAllPrevSiblings()).toThrow(/does not have a parent/)
       },
       Literal(path) {
         if (path.node.value === 3) {
-          const prevSiblings = path.getAllPrevSiblings();
-          expect(prevSiblings[0].node).toBe(ast.elements[1]);
-          expect(prevSiblings[1].node).toBe(ast.elements[0]);
+          const prevSiblings = path.getAllPrevSiblings()
+          expect(prevSiblings[0].node).toBe(ast.elements[1])
+          expect(prevSiblings[1].node).toBe(ast.elements[0])
         }
       }
-    });
+    })
 
-    expect.assertions(3);
-  });
+    expect.assertions(3)
+  })
 
   test('getAllNextSiblings', () => {
     const ast = {
@@ -891,23 +891,23 @@ describe('Methods', () => {
           value: 5
         }
       ]
-    };
+    }
 
     traverse(ast, {
       ArrayExpression(path) {
-        expect(() => path.getAllNextSiblings()).toThrow(/does not have a parent/);
+        expect(() => path.getAllNextSiblings()).toThrow(/does not have a parent/)
       },
       Literal(path) {
         if (path.node.value === 3) {
-          const nextSiblings = path.getAllNextSiblings();
-          expect(nextSiblings[0].node).toBe(ast.elements[3]);
-          expect(nextSiblings[1].node).toBe(ast.elements[4]);
+          const nextSiblings = path.getAllNextSiblings()
+          expect(nextSiblings[0].node).toBe(ast.elements[3])
+          expect(nextSiblings[1].node).toBe(ast.elements[4])
         }
       }
-    });
+    })
 
-    expect.assertions(3);
-  });
+    expect.assertions(3)
+  })
 
   //#endregion
 
@@ -925,20 +925,20 @@ describe('Methods', () => {
         body: []
       },
       alternate: null
-    };
+    }
 
     traverse(ast, {
       IfStatement(path) {
-        expect(path.has('consequent')).toBe(true);
-        expect(path.has('alternate')).toBe(false);
+        expect(path.has('consequent')).toBe(true)
+        expect(path.has('alternate')).toBe(false)
       },
       BlockStatement(path) {
-        expect(path.has('body')).toBe(false);
+        expect(path.has('body')).toBe(false)
       }
-    });
+    })
 
-    expect.assertions(3);
-  });
+    expect.assertions(3)
+  })
 
   test('is', () => {
     const ast = {
@@ -955,17 +955,17 @@ describe('Methods', () => {
       computed: false,
       method: false,
       shorthand: true
-    };
+    }
 
     traverse(ast, {
       Property(path) {
-        expect(path.is('computed')).toBe(false);
-        expect(path.is('shorthand')).toBe(true);
+        expect(path.is('computed')).toBe(false)
+        expect(path.is('shorthand')).toBe(true)
       }
-    });
+    })
 
-    expect.assertions(2);
-  });
+    expect.assertions(2)
+  })
 
   //#endregion
 
@@ -989,17 +989,17 @@ describe('Methods', () => {
           value: true
         }
       }
-    };
+    }
 
     traverse(ast1, {
       IfStatement(path) {
-        expect(() => path.remove()).toThrow(/does not have a parent/);
+        expect(() => path.remove()).toThrow(/does not have a parent/)
       },
       ExpressionStatement(path) {
-        path.remove();
-        expect(() => path.remove()).toThrow(/already removed/);
+        path.remove()
+        expect(() => path.remove()).toThrow(/already removed/)
       }
-    });
+    })
 
     expect(ast1).toEqual({
       type: 'IfStatement',
@@ -1012,7 +1012,7 @@ describe('Methods', () => {
         body: []
       },
       alternate: null
-    });
+    })
 
     const ast2 = {
       type: 'Program',
@@ -1047,22 +1047,22 @@ describe('Methods', () => {
           }
         }
       ]
-    };
+    }
 
     traverse(ast2, {
       ExpressionStatement(path) {
-        const expressionNode = path.node.expression;
+        const expressionNode = path.node.expression
         if (expressionNode.type === 'Literal') {
-          if (typeof expressionNode.value === 'boolean') path.remove();
+          if (typeof expressionNode.value === 'boolean') path.remove()
           if (expressionNode.value === 1) {
-            expect(path.key).toBe(1);
+            expect(path.key).toBe(1)
           }
           if (expressionNode.value === 2) {
-            expect(path.key).toBe(2);
+            expect(path.key).toBe(2)
           }
         }
       },
-    });
+    })
 
     expect(ast2).toEqual({
       type: 'Program',
@@ -1090,9 +1090,9 @@ describe('Methods', () => {
           }
         }
       ]
-    });
+    })
 
-  });
+  })
 
   //#endregion
 
@@ -1115,31 +1115,31 @@ describe('Methods', () => {
           value: 3
         }
       ]
-    };
-    let mockFn: jest.Mock<void, [NodePath<t.Literal>]>;
+    }
+    let mockFn: jest.Mock<void, [NodePath<t.Literal>]>
 
     traverse(ast, {
       ArrayExpression(path) {
-        expect(() => path.replaceWith({ type: 'EmptyStatement' })).toThrow(/does not have a parent/);
+        expect(() => path.replaceWith({ type: 'EmptyStatement' })).toThrow(/does not have a parent/)
       },
       Literal: (mockFn = jest.fn((path) => {
         if (path.node.value === 2) {
           const newPath = path.replaceWith({
             type: 'Literal',
             value: null
-          });
+          })
 
-          expect(path.removed).toBe(true);
-          expect(newPath.key).toBe(path.key);
-          expect(newPath.listKey).toBe(path.listKey);
-          expect(newPath.parentPath).toBe(path.parentPath);
+          expect(path.removed).toBe(true)
+          expect(newPath.key).toBe(path.key)
+          expect(newPath.listKey).toBe(path.listKey)
+          expect(newPath.parentPath).toBe(path.parentPath)
 
-          expect(() => path.replaceWith({ type: 'Literal', value: null })).toThrow(/already removed/);
+          expect(() => path.replaceWith({ type: 'Literal', value: null })).toThrow(/already removed/)
         }
       }))
-    });
+    })
 
-    expect(mockFn).toBeCalledTimes(4);
+    expect(mockFn).toBeCalledTimes(4)
     expect(ast).toEqual({
       type: 'ArrayExpression',
       elements: [
@@ -1156,8 +1156,8 @@ describe('Methods', () => {
           value: 3
         }
       ]
-    });
-  });
+    })
+  })
 
   test('replaceWithMultiple', () => {
     const ast = {
@@ -1168,12 +1168,12 @@ describe('Methods', () => {
           value: 0
         }
       ]
-    };
-    let mockFn: jest.Mock<void, [NodePath<t.Literal>]>;
+    }
+    let mockFn: jest.Mock<void, [NodePath<t.Literal>]>
 
     traverse(ast, {
       ArrayExpression(path) {
-        expect(() => path.replaceWithMultiple([{ type: 'EmptyStatement' }])).toThrow();
+        expect(() => path.replaceWithMultiple([{ type: 'EmptyStatement' }])).toThrow()
       },
       Literal: (mockFn = jest.fn((path) => {
         if (path.node.value === 0) {
@@ -1190,22 +1190,22 @@ describe('Methods', () => {
               type: 'Literal',
               value: 3
             }
-          ]);
-          expect(path.removed).toBe(true);
-          expect(newPaths[0].key).toBe(0);
-          expect(newPaths[1].key).toBe(1);
-          expect(newPaths[2].key).toBe(2);
+          ])
+          expect(path.removed).toBe(true)
+          expect(newPaths[0].key).toBe(0)
+          expect(newPaths[1].key).toBe(1)
+          expect(newPaths[2].key).toBe(2)
 
-          expect(newPaths[0].listKey).toBe(path.listKey);
-          expect(newPaths[1].listKey).toBe(path.listKey);
-          expect(newPaths[2].listKey).toBe(path.listKey);
+          expect(newPaths[0].listKey).toBe(path.listKey)
+          expect(newPaths[1].listKey).toBe(path.listKey)
+          expect(newPaths[2].listKey).toBe(path.listKey)
 
-          expect(() => path.replaceWithMultiple([{ type: 'Literal', value: null }])).toThrow(/already removed/);
+          expect(() => path.replaceWithMultiple([{ type: 'Literal', value: null }])).toThrow(/already removed/)
         }
       }))
-    });
+    })
 
-    expect(mockFn).toBeCalledTimes(4);
+    expect(mockFn).toBeCalledTimes(4)
     expect(ast).toEqual({
       type: 'ArrayExpression',
       elements: [
@@ -1222,18 +1222,18 @@ describe('Methods', () => {
           value: 3
         }
       ]
-    });
-  });
+    })
+  })
 
   //#endregion
-});
+})
 
 describe('Properties', () => {
   test('node', () => {
     const literalNode = {
       type: 'Literal',
       value: 0
-    };
+    }
     const ast = {
       type: 'Program',
       sourceType: 'script',
@@ -1243,16 +1243,16 @@ describe('Properties', () => {
           expression: literalNode
         }
       ]
-    };
+    }
 
     traverse(ast, {
       Literal(path) {
-        expect(path.node).toBe(literalNode);
+        expect(path.node).toBe(literalNode)
       }
-    });
+    })
 
-    expect.assertions(1);
-  });
+    expect.assertions(1)
+  })
 
   test('type', () => {
     const ast = {
@@ -1267,16 +1267,16 @@ describe('Properties', () => {
           }
         }
       ]
-    };
+    }
 
     traverse(ast, {
       ExpressionStatement(path) {
-        expect(path.type).toBe('ExpressionStatement');
+        expect(path.type).toBe('ExpressionStatement')
       }
-    });
+    })
 
-    expect.assertions(1);
-  });
+    expect.assertions(1)
+  })
 
   test('key', () => {
     const ast = {
@@ -1291,16 +1291,16 @@ describe('Properties', () => {
           }
         }
       ]
-    };
+    }
 
     traverse(ast, {
       Literal(path) {
-        expect(path.key).toBe('expression');
+        expect(path.key).toBe('expression')
       }
-    });
+    })
 
-    expect.assertions(1);
-  });
+    expect.assertions(1)
+  })
 
   test('listKey', () => {
     const ast = {
@@ -1315,17 +1315,17 @@ describe('Properties', () => {
           }
         }
       ]
-    };
+    }
 
     traverse(ast, {
       ExpressionStatement(path) {
-        expect(path.key).toBe(0);
-        expect(path.listKey).toBe('body');
+        expect(path.key).toBe(0)
+        expect(path.listKey).toBe('body')
       }
-    });
+    })
 
-    expect.assertions(2);
-  });
+    expect.assertions(2)
+  })
 
   test('parentKey', () => {
     const ast = {
@@ -1340,19 +1340,19 @@ describe('Properties', () => {
           }
         }
       ]
-    };
+    }
 
     traverse(ast, {
       Literal(path) {
-        expect(path.parentKey).toBe('expression');
+        expect(path.parentKey).toBe('expression')
       },
       ExpressionStatement(path) {
-        expect(path.parentKey).toBe('body');
+        expect(path.parentKey).toBe('body')
       }
-    });
+    })
 
-    expect.assertions(2);
-  });
+    expect.assertions(2)
+  })
 
   test('parentPath', () => {
     const ast = {
@@ -1367,16 +1367,16 @@ describe('Properties', () => {
           }
         }
       ]
-    };
+    }
 
     traverse(ast, {
       ExpressionStatement(path) {
-        expect(path.parentPath.node).toBe(ast);
+        expect(path.parentPath.node).toBe(ast)
       }
-    });
+    })
 
-    expect.assertions(1);
-  });
+    expect.assertions(1)
+  })
 
   test('parent', () => {
     const ast = {
@@ -1391,16 +1391,16 @@ describe('Properties', () => {
           }
         }
       ]
-    };
+    }
 
     traverse(ast, {
       ExpressionStatement(path) {
-        expect(path.parent).toBe(ast);
+        expect(path.parent).toBe(ast)
       }
-    });
+    })
 
-    expect.assertions(1);
-  });
+    expect.assertions(1)
+  })
 
   test('container', () => {
     const ast = {
@@ -1415,19 +1415,19 @@ describe('Properties', () => {
           }
         }
       ]
-    };
+    }
 
     traverse(ast, {
       ExpressionStatement(path) {
-        expect(path.container).toBe(ast.body);
+        expect(path.container).toBe(ast.body)
       },
       Literal(path) {
-        expect(path.container).toBe(ast.body[0]);
+        expect(path.container).toBe(ast.body[0])
       }
-    });
+    })
 
-    expect.assertions(2);
-  });
+    expect.assertions(2)
+  })
 
   test('removed', () => {
     const ast = {
@@ -1442,18 +1442,18 @@ describe('Properties', () => {
           }
         }
       ]
-    };
+    }
 
     traverse(ast, {
       ExpressionStatement(path) {
-        path.remove();
-        expect(path.removed).toBe(true);
+        path.remove()
+        expect(path.removed).toBe(true)
       }
-    });
+    })
 
-    expect.assertions(1);
-  });
-});
+    expect.assertions(1)
+  })
+})
 
 describe('special cases', () => {
   test('syncs paths', () => {
@@ -1475,26 +1475,26 @@ describe('special cases', () => {
           ]
         }
       ]
-    };
+    }
 
-    let programPath: NodePath;
-    traverse(ast, { Program: (p) => programPath = p });
+    let programPath: NodePath
+    traverse(ast, { Program: (p) => programPath = p })
 
     programPath.traverse({
       BlockStatement(path) {
-        path.replaceWithMultiple(path.node.body);
-        expect(0).toBe(0);
+        path.replaceWithMultiple(path.node.body)
+        expect(0).toBe(0)
       }
-    });
+    })
 
     programPath.traverse({
       ExpressionStatement(path) {
-        expect(path.parentPath).toBe(programPath);
+        expect(path.parentPath).toBe(programPath)
       }
-    });
+    })
 
-    expect.assertions(2);
-  });
+    expect.assertions(2)
+  })
 
   describe('removal cases', () => {
     test('"expression" of ExpressionStatement', () => {
@@ -1510,20 +1510,20 @@ describe('special cases', () => {
             }
           }
         ]
-      };
+      }
 
       traverse(ast, {
         Identifier(path) {
-          path.remove();
+          path.remove()
         }
-      });
+      })
 
       expect(ast).toEqual({
         type: 'Program',
         sourceType: 'module',
         body: []
-      });
-    });
+      })
+    })
 
     test('"declaration" of ExportDeclaration', () => {
       const ast = {
@@ -1560,22 +1560,22 @@ describe('special cases', () => {
             source: null
           }
         ]
-      };
+      }
 
       traverse(ast, {
         ExportDeclaration(path) {
           if (path.has('declaration')) {
-            path.get<t.Node>('declaration').remove();
+            path.get<t.Node>('declaration').remove()
           }
         }
-      });
+      })
 
       expect(ast).toEqual({
         type: 'Program',
         sourceType: 'module',
         body: []
-      });
-    });
+      })
+    })
 
     test('"test" of WhileStatement or SwitchCase', () => {
       const ast = {
@@ -1616,15 +1616,15 @@ describe('special cases', () => {
             ]
           }
         ]
-      };
+      }
 
       traverse(ast, {
         Identifier(path) {
           if (path.node.name === 'targetNode') {
-            path.remove();
+            path.remove()
           }
         }
-      });
+      })
 
       expect(ast).toEqual({
         type: 'Program',
@@ -1639,8 +1639,8 @@ describe('special cases', () => {
             cases: []
           }
         ]
-      });
-    });
+      })
+    })
 
     test('"body" of LabeledStatement', () => {
       const ast = {
@@ -1659,20 +1659,20 @@ describe('special cases', () => {
             }
           }
         ]
-      };
+      }
 
       traverse(ast, {
         BlockStatement(path) {
-          path.remove();
+          path.remove()
         }
-      });
+      })
 
       expect(ast).toEqual({
         type: 'Program',
         sourceType: 'module',
         body: []
-      });
-    });
+      })
+    })
 
     test('"declarations" of VariableDeclaration', () => {
       const ast = {
@@ -1694,20 +1694,20 @@ describe('special cases', () => {
             ]
           }
         ]
-      };
+      }
 
       traverse(ast, {
         VariableDeclarator(path) {
-          path.remove();
+          path.remove()
         }
-      });
+      })
 
       expect(ast).toEqual({
         type: 'Program',
         sourceType: 'module',
         body: []
-      });
-    });
+      })
+    })
 
     test('child of BinaryExpression', () => {
       const ast = {
@@ -1745,15 +1745,15 @@ describe('special cases', () => {
             }
           }
         ]
-      };
+      }
 
       traverse(ast, {
         Identifier(path) {
           if (path.node.name === 'target') {
-            path.remove();
+            path.remove()
           }
         }
-      });
+      })
 
       expect(ast).toEqual({
         type: 'Program',
@@ -1774,8 +1774,8 @@ describe('special cases', () => {
             }
           }
         ]
-      });
-    });
+      })
+    })
 
     test('consequent of IfStatement', () => {
       const ast = {
@@ -1798,15 +1798,15 @@ describe('special cases', () => {
             alternate: null
           }
         ]
-      };
+      }
       
       traverse(ast, {
         Identifier(path) {
           if (path.node.name === 'target') {
-            path.remove();
+            path.remove()
           }
         }
-      });
+      })
 
       expect(ast).toEqual({
         type: 'Program',
@@ -1825,8 +1825,8 @@ describe('special cases', () => {
             alternate: null
           }
         ]
-      });
-    });
+      })
+    })
 
     test('"body" of ArrowFunctionExpression or Loop', () => {
       const ast = {
@@ -1917,16 +1917,16 @@ describe('special cases', () => {
             }
           }
         ]
-      };
+      }
 
       traverse(ast, {
         ArrowFunctionExpression(path) {
-          path.get('body').remove();
+          path.get('body').remove()
         },
         Loop(path) {
-          path.get('body').remove();
+          path.get('body').remove()
         }
-      });
+      })
 
       expect(ast).toEqual({
         type: 'Program',
@@ -1999,7 +1999,7 @@ describe('special cases', () => {
             }
           }
         ]
-      });
-    });
-  });
-});
+      })
+    })
+  })
+})

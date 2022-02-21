@@ -1,11 +1,11 @@
-import { builders as b, NodePath, traverse } from '<project>';
-import { NodeT } from '<project>/estree';
+import { builders as b, NodePath, traverse } from '<project>'
+import { NodeT } from '<project>/estree'
 
 describe('identifier', () => {
   test('basic builder', () => {
-    expect(() => b.identifier('const')).not.toThrow();
-    expect(() => b.identifier('a b')).toThrow();
-  });
+    expect(() => b.identifier('const')).not.toThrow()
+    expect(() => b.identifier('a b')).toThrow()
+  })
 
   test('MemberExpression', () => {
     traverse({
@@ -21,15 +21,15 @@ describe('identifier', () => {
       }
     }, {
       MemberExpression(path) {
-        expect(() => path.get('property').replaceWith(b.identifier('const'))).not.toThrow();
-        expect(() => path.get('object').replaceWith(b.identifier('const'))).toThrow();
-        path.node.computed = true;
-        expect(() => path.get('property').replaceWith(b.identifier('const'))).toThrow();
+        expect(() => path.get('property').replaceWith(b.identifier('const'))).not.toThrow()
+        expect(() => path.get('object').replaceWith(b.identifier('const'))).toThrow()
+        path.node.computed = true
+        expect(() => path.get('property').replaceWith(b.identifier('const'))).toThrow()
       }
-    });
+    })
 
-    expect.assertions(3);
-  });
+    expect.assertions(3)
+  })
 
   test('Property and MethodDefinition', () => {
     [
@@ -79,15 +79,15 @@ describe('identifier', () => {
     ].forEach(([type, ast]) => {
       traverse(ast, {
         [type]: (path: NodePath<NodeT<typeof type>>) => {
-          expect(() => path.get('key').replaceWith(b.identifier('if'))).not.toThrow();
-          path.node.computed = true;
-          expect(() => path.get('key').replaceWith(b.identifier('if'))).toThrow();
+          expect(() => path.get('key').replaceWith(b.identifier('if'))).not.toThrow()
+          path.node.computed = true
+          expect(() => path.get('key').replaceWith(b.identifier('if'))).toThrow()
         }
-      });
-    });
+      })
+    })
 
-    expect.assertions(4);
-  });
+    expect.assertions(4)
+  })
 
   test('ExportSpecifier', () => {
     traverse({
@@ -102,13 +102,13 @@ describe('identifier', () => {
       }
     }, {
       ExportSpecifier(path) {
-        expect(() => path.get('exported').replaceWith(b.identifier('class'))).not.toThrow();
-        expect(() => path.get('local').replaceWith(b.identifier('class'))).toThrow();
+        expect(() => path.get('exported').replaceWith(b.identifier('class'))).not.toThrow()
+        expect(() => path.get('local').replaceWith(b.identifier('class'))).toThrow()
       }
-    });
+    })
 
-    expect.assertions(2);
-  });
+    expect.assertions(2)
+  })
 
   test('ImportSpecifier', () => {
     traverse({
@@ -123,13 +123,13 @@ describe('identifier', () => {
       }
     }, {
       ImportSpecifier(path) {
-        expect(() => path.get('imported').replaceWith(b.identifier('class'))).not.toThrow();
-        expect(() => path.get('local').replaceWith(b.identifier('class'))).toThrow();
+        expect(() => path.get('imported').replaceWith(b.identifier('class'))).not.toThrow()
+        expect(() => path.get('local').replaceWith(b.identifier('class'))).toThrow()
       }
-    });
+    })
 
-    expect.assertions(2);
-  });
+    expect.assertions(2)
+  })
 
   test('MetaProperty', () => {
     traverse({
@@ -144,16 +144,16 @@ describe('identifier', () => {
       }
     }, {
       MetaProperty(path) {
-        expect(() => path.get('property').replaceWith(b.identifier('for'))).toThrow();
-        expect(() => path.get('meta').replaceWith(b.identifier('while'))).toThrow();
-        expect(() => path.get('property').replaceWith(b.identifier('meta'))).not.toThrow();
-        expect(() => path.get('meta').replaceWith(b.identifier('import'))).not.toThrow();
+        expect(() => path.get('property').replaceWith(b.identifier('for'))).toThrow()
+        expect(() => path.get('meta').replaceWith(b.identifier('while'))).toThrow()
+        expect(() => path.get('property').replaceWith(b.identifier('meta'))).not.toThrow()
+        expect(() => path.get('meta').replaceWith(b.identifier('import'))).not.toThrow()
       }
-    });
+    })
 
-    expect.assertions(4);
-  });
-});
+    expect.assertions(4)
+  })
+})
 
 test('TryStatement', () => {
   expect(() => {
@@ -162,29 +162,29 @@ test('TryStatement', () => {
       b.catchClause(b.identifier('e'), b.blockStatement([])),
       b.blockStatement([])
     )
-  }).not.toThrow();
+  }).not.toThrow()
   expect(() => {
     b.tryStatement(
       b.blockStatement([]),
       null,
       b.blockStatement([])
-    );
-  }).not.toThrow();
+    )
+  }).not.toThrow()
   expect(() => {
     b.tryStatement(
       b.blockStatement([]),
       b.catchClause(b.identifier('e'), b.blockStatement([])),
       null
     )
-  }).not.toThrow();
+  }).not.toThrow()
   expect(() => {
     b.tryStatement(
       b.blockStatement([]),
       null,
       null
     )
-  }).toThrow('If `handler` is null then `finalizer` must be not null');
-});
+  }).toThrow('If `handler` is null then `finalizer` must be not null')
+})
 
 test('RestElement', () => {
   traverse({
@@ -207,15 +207,15 @@ test('RestElement', () => {
     expression: true
   }, {
     ArrowFunctionExpression(path) {
-      const node = b.restElement(b.identifier('x'));
-      const errRE = /RestElement should be the last children/;
-      expect(() => path.get('params')[1].insertBefore([node])).toThrow(errRE);
-      expect(() => path.get('params')[1].insertAfter([node])).not.toThrow();
-      expect(() => path.get('params')[0].insertAfter([node])).toThrow(errRE);
-      expect(() => path.pushContainer('params', [node])).not.toThrow();
-      expect(() => path.unshiftContainer('params', [node])).toThrow(errRE);
+      const node = b.restElement(b.identifier('x'))
+      const errRE = /RestElement should be the last children/
+      expect(() => path.get('params')[1].insertBefore([node])).toThrow(errRE)
+      expect(() => path.get('params')[1].insertAfter([node])).not.toThrow()
+      expect(() => path.get('params')[0].insertAfter([node])).toThrow(errRE)
+      expect(() => path.pushContainer('params', [node])).not.toThrow()
+      expect(() => path.unshiftContainer('params', [node])).toThrow(errRE)
     }
-  });
+  })
 
-  expect.assertions(5);
-});
+  expect.assertions(5)
+})

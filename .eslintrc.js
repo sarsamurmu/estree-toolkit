@@ -32,7 +32,9 @@ const defaultTSOptions = {
     }],
     '@typescript-eslint/explicit-module-boundary-types': 'off',
     '@typescript-eslint/no-namespace': ['error', { allowDeclarations: true }],
-    '@typescript-eslint/no-non-null-assertion': 'off'
+    '@typescript-eslint/no-non-null-assertion': 'off',
+    'semi': 'off',
+    '@typescript-eslint/semi': ['error', 'never']
   }
 }
 
@@ -58,7 +60,8 @@ module.exports = {
       named: 'never',
       asyncArrow: 'always'
     }],
-    'quote-props': ['error', 'as-needed']
+    'quote-props': ['error', 'as-needed'],
+    'semi': ['error', 'never'],
   },
   overrides: [
     {
@@ -79,4 +82,4 @@ module.exports = {
       }
     }
   ]
-};
+}

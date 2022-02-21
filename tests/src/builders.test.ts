@@ -1,12 +1,12 @@
-import { builders as b, types as t } from '<project>';
-import { setNodeValidationEnabled } from '<project>/builders';
+import { builders as b, types as t } from '<project>'
+import { setNodeValidationEnabled } from '<project>/builders'
 
 test('basic', () => {
   expect(b.identifier('x')).toEqual<t.Identifier>({
     type: 'Identifier',
     name: 'x'
-  });
-});
+  })
+})
 
 describe('optional fields', () => {
   test('static', () => {
@@ -25,8 +25,8 @@ describe('optional fields', () => {
       },
       computed: false,
       shorthand: false
-    }));
-  });
+    }))
+  })
 
   test('computed', () => {
     expect(b.importSpecifier(b.identifier('imp'))).toEqual<t.ImportSpecifier>({
@@ -39,7 +39,7 @@ describe('optional fields', () => {
         type: 'Identifier',
         name: 'imp'
       }
-    });
+    })
     expect(b.exportSpecifier(b.identifier('exp'))).toEqual<t.ExportSpecifier>({
       type: 'ExportSpecifier',
       exported: {
@@ -50,15 +50,15 @@ describe('optional fields', () => {
         type: 'Identifier',
         name: 'exp'
       }
-    });
-  });
-});
+    })
+  })
+})
 
 test('validation', () => {
-  setNodeValidationEnabled(false);
-  expect(() => b.identifier(null)).not.toThrow();
-  setNodeValidationEnabled(true);
-  expect(() => b.identifier(null)).toThrow();
+  setNodeValidationEnabled(false)
+  expect(() => b.identifier(null)).not.toThrow()
+  setNodeValidationEnabled(true)
+  expect(() => b.identifier(null)).toThrow()
   expect(b.tryStatement(
     b.blockStatement([]),
     b.catchClause(b.identifier('e'), b.blockStatement([])),
@@ -84,5 +84,5 @@ test('validation', () => {
       type: 'BlockStatement',
       body: []
     }
-  });
-});
+  })
+})

@@ -1,34 +1,34 @@
-import { Builders } from './generated/builders-type';
-import { definitions, Definition, Definitions, DefinitionField, getFieldsOf } from './definitions';
-import { runValidation } from './assert';
+import { Builders } from './generated/builders-type'
+import { definitions, Definition, Definitions, DefinitionField, getFieldsOf } from './definitions'
+import { runValidation } from './assert'
 
-let shouldValidateNodes = true;
+let shouldValidateNodes = true
 
 export const setNodeValidationEnabled = (state: boolean) => {
-  shouldValidateNodes = state;
+  shouldValidateNodes = state
 }
 
-export const getNodeValidationEnabled = () => shouldValidateNodes;
+export const getNodeValidationEnabled = () => shouldValidateNodes
 
-export const builders: Builders = {} as any;
+export const builders: Builders = {} as any
 
 // Pseudo type for some kind of value, actual value may not like this type
 // eslint-disable-next-line @typescript-eslint/no-empty-interface
 interface Some extends Record<string, Record<string, unknown>> {}
 
 for (const key in definitions) {
-  const nodeType = key as keyof Definitions;
+  const nodeType = key as keyof Definitions
 
-  const lowerCasedNodeType = nodeType[0].toLowerCase() + nodeType.slice(1);
-  const definition: Definition = (definitions as any)[nodeType];
-  const { fields } = definition;
+  const lowerCasedNodeType = nodeType[0].toLowerCase() + nodeType.slice(1)
+  const definition: Definition = (definitions as any)[nodeType]
+  const { fields } = definition
   const fieldNames = getFieldsOf(definition, 'builder');
 
   (builders as any)[lowerCasedNodeType] = (...args: any[]) => {
-    const node: Record<string, unknown> = { type: nodeType };
+    const node: Record<string, unknown> = { type: nodeType }
 
     fieldNames.forEach((fieldName, index) => {
-      const field = (fields as Record<string, DefinitionField<Some, Some>>)[fieldName];
+      const field = (fields as Record<string, DefinitionField<Some, Some>>)[fieldName]
 
       node[fieldName] = args[index] !== undefined ? args[index] : (
         'default' in field
@@ -38,17 +38,17 @@ for (const key in definitions) {
               : field.default
           )
           : /* istanbul ignore next */ args[index]
-      );
+      )
 
       if (shouldValidateNodes && field.validate != null) {
-        runValidation(field.validate, node[fieldName]);
+        runValidation(field.validate, node[fieldName])
       }
-    });
+    })
 
     if (shouldValidateNodes && definition.finalValidate != null) {
-      runValidation(definition.finalValidate, node);
+      runValidation(definition.finalValidate, node)
     }
 
-    return node;
+    return node
   }
 }
