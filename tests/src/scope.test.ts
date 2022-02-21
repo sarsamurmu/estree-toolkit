@@ -52,8 +52,8 @@ test('reference collection', () => {
     // ----------------------------
     //   jsxIdentifierCrawlers
     // ----------------------------
-    <JSXNamespacedName_name:jsxNamespacedName_namespace />;
-    <jsxNamespacedName_name:x />;
+    <JSXNamespacedName_namespace:jsxNamespacedName_name />;
+    <jsxNamespacedName_namespace:x />;
     <a jsxAttribute_name={x} />;
     <JSXClosingElement_nameOne></JSXClosingElement_nameOne>;
     <JSXMemberExpression_object.jsxMemberExpression_property />;

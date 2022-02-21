@@ -120,8 +120,10 @@ test('nonNull', () => {
 
 test('node', () => {
   expect(a.node('Identifier')({ type: 'Identifier', name: 'x' })).toBe(null);
+  expect(a.node('Identifier', 'EmptyStatement')({ type: 'EmptyStatement' })).toBe(null);
   expect(a.node('Identifier')(null)).toMatch('Expected a "Identifier" node');
   expect(a.node('Identifier')({ type: 'EmptyStatement' } as any)).toMatch('Expected a "Identifier" node');
+  expect(a.node('Identifier', 'Literal')({ type: 'EmptyStatement' } as any)).toMatch('Expected one of');
 });
 
 test('nodeAlias', () => {

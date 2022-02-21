@@ -516,6 +516,7 @@ const identifierCrawlers: {
   ImportSpecifier(key, path, state) {
     switch (key) {
       case 'imported':
+        /* istanbul ignore next */
         if (path.parent!.local == null) {
           state.scope.registerBinding('module', path, path.parentPath!);
         }
@@ -613,12 +614,12 @@ const jsxIdentifierCrawlers: {
 } = {
   JSXNamespacedName(key, path, state) {
     switch (key) {
-      case 'name':
+      case 'namespace':
         if (isIdentifierJSX(path.node!.name)) {
           state.references.push(path)
         }
         break;
-      case 'namespace': break;
+      case 'name': break;
       /* istanbul ignore next */
       default: assertNever(key);
     }
@@ -799,12 +800,13 @@ const findVisiblePathsInPattern = (
             break;
 
           case 'Property':
+            /* istanbul ignore else */
             if (propertyNode.value != null) {
               findVisiblePathsInPattern(
                 (property as NodePath<NodeT<'Property'>>).get('value') as NodePath<Pattern>,
                 result
               );
-            } else if (
+            } else /* istanbul ignore if */ if (
               !propertyNode.computed &&
               propertyNode.key.type === 'Identifier'
             ) {
