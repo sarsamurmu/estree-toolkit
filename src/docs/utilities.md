@@ -18,7 +18,6 @@ Evaluates the given path and returns the evaluated result. If it's sure
 about the evaluation it would return an object with the evaluated value stored
 in `value` property. If it's not sure about the evaluation it would return `undefined`.
 
-For now it only supports logical, binary and unary operations.
 These AST Nodes are supported for now
 - `Identifier` - with `undefined` as value
 - `Literal`
