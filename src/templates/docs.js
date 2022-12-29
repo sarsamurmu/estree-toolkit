@@ -1,6 +1,6 @@
 import React from 'react'
 import { graphql } from 'gatsby'
-import Interweave from 'interweave'
+import { Interweave } from 'interweave'
 import { Link } from 'gatsby'
 import { PrismLight as SyntaxHighlighter } from 'react-syntax-highlighter'
 import { javascript } from 'react-syntax-highlighter/dist/esm/languages/prism'
