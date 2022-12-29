@@ -886,15 +886,21 @@ const crawlerVisitor: {
     enter(path, state) {
       const parentType = path.parentPath!.node?.type
 
+      type CrawlerRecord = typeof inListIdentifierCrawlers
+      type CrawlerType = CrawlerRecord[keyof CrawlerRecord]
+      type Filter<T extends unknown[], X> = T extends [infer H, ...infer R] ?
+        H extends X ? Filter<R, X> : [H, ...Filter<R, X>] : T
+      type RealType = (...arg: [string, ...Filter<Parameters<CrawlerType>, string>]) => void
+
       if (path.listKey != null) {
         const crawler = inListIdentifierCrawlers[parentType as ParentsOf<Identifier[]>['type']]
         if (crawler != null) {
-          crawler(path.listKey as never, path, state)
+          (crawler as unknown as RealType)(path.listKey as never, path, state)
         }
       } else {
         const crawler = identifierCrawlers[parentType as ParentsOf<Identifier>['type']]
         if (crawler != null) {
-          crawler(path.key as never, path as NodePath<Identifier, any>, state)
+          (crawler as unknown as RealType)(path.key as never, path as NodePath<Identifier, any>, state)
         }
       }
     }
@@ -1067,6 +1073,7 @@ export class Scope {
   readonly parent: Scope | null
   readonly children: Scope[] = []
   private initialized = false
+  private prevCrawlerState: Omit<CrawlerState, 'scope' | 'childScopedPaths'> | null = null
   bindings: Record<string, Binding | undefined> = Object.create(null)
   globalBindings: Record<string, GlobalBinding | undefined> = Object.create(null)
   labels: Record<string, Label | undefined> = Object.create(null)
@@ -1096,8 +1103,78 @@ export class Scope {
     this.crawl()
   }
 
+  // Temporarily memoize stuffs. Improves performance in deep tree
+  private memoizedBindings: Record<string, Binding | undefined> = Object.create(null)
+  private memoizedLabels: Record<string, Label | undefined> = Object.create(null)
+  private getMemoBinding(bindingName: string) {
+    const { memoizedBindings } = this
+    return bindingName in memoizedBindings
+      ? memoizedBindings[bindingName]
+      : (memoizedBindings[bindingName] = this.getBinding(bindingName))
+  }
+  private getMemoLabel(labelName: string) {
+    const { memoizedLabels } = this
+    return labelName in memoizedLabels
+      ? memoizedLabels[labelName]
+      : (memoizedLabels[labelName] = this.getLabel(labelName))
+  }
+  private clearMemo() {
+    this.memoizedBindings = Object.create(null)
+    this.memoizedBindings = Object.create(null)
+  }
+
   crawl(): void {
     if (this.path.node == null) return
+
+    this.clearMemo()
+
+    if (this.prevCrawlerState != null) {
+      // Rollback previous registrations
+      // This will be used when re-crawling
+
+      const { globalBindings } = this.getProgramScope()
+      const state = this.prevCrawlerState
+
+      for (let i = 0; i < state.references.length; i++) {
+        const path = state.references[i]
+        const bindingName = path.node!.name
+        const binding = this.getMemoBinding(bindingName)
+
+        if (binding != null) {
+          binding.removeReference(path)
+        } else {
+          const globalBinding = globalBindings[bindingName]
+          if (globalBinding != null) {
+            globalBinding.removeReference(path)
+          }
+        }
+      }
+
+      for (let i = 0; i < state.constantViolations.length; i++) {
+        const path = state.constantViolations[i]
+        const bindingName = path.node!.name
+        const binding = this.getMemoBinding(bindingName)
+
+        if (binding != null) {
+          binding.removeConstantViolation(path)
+        } else {
+          const globalBinding = globalBindings[bindingName]
+          if (globalBinding != null) {
+            globalBinding.removeReference(path)
+          }
+        }
+      }
+
+      for (let i = 0; i < state.labelReferences.length; i++) {
+        const path = state.labelReferences[i]
+        const labelName = path.node!.name
+        const label = this.getMemoLabel(labelName)
+
+        if (label != null) {
+          label.references.push(path)
+        }
+      }
+    }
 
     this.bindings = Object.create(null)
     this.globalBindings = Object.create(null)
@@ -1137,15 +1214,12 @@ export class Scope {
     this.path.ctx.restorePrevSkipPathStack()
 
     {
-      const memoizedBindings: Record<string, Binding | undefined> = Object.create(null)
       const { globalBindings } = this.getProgramScope()
 
       for (let i = 0; i < state.references.length; i++) {
         const path = state.references[i]
         const bindingName = path.node!.name
-        const binding = bindingName in memoizedBindings
-          ? memoizedBindings[bindingName]
-          : (memoizedBindings[bindingName] = this.getBinding(bindingName))
+        const binding = this.getMemoBinding(bindingName)
 
         if (binding != null) {
           binding.addReference(path)
@@ -1159,9 +1233,7 @@ export class Scope {
       for (let i = 0; i < state.constantViolations.length; i++) {
         const path = state.constantViolations[i]
         const bindingName = path.node!.name
-        const binding = bindingName in memoizedBindings
-          ? memoizedBindings[bindingName]
-          : (memoizedBindings[bindingName] = this.getBinding(bindingName))
+        const binding = this.getMemoBinding(bindingName)
         
         if (binding != null) {
           binding.addConstantViolation(path)
@@ -1171,16 +1243,11 @@ export class Scope {
           ).addConstantViolation(path)
         }
       }
-    }
 
-    {
-      const memoizedLabels: Record<string, Label | undefined> = Object.create(null)
       for (let i = 0; i < state.labelReferences.length; i++) {
         const path = state.labelReferences[i]
         const labelName = path.node!.name
-        const label = labelName in memoizedLabels
-          ? memoizedLabels[labelName]
-          : (memoizedLabels[labelName] = this.getLabel(labelName))
+        const label = this.getMemoLabel(labelName)
 
         if (label != null) {
           label.references.push(path)
@@ -1189,6 +1256,12 @@ export class Scope {
     }
 
     this.initialized = true
+    this.prevCrawlerState = {
+      references: state.references,
+      constantViolations: state.constantViolations,
+      labelReferences: state.labelReferences
+    }
+    this.clearMemo()
 
     for (let i = 0; i < state.childScopedPaths.length; i++) {
       // Manually pass the parent scope,
@@ -1211,7 +1284,7 @@ export class Scope {
     const binding = this.getOwnBinding(bindingName)
 
     if (binding != null) {
-      binding.constantViolations.push(identifierPath)
+      binding.addConstantViolation(identifierPath)
       return
     }
 

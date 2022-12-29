@@ -1,3 +1,6 @@
+## 1.4.0
+- Updated all dependencies
+
 ## 1.3.1
 - Added `ObjectExpression` and `ArrayExpression` evaluators
 - Improved code

@@ -23,9 +23,21 @@ class BaseBinding {
   addReference(path: NodePath<Identifier | JSXIdentifier>) {
     this.references.push(path)
   }
+  
+  // Splice is performance intensive, I guess it wouldn't matter for small
+  // arrays, anyway someone's hardly gonna use this remove* methods
+  removeReference(path: NodePath<Identifier | JSXIdentifier>) {
+    const idx = this.references.findIndex((x) => x === path)
+    if (idx > -1) this.references.splice(idx, 1)
+  }
 
   addConstantViolation(path: NodePath<Identifier>) {
     this.constantViolations.push(path)
+  }
+
+  removeConstantViolation(path: NodePath<Identifier>) {
+    const idx = this.constantViolations.findIndex((x) => x === path)
+    if (idx > -1) this.constantViolations.splice(idx, 1)
   }
 }
 
