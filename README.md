@@ -202,8 +202,12 @@ There are several static utilities that you can use.
   });
   ```
 
+There's more functionalities, please read the documentation.
+
 ## Documentation
-The documentation is work in progress. You can find the documentation at https://estree-toolkit.netlify.app/
+You can find the documentation at https://estree-toolkit.netlify.app/
+
+Thank you for using `estree-toolkit`.
 
 ## License
 Licensed under the [MIT License](/LICENSE).
