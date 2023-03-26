@@ -1,0 +1,68 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`methods crawl manages references when re-crawling 1`] = `
+"let a, b;
+c = 0;
+block1: for (let y of z) {
+  a = 5;
+  b = 6;
+  a = 6;
+  b = 7;
+  a = 7;
+  b = 8;
+  a = 8;
+  b = 9;
+  {
+    a = b = 77;
+    a.x;
+    b.x;
+    rec;
+  }
+}
+"
+`;
+
+exports[`methods getAllBindings all kind 1`] = `
+"const a = 0;
+const b = 0;
+{
+  const a = 22;
+  const c = 0;
+  const x = d => {
+    it;
+  };
+}
+"
+`;
+
+exports[`methods rename Common binding 1`] = `
+"const c = obj;
+f(c);
+let x = (b = c) => b;
+"
+`;
+
+exports[`methods rename Patterns 1`] = `
+"const {a: b} = global;
+rep_a_b;
+({a: b} = newGlobal);
+const x = ({d: e, y: [g]} = b) => {
+  rep_d_e;
+  rep_f_g;
+};
+"
+`;
+
+exports[`methods rename Replace binding in parent scope 1`] = `
+"{
+  const e = 0;
+  {
+    const f = 0;
+    {
+      const c = 0;
+      rep;
+    }
+  }
+}
+"
+`;

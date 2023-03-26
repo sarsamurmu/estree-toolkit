@@ -1,6 +1,8 @@
 import { parseModule } from 'meriyah'
+import { generate } from 'astring'
 
-import { traverse } from '<project>'
+import { traverse, builders as b,  } from '<project>'
+import { NodeT } from '<project>/estree'
 
 test('reference collection', () => {
   const source = `
@@ -196,22 +198,26 @@ describe('binding registration', () => {
 
   test('from ImportSpecifier', () => {
     const ast = parseModule(`
-      import { a as b } from '';
+      import { a as b, c } from '';
     `)
 
     traverse(ast, {
       $: { scope: true },
       Program(path) {
-        const { a: aBinding, b: bBinding } = path.scope.bindings
+        const { a: aBinding, b: bBinding, c: cBinding } = path.scope.bindings
         expect(aBinding).toBeUndefined()
         expect(bBinding.kind).toBe('module')
         expect(bBinding.identifierPath.type).toBe('Identifier')
         expect(bBinding.identifierPath.node.name).toBe('b')
         expect(bBinding.path.type).toBe('ImportSpecifier')
+        expect(cBinding.kind).toBe('module')
+        expect(cBinding.identifierPath.type).toBe('Identifier')
+        expect(cBinding.identifierPath.node.name).toBe('c')
+        expect(cBinding.path.type).toBe('ImportSpecifier')
       }
     })
 
-    expect.assertions(5)
+    expect.assertions(9)
   })
 
   test('from ImportDefaultSpecifier', () => {
@@ -476,6 +482,299 @@ describe('constant violations', () => {
           expect(globalBindings[bindingName].constantViolations).toHaveLength(2)
         }
       }
+    })
+  })
+})
+
+describe('methods', () => {
+  test('hasBinding', () => {
+    const ast = parseModule(`
+      const a = 0
+
+      {
+        check
+      }
+    `)
+
+    traverse(ast, {
+      $: { scope: true },
+      Identifier(path) {
+        if (path.node.name === 'check') {
+          expect(path.scope.hasBinding('a')).toBe(true)
+          expect(path.scope.hasBinding('b')).toBe(false)
+        }
+      }
+    })
+
+    expect.assertions(2)
+  })
+
+  test('hasGlobalBinding', () => {
+    const ast = parseModule(`
+      a = 0
+
+      {
+        check
+      }
+    `)
+
+    traverse(ast, {
+      $: { scope: true },
+      Identifier(path) {
+        if (path.node.name === 'check') {
+          expect(path.scope.hasGlobalBinding('a')).toBe(true)
+          expect(path.scope.hasGlobalBinding('b')).toBe(false)
+        }
+      }
+    })
+
+    expect.assertions(2)
+  })
+
+  test('getGlobalBinding', () => {
+    const ast = parseModule(`
+      a = 0
+
+      {
+        a = 8
+        a = 7
+        x = a
+        check
+      }
+    `)
+
+    traverse(ast, {
+      $: { scope: true },
+      Identifier(path) {
+        if (path.node.name === 'check') {
+          expect(path.scope.getGlobalBinding('a').constantViolations.length).toBe(3)
+          expect(path.scope.getGlobalBinding('a').references.length).toBe(1)
+        }
+      }
+    })
+
+    expect.assertions(2)
+  })
+
+  describe('getAllBindings', () => {
+    test('all kind', () => {
+      const ast = parseModule(`
+        const a = 0
+        const b = 0
+        {
+          const a = 0
+          const c = 0
+          const x = (d) => {
+            it;
+          }
+        }
+      `)
+
+      traverse(ast, {
+        $: { scope: true },
+        Identifier(path) {
+          if (path.node.name === 'it') {
+            const allBinding = path.scope.getAllBindings()
+            expect(Object.keys(allBinding)).toEqual(expect.arrayContaining(['a', 'b', 'c', 'd', 'x']));
+            ((allBinding['a'].path.node as NodeT<'VariableDeclarator'>).init as NodeT<'Literal'>).value = 22
+          }
+        }
+      })
+
+      expect(generate(ast)).toMatchSnapshot()
+    })
+
+    test('specific kind', () => {
+      const ast = parseModule(`
+        const a = 0;
+        let b = 0;
+        var c = 0;
+
+        function Fn(param_1, {param_2}) {
+          const e = 0;
+          let f = 0;
+          var g = 0;
+          it
+        }
+
+        class Cls {}
+      `)
+
+      traverse(ast, {
+        $: { scope: true },
+        Identifier(path) {
+          if (path.node.name === 'it') {
+            expect(Object.keys(path.scope.getAllBindings('const'))).toEqual(expect.arrayContaining(['a', 'e']))
+            expect(Object.keys(path.scope.getAllBindings('let'))).toEqual(expect.arrayContaining(['b', 'f']))
+            expect(Object.keys(path.scope.getAllBindings('var'))).toEqual(expect.arrayContaining(['c', 'g']))
+            expect(Object.keys(path.scope.getAllBindings('hoisted'))).toEqual(expect.arrayContaining(['Fn', 'Cls']))
+            expect(Object.keys(path.scope.getAllBindings('param'))).toEqual(expect.arrayContaining(['param_1', 'param_2']))
+            expect(Object.keys(path.scope.getAllBindings('const', 'let'))).toEqual(expect.arrayContaining(['a', 'e', 'b', 'f']))
+          }
+        }
+      })
+    })
+  })
+
+  describe('crawl', () => {
+    test('manages references when re-crawling', () => {
+      const ast = parseModule(`
+        let a, b
+        c = 0
+
+        block1: for (let y of z) {
+          a = 5; b = 6;
+          a = 6; b = 7;
+          a = 7; b = 8;
+          a = 8; b = 9;
+
+          {
+            stdel;
+
+            a = 5+1; b = 6+1;
+            a = 6+1; b = 7+1;
+            a = 7+1; b = 8+1;
+            a = 8+1; b = 9+1;
+
+            if (globalBool1) break block1;
+            if (globalBool2) continue block1;
+            
+            a.x = 2
+            b.x = 3
+            a.x = (2*a+3*b)/(2**a-5**b+c)
+            b.x = (6*a**5+99.9*b+c)
+            c = 0
+            c = 7
+
+            rec;
+          }
+        }
+      `)
+      let deletePaths = false
+
+      traverse(ast, {
+        $: { scope: true },
+        Program(path) {
+          expect(path.scope.getBinding('a').references.length).toBe(5)
+          expect(path.scope.getBinding('a').constantViolations.length).toBe(8)
+          expect(path.scope.getBinding('b').references.length).toBe(5)
+          expect(path.scope.getBinding('b').constantViolations.length).toBe(8)
+          expect(path.scope.getGlobalBinding('c').references.length).toBe(2)
+          expect(path.scope.getGlobalBinding('c').constantViolations.length).toBe(3)
+        },
+        IfStatement(path) {
+          if (deletePaths) path.remove()
+        },
+        ExpressionStatement: {
+          leave(path) {
+            if (deletePaths) path.remove()
+          }
+        },
+        Identifier(path) {
+          if (path.node.name === 'stdel') {
+            deletePaths = true
+          }
+
+          if (path.node.name === 'rec') {
+            deletePaths = false
+
+            path.parentPath.insertBefore([
+              b.expressionStatement(
+                b.assignmentExpression('=', b.identifier('a'),
+                  b.assignmentExpression('=', b.identifier('b'), b.literal(77)))
+              ),
+              b.expressionStatement(b.memberExpression(b.identifier('a'), b.identifier('x'))),
+              b.expressionStatement(b.memberExpression(b.identifier('b'), b.identifier('x'))),
+            ])
+
+            expect(path.scope.getLabel('block1').references.length).toBe(2)
+
+            path.scope.crawl()
+
+            expect(path.scope.getBinding('a').references.length).toBe(1)
+            expect(path.scope.getBinding('a').constantViolations.length).toBe(5)
+            expect(path.scope.getBinding('b').references.length).toBe(1)
+            expect(path.scope.getBinding('b').constantViolations.length).toBe(5)
+            expect(path.scope.getGlobalBinding('c').references.length).toBe(0)
+            expect(path.scope.getGlobalBinding('c').constantViolations.length).toBe(1)
+            expect(path.scope.getLabel('block1').references.length).toBe(0)
+          }
+        }
+      })
+
+      expect(generate(ast)).toMatchSnapshot()
+    })
+  })
+
+  describe('rename', () => {
+    test('Common binding', () => {
+      const ast = parseModule(`
+        const a = obj;
+        f(a);
+        let x = (b = a) => b
+      `)
+
+      traverse(ast, {
+        $: { scope: true },
+        Program(path) {
+          path.scope.renameBinding('a', 'c')
+        }
+      })
+
+      expect(generate(ast)).toMatchSnapshot()
+    })
+
+    test('Patterns', () => {
+      const ast = parseModule(`
+        const { a } = global;
+        rep_a_b;
+
+        ({a} = newGlobal)
+
+        const x = ({ d, y: [f] } = a) => {
+          rep_d_e;
+          rep_f_g;
+        }
+      `)
+
+      traverse(ast, {
+        $: { scope: true },
+        Identifier(path) {
+          let match
+          if ((match = path.node.name.match(/rep_(\w+)_(\w+)/))) {
+            path.scope.renameBinding(match[1], match[2])
+          }
+        }
+      })
+
+      expect(generate(ast)).toMatchSnapshot()
+    })
+
+    test('Replace binding in parent scope', () => {
+      const ast = parseModule(`
+        {
+          const a = 0;
+          {
+            const b = 0;
+            {
+              const c = 0;
+              rep;
+            }
+          }
+        }
+      `)
+
+      traverse(ast, {
+        $: { scope: true },
+        Identifier(path) {
+          if (path.node.name === 'rep') {
+            path.scope.renameBinding('a', 'e')
+            path.scope.renameBinding('b', 'f')
+          }
+        }
+      })
+
+      expect(generate(ast)).toMatchSnapshot()
     })
   })
 })

@@ -37,6 +37,7 @@ class Evaluator {
   private cache = new Map<NodePath, EvaluationResult | undefined>()
 
   getEvaluated(path: NodePath): EvaluationResult | undefined {
+    /* istanbul ignore if */
     if (this.cache.has(path)) {
       const cachedResult = this.cache.get(path)
       return cachedResult!

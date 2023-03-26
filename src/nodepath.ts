@@ -148,8 +148,10 @@ export class NodePath<T extends Node = Node, P extends Node = Node> implements N
   }
 
   init(parentScope?: Scope) {
-    this.scope = this.ctx.makeScope ? Scope.for(this, parentScope || this.parentPath?.scope || null) : null
-    if (this.scope != null) this.scope.init()
+    if (this.ctx.makeScope) {
+      this.scope = Scope.for(this, parentScope || this.parentPath?.scope || null)
+      if (this.scope != null) this.scope.init()
+    }
     return this
   }
 
@@ -222,6 +224,17 @@ export class NodePath<T extends Node = Node, P extends Node = Node> implements N
 
   getFunctionParent(): NodePath<t.Function> | null {
     return this.findParent((p) => is.function(p))
+  }
+
+  getAncestry(): NodePath[] {
+    const ancestors = []
+    // eslint-disable-next-line @typescript-eslint/no-this-alias
+    let ancestor: NodePath | null = this
+    while (ancestor != null) {
+      ancestors.push(ancestor)
+      ancestor = ancestor.parentPath
+    }
+    return ancestors
   }
 
   //#endregion
@@ -485,6 +498,8 @@ export class NodePath<T extends Node = Node, P extends Node = Node> implements N
     const parentT = parent!.type
     const parentPath = this.parentPath!
 
+    this.ctx.newSkipPathStack()
+
     switch (true) {
       case parentT === 'ExpressionStatement' && key === 'expression':
       case is.exportDeclaration(parent) && key === 'declaration':
@@ -511,6 +526,8 @@ export class NodePath<T extends Node = Node, P extends Node = Node> implements N
         })
         return true
     }
+
+    this.ctx.restorePrevSkipPathStack()
 
     return false
   }

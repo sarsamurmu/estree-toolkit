@@ -6,5 +6,6 @@ module.exports = {
   collectCoverageFrom: ['dist/**/*.js'],
   moduleNameMapper: {
     '^<project>(.*)$': '<rootDir>/dist$1'
-  }
+  },
+  snapshotResolver: './snapshotResolver.js'
 }

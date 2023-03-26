@@ -520,6 +520,18 @@ const identifierCrawlers: {
         if (path.parent!.local == null) {
           state.scope.registerBinding('module', path, path.parentPath!)
         }
+        // Sometimes parsers set imported and local to the same node
+        // (ImportSpecifier.imported === ImportSpecifier.local)
+        // in that case the `local` part would not get traversed
+        // because the traverser thinks that it has already traversed the `local`
+        // but it has just traversed the `imported`
+        if (path.parent!.local === path.parent!.imported) {
+          const localPath = path.parentPath!.get('local')
+          path.ctx.newSkipPathStack()
+          path.replaceWith(Object.assign({}, path.node))
+          path.ctx.restorePrevSkipPathStack()
+          state.scope.registerBinding('module', localPath, path.parentPath!)
+        }
         break
       case 'local':
         state.scope.registerBinding('module', path, path.parentPath!)
@@ -802,6 +814,16 @@ const findVisiblePathsInPattern = (
           case 'Property':
             /* istanbul ignore else */
             if (propertyNode.value != null) {
+              // Meriyah makes `key` and `value` refer to same node
+              // So make a copy
+
+              if (propertyNode.value === propertyNode.key) {
+                const propValue = property.get<Pattern>('value')
+                path.ctx.newSkipPathStack()
+                propValue.replaceWith(Object.assign({}, propValue.node))
+                path.ctx.restorePrevSkipPathStack()
+              }
+
               findVisiblePathsInPattern(
                 (property as NodePath<NodeT<'Property'>>).get('value') as NodePath<Pattern>,
                 result
@@ -1123,8 +1145,19 @@ export class Scope {
     this.memoizedBindings = Object.create(null)
   }
 
+  getProgramScope(): Scope {
+    if (this.path.type === 'Program') {
+      return this
+    } else {
+      return this.path.findParent((p) => p.type === 'Program')!.scope!
+    }
+  }
+
   crawl(): void {
     if (this.path.node == null) return
+    if (this.path.removed) {
+      throw Error('This scope is no longer part of the AST, the containing path has been removed')
+    }
 
     this.clearMemo()
 
@@ -1160,7 +1193,7 @@ export class Scope {
         } else {
           const globalBinding = globalBindings[bindingName]
           if (globalBinding != null) {
-            globalBinding.removeReference(path)
+            globalBinding.removeConstantViolation(path)
           }
         }
       }
@@ -1171,7 +1204,8 @@ export class Scope {
         const label = this.getMemoLabel(labelName)
 
         if (label != null) {
-          label.references.push(path)
+          const idx = label.references.findIndex((x) => x === path)
+          if (idx > -1) label.references.splice(idx, 1)
         }
       }
     }
@@ -1320,12 +1354,23 @@ export class Scope {
     }
   }
 
-  getProgramScope(): Scope {
-    if (this.path.type === 'Program') {
-      return this
-    } else {
-      return this.path.findParent((p) => p.type === 'Program')!.scope!
+  getAllBindings(...kind: BindingKind[]): Record<string, Binding> {
+    const result = Object.create(null)
+    const kindLength = kind.length
+    const kindSet = new Set(kind)
+    // eslint-disable-next-line @typescript-eslint/no-this-alias
+    let scope: Scope | null = this
+    while (scope != null) {
+      for (const name in scope.bindings) {
+        if (!(name in result)) {
+          if (kindLength === 0 || (kindLength && kindSet.has(scope.bindings[name]!.kind))) {
+            result[name] = scope.bindings[name]
+          }
+        }
+      }
+      scope = scope.parent
     }
+    return result
   }
 
   hasGlobalBinding(name: string): boolean {
@@ -1363,6 +1408,40 @@ export class Scope {
         return scope.labels[name]
       }
       scope = scope.parent
+    }
+  }
+
+  private renameConsideringParent(path: NodePath<Identifier>, newName: string) {
+    const parent = path.parent!
+    if (
+      parent!.type === 'Property' &&
+      path.parentPath?.parent?.type === 'ObjectPattern'
+    ) {
+      (parent.value as Identifier).name = newName
+      parent.shorthand = (parent.value as Identifier).name === (parent.key as Identifier).name
+    } else {
+      path.node!.name = newName
+    }
+  }
+
+  renameBinding(oldName: string, newName: string) {
+    if (this.bindings[oldName] != null) {
+      const binding = this.bindings[oldName]!
+
+      this.renameConsideringParent(binding.identifierPath, newName)
+
+      for (let i = 0; i < binding.references.length; i++) {
+        binding.references[i].node!.name = newName
+      }
+      for (let i = 0; i < binding.constantViolations.length; i++) {
+        this.renameConsideringParent(binding.constantViolations[i], newName)
+      }
+
+      this.bindings[oldName] = undefined
+      delete this.bindings[oldName]
+      this.bindings[newName] = binding
+    } else {
+      this.parent?.renameBinding(oldName, newName)
     }
   }
 }

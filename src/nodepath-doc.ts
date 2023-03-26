@@ -219,6 +219,8 @@ export interface NodePathDocs {
   find;
   /** Get the closest function parent */
   getFunctionParent;
+  /** Get all the ancestors. Returns an array. __THIS NODE IS INCLUDED__ */
+  getAncestry;
 
   //#endregion
 

@@ -32,6 +32,7 @@
     "@types/jest": "^29.2.4",
     "@typescript-eslint/eslint-plugin": "^5.47.1",
     "@typescript-eslint/parser": "^5.47.1",
+    "astring": "^1.8.4",
     "eslint": "^8.30.0",
     "jest": "^29.3.1",
     "meriyah": "^4.3.3",
