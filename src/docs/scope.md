@@ -5,8 +5,8 @@ title: Scope
 `Scope` contains information about the scope, like all the declared variables (bindings),
 references of a specific variable, labels etc.
 
-By default, scope tracking is disabled. After [enabling it using options](./traversal#options),
-it would be available in [`NodePath.scope`](./nodepath#scope).
+By default, scope tracking is disabled. After [enabling it using options](/traversal#options),
+it would be available in [`NodePath.scope`](/nodepath#scope).
 ```js
 const { traverse } = require('estree-toolkit');
 
