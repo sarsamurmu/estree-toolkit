@@ -11,3 +11,5 @@ tests/
 codecov.yml
 jest.config.js
 tsconfig.json
+snapshotResolver.js
+TODO.txt

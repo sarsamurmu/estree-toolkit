@@ -1,3 +1,9 @@
+## 1.5.0
+- New methods [`NodePath.getAncestry`](https://estree-toolkit.netlify.app/nodepath/#getancestry)
+  and [`Scope.renameBinding`](https://estree-toolkit.netlify.app/scope/#renamebindingoldname-newname)
+- New utility [`getCommonAncestor`](https://estree-toolkit.netlify.app/utilities/#getcommonancestorpaths)
+- Fixed many bugs
+
 ## 1.4.0
 - Updated all dependencies
 
