@@ -251,7 +251,7 @@ export class NodePath<T extends Node = Node, P extends Node = Node> implements N
     })
   }
 
-  insertBefore(nodes: readonly Node[]): NodePath[] {
+  insertBefore(nodes: readonly Node[]): NodePath<typeof nodes[number], P>[] {
     this.assertNotRemoved()
 
     // TODO: Handle more cases
@@ -284,7 +284,7 @@ export class NodePath<T extends Node = Node, P extends Node = Node> implements N
     return newPaths
   }
 
-  insertAfter(nodes: readonly Node[]): NodePath[] {
+  insertAfter(nodes: readonly Node[]): NodePath<typeof nodes[number], P>[] {
     this.assertNotRemoved()
 
     // TODO: Handle more cases
@@ -567,7 +567,7 @@ export class NodePath<T extends Node = Node, P extends Node = Node> implements N
 
   //#region Replacement
 
-  replaceWith<N extends Node = Node>(node: N): NodePath<N> {
+  replaceWith<N extends Node = Node>(node: N): NodePath<N, P> {
     if (this.container == null) {
       this.throwNoParent('replaceWith')
     }
@@ -580,7 +580,7 @@ export class NodePath<T extends Node = Node, P extends Node = Node> implements N
     (this.container as any as Record<string | number, Node>)[this.key!] = node
     this.markRemoved()
 
-    const newPath = NodePath.for({
+    const newPath = NodePath.for<N, P>({
       node,
       key: this.key,
       listKey: this.listKey,
@@ -603,7 +603,7 @@ export class NodePath<T extends Node = Node, P extends Node = Node> implements N
 
     const newPath = this.replaceWith(nodes[0])
     return [newPath].concat(newPath.insertAfter(nodes.slice(1)))
-  } 
+  }
 
   //#endregion
 }

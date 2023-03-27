@@ -526,11 +526,17 @@ const identifierCrawlers: {
         // because the traverser thinks that it has already traversed the `local`
         // but it has just traversed the `imported`
         if (path.parent!.local === path.parent!.imported) {
-          const localPath = path.parentPath!.get('local')
-          path.ctx.newSkipPathStack()
-          path.replaceWith(Object.assign({}, path.node))
-          path.ctx.restorePrevSkipPathStack()
-          state.scope.registerBinding('module', localPath, path.parentPath!)
+          const ctx = path.ctx
+          let parentPath = path.parentPath!
+          const parentNode = parentPath.node!
+          type T = NodeT<'ImportSpecifier'>
+          ctx.newSkipPathStack()
+          parentPath = parentPath.replaceWith(Object.assign<any, T, Partial<T>>({}, parentNode, {
+            local: Object.assign({}, parentNode.local),
+            imported: Object.assign({}, parentNode.imported)
+          }))
+          ctx.restorePrevSkipPathStack()
+          state.scope.registerBinding('module', parentPath.get('local'), parentPath)
         }
         break
       case 'local':
@@ -561,7 +567,25 @@ const identifierCrawlers: {
   ExportSpecifier(key, path, state) {
     switch (key) {
       case 'local':
-        state.references.push(path)
+        // Sometimes parsers set exported and local to the same node
+        // (ExportSpecifier.exported === ExportSpecifier.local)
+        // It messes up the renaming process, here is a workaround
+        // so that these two object does not reference each other
+        if (path.parent!.local === path.parent!.exported) {
+          const ctx = path.ctx
+          let parentPath = path.parentPath!
+          const parentNode = parentPath.node!
+          type T = NodeT<'ExportSpecifier'>
+          ctx.newSkipPathStack()
+          parentPath = parentPath.replaceWith(Object.assign<any, T, Partial<T>>({}, parentNode, {
+            local: Object.assign({}, parentNode.local),
+            exported: Object.assign({}, parentNode.exported)
+          }))
+          ctx.restorePrevSkipPathStack()
+          state.references.push(parentPath.get('local'))
+        } else {
+          state.references.push(path)
+        }
         break
       case 'exported': break
       /* istanbul ignore next */
@@ -814,18 +838,24 @@ const findVisiblePathsInPattern = (
           case 'Property':
             /* istanbul ignore else */
             if (propertyNode.value != null) {
-              // Meriyah makes `key` and `value` refer to same node
-              // So make a copy
-
+              let propertyPath = property
+              // Sometimes parsers set key and value to the same node
+              // (Property.key === Property.value)
+              // It messes up the renaming process, here is a workaround
+              // so that these two object does not reference each other
               if (propertyNode.value === propertyNode.key) {
-                const propValue = property.get<Pattern>('value')
-                path.ctx.newSkipPathStack()
-                propValue.replaceWith(Object.assign({}, propValue.node))
-                path.ctx.restorePrevSkipPathStack()
+                const ctx = path.ctx
+                type T = NodeT<'Property'>
+                ctx.newSkipPathStack()
+                propertyPath = propertyPath.replaceWith(Object.assign<any, T, Partial<T>>({}, propertyNode, {
+                  key: Object.assign({}, propertyNode.key),
+                  value: Object.assign({}, propertyNode.value)
+                }))
+                ctx.restorePrevSkipPathStack()
               }
 
               findVisiblePathsInPattern(
-                (property as NodePath<NodeT<'Property'>>).get('value') as NodePath<Pattern>,
+                (propertyPath as NodePath<NodeT<'Property'>>).get('value') as NodePath<Pattern>,
                 result
               )
             } else /* istanbul ignore if */ if (
@@ -865,7 +895,7 @@ const findVisiblePathsInPattern = (
     /* istanbul ignore next */
     case 'MemberExpression': break
     /* istanbul ignore next */
-    default: assertNever(path.node!.type)
+    default: assertNever(path.node)
   }
 }
 

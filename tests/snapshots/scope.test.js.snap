@@ -42,6 +42,14 @@ let x = (b = c) => b;
 "
 `;
 
+exports[`methods rename Import-Export 1`] = `
+"import {a as e} from ".";
+export {e as a};
+import f from ".";
+export {f as x};
+"
+`;
+
 exports[`methods rename Patterns 1`] = `
 "const {a: b} = global;
 rep_a_b;
@@ -54,8 +62,8 @@ const x = ({d: e, y: [g]} = b) => {
 `;
 
 exports[`methods rename Replace binding in parent scope 1`] = `
-"{
-  const e = 0;
+"import {a as e} from ".";
+{
   {
     const f = 0;
     {

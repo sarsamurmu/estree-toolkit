@@ -904,7 +904,7 @@ export const definitions: Definitions = Object.assign<any, Definitions>(Object.c
       }
     },
     insertionValidate(node, key, listKey, parent) {
-      if (((parent as unknown as Record<string, unknown[]>)[listKey as string]).length > key) {
+      if (((parent as unknown as Record<string, unknown[]>)[listKey as string]).length > (key as number)) {
         return `RestElement should be the last children of "${listKey}"`
       }
 

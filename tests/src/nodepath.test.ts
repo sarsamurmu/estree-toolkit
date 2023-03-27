@@ -222,6 +222,68 @@ describe('Methods', () => {
     expect.assertions(3)
   })
 
+  test('getAncestry', () => {
+    const ast = {
+      type: 'Program',
+      sourceType: 'module',
+      body: [
+        {
+          type: 'VariableDeclaration',
+          kind: 'const',
+          declarations: [
+            {
+              type: 'VariableDeclarator',
+              id: {
+                type: 'Identifier',
+                name: 'a'
+              },
+              init: {
+                type: 'ArrayExpression',
+                elements: [
+                  {
+                    type: 'ObjectExpression',
+                    properties: [
+                      {
+                        type: 'Property',
+                        key: {
+                          type: 'Identifier',
+                          name: 'x'
+                        },
+                        value: {
+                          type: 'ArrayExpression',
+                          elements: [
+                            {
+                              type: 'Literal',
+                              value: 0
+                            }
+                          ]
+                        },
+                        kind: 'init',
+                        computed: false,
+                        method: false,
+                        shorthand: false
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+
+    traverse(ast, {
+      Literal(path) {
+        const ancestry = path.getAncestry().map((x) => x.type)
+        expect(ancestry).toEqual(['Literal', 'ArrayExpression', 'Property', 'ObjectExpression',
+          'ArrayExpression', 'VariableDeclarator', 'VariableDeclaration', 'Program'])
+      }
+    })
+
+    expect.assertions(1)
+  })
+
   //#endregion
 
   //#region Modification

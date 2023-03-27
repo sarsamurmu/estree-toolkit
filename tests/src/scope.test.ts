@@ -752,8 +752,9 @@ describe('methods', () => {
 
     test('Replace binding in parent scope', () => {
       const ast = parseModule(`
+        import {a} from '.'
+
         {
-          const a = 0;
           {
             const b = 0;
             {
@@ -771,6 +772,26 @@ describe('methods', () => {
             path.scope.renameBinding('a', 'e')
             path.scope.renameBinding('b', 'f')
           }
+        }
+      })
+
+      expect(generate(ast)).toMatchSnapshot()
+    })
+
+    test('Import-Export', () => {
+      const ast = parseModule(`
+        import {a} from '.'
+        export {a}
+
+        import b from '.'
+        export {b as x}
+      `)
+
+      traverse(ast, {
+        $: { scope: true },
+        Program(path) {
+          path.scope.renameBinding('a', 'e')
+          path.scope.renameBinding('b', 'f')
         }
       })
 
