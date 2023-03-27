@@ -149,7 +149,7 @@ const ThemeButton = ({ toggleTheme, isDarkTheme }) => {
 const OtherLinks = () => (
   <ul className='links'>
     {[
-      ['Github', Octicons.MarkGithubIcon, 'https://github.com/sarsamurmu/estree-toolkit'],
+      ['GitHub', Octicons.MarkGithubIcon, 'https://github.com/sarsamurmu/estree-toolkit'],
       ['npm', Octicons.PackageIcon, 'https://www.npmjs.com/package/estree-toolkit']
     ].map(([name, Icon, url]) => (
       <li key={name}>

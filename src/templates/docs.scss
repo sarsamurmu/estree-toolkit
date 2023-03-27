@@ -31,7 +31,7 @@
   --code-border: #0000000f;
   --code-block-bg: #1e1e1e;
   --header-height: 80px;
-  --link: #d4008e;
+  --link: #ff00aa;
   --icon-color: #000;
   --alert-bg: #0072ff17;
   --alert-line: #0073ff;
@@ -54,7 +54,7 @@
   --code-border: rgb(66, 66, 66);
   --code-block-bg: #212121;
   --header-height: 80px;
-  --link: #ff64cf;
+  --link: #8f83f5;
   --icon-color: rgb(228, 228, 228);
   --alert-bg: #4096ff17;
   --alert-line: #4096ff;
@@ -110,7 +110,11 @@ a {
   text-decoration: none;
 
   &:hover {
-    text-decoration: underline;
+    text-decoration: dashed;
+    text-decoration-line: revert;
+    text-decoration-skip-ink: none;
+    text-underline-offset: 4px;
+    text-decoration-thickness: 2px;
   }
 }
 
@@ -381,12 +385,15 @@ footer {
 
     &.active > a {
       color: var(--toc-active-text);
+      border-color: var(--toc-active-text);
     }
   }
 
   a {
     text-decoration: none;
     color: var(--toc-text);
+    transition: border-color 0.1s;
+    border-bottom: solid 2px transparent;
 
     &:hover {
       color: var(--toc-active-text);
