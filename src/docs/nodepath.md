@@ -281,7 +281,13 @@ traverse(ast, {
 ### `getFunctionParent()`
 - Returns: <`NodePath`> The closest function parent
 
-Going up the tree returns the NodePath's closest function parent
+Going up the tree returns the NodePath's closest function parent.
+
+### `getAncestry()`
+- Returns: <`NodePath[]`> The array containing all ancestors
+
+Goes up the tree and collects all ancestors. The **node itself**
+is also included in the ancestry.
 
 <!--
                                                                                                          

@@ -164,3 +164,11 @@ traverse(ast, {
   }
 });
 ```
+
+------------------------------------
+
+## `getCommonAncestor(paths)`
+- `paths`: <`NodePath[]`> The paths for which the ancestor should be common
+- Returns: <`NodePath`> The NodePath of the ancestor
+
+Finds the closest common parent (or ancestor) for all the provided `paths`

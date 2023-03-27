@@ -23,20 +23,20 @@
   --border-hover: #b3b3b3;
   --sidenav-bg: hsl(198, 81%, 96%);
   --sidenav-text: black;
-  --sidenav-active-text: #0072ff;
-  --sidenav-active-bg: #0072ff17;
+  --sidenav-active-text: #0044ff;
+  --sidenav-active-bg: #00ffb34f;
   --toc-text: hsl(0, 0%, 20%);
   --toc-active-text: var(--sidenav-active-text);
   --code-bg: #f3f5f9;
   --code-border: #0000000f;
   --code-block-bg: #1e1e1e;
   --header-height: 80px;
-  --link: #0051ff;
+  --link: #d4008e;
   --icon-color: #000;
   --alert-bg: #0072ff17;
   --alert-line: #0073ff;
-  --tab-active: #0073ff;
-  --tab-active-bg: #0072ff17;
+  --tab-active: #0044ff;
+  --tab-active-bg: #6200ff13;
 }
 
 [theme=dark] {
@@ -46,20 +46,20 @@
   --border-hover: #626262;
   --sidenav-bg: #212121;
   --sidenav-text: #dddddd;
-  --sidenav-active-text: #509fff;
-  --sidenav-active-bg: #4096ff17;
+  --sidenav-active-text: #00c594;
+  --sidenav-active-bg: #40a9ff17;
   --toc-text: #b4b4b4;
   --toc-active-text: var(--sidenav-active-text);
   --code-bg: rgb(53, 53, 53);
   --code-border: rgb(66, 66, 66);
   --code-block-bg: #212121;
   --header-height: 80px;
-  --link: rgb(122, 159, 251);
+  --link: #ff64cf;
   --icon-color: rgb(228, 228, 228);
   --alert-bg: #4096ff17;
   --alert-line: #4096ff;
-  --tab-active: #4096ff;
-  --tab-active-bg: #4096ff17;
+  --tab-active: #00c594;
+  --tab-active-bg: #40a9ff17;
 }
 
 $sidenav-width: 280px;
@@ -584,18 +584,18 @@ code {
     > div {
       display: flex;
       flex-direction: column;
-      margin: 0 12px;
+      margin: 0 18px;
 
       > span {
         font-family: 'Lexend Deca', sans-serif;
 
         &:first-child {
-          font-size: 0.8rem;
+          font-size: 0.9rem;
           opacity: 0.8;
         }
 
         &:last-child {
-          font-size: 1.1rem;
+          font-size: 1.2rem;
           color: var(--link);
         }
       }
@@ -634,6 +634,7 @@ code {
     border-radius: 100px;
     transform: translate(-50%, -50%);
     color: var(--alert-line);
+    line-height: initial;
   }
 }
 
@@ -663,7 +664,7 @@ code {
       &.active {
         border-color: var(--tab-active);
         color: var(--tab-active);
-        background-color: var(--alert-bg);
+        background-color: var(--tab-active-bg);
       }
     }
   }

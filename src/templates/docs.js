@@ -27,19 +27,13 @@ const CopyButton = () => {
   
   const onClick = (e) => {
     const codeText = e.nativeEvent.target.closest('.inner').querySelector('code').innerText
-    const input = document.createElement('textarea')
-    input.innerHTML = codeText
-    document.body.appendChild(input)
-    input.select()
     try {
-      if (document.execCommand('copy')) {
-        setCopied(true)
-        setTimeout(() => setCopied(false), 1300)
-      }
+      window.navigator.clipboard.writeText(codeText)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 1300)
     } catch (e) {
       setCopied(false)
     }
-    document.body.removeChild(input)
   }
 
   return (
@@ -217,7 +211,7 @@ const Footer = ({ pageOrder }) => {
         ))}
       </div>
       <hr />
-      <p>© Copyright 2022 Sarsa Murmu. All rights reserved.</p>
+      <p>© Copyright 2023 Sarsa Murmu. All rights reserved.</p>
     </footer>
   )
 }

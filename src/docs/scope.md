@@ -56,6 +56,27 @@ All labels that are defined in the current scope.
 ---------------------------------
 
 ## Methods
+
+### `getProgramScope()`
+- Returns: <`Scope`> The program scope
+
+Returns the `Scope` associated with the `Program` node of the AST.
+
+```js
+const ast = parseModule(`x`);
+let programScope;
+
+traverse(ast, {
+  $: { scope: true },
+  Program(path) {
+    programScope = path.scope;
+  },
+  Identifier(path) {
+    path.scope.getProgramScope() === programScope // => true
+  }
+});
+```
+
 ### `crawl()`
 
 Crawl the tree and create all the scope information. Whenever you make a change to the AST
@@ -190,26 +211,6 @@ traverse(ast, {
 });
 ```
 
-### `getProgramScope()`
-- Returns: <`Scope`> The program scope
-
-Returns the `Scope` associated with the `Program` node of the AST.
-
-```js
-const ast = parseModule(`x`);
-let programScope;
-
-traverse(ast, {
-  $: { scope: true },
-  Program(path) {
-    programScope = path.scope;
-  },
-  Identifier(path) {
-    path.scope.getProgramScope() === programScope // => true
-  }
-});
-```
-
 ### `hasGlobalBinding(name)`
 - `name`: <`string`> The name of the global binding
 - Returns: <`boolean`> If the global binding exists
@@ -276,3 +277,109 @@ traverse(ast, {
 
 Returns the label with the provided name. Returns `undefined` if no label can be
 found.
+
+### `getAllBindings(...kind)`
+- `kind`: <`string[]`> The kind of binding, that it will collect
+- Return: <`Record<string, Binding>`> A record of bindings
+
+Returns all the bindings available in a scope including its parents' bindings.
+Maintains variable shadowing.
+
+```js
+const ast = parseModule(`
+  const a = 0;
+  let b = 0;
+  var c = 0;
+
+  function Fn(param_1, {param_2}) {
+    const e = 0;
+    let f = 0;
+    var g = 0;
+    target;
+  }
+
+  class Cls {}
+`);
+
+traverse(ast, {
+  $: { scope: true },
+  Identifier(path) {
+    if (path.node.name === 'target') {
+      // Get all kind of binding
+      path.scope.getAllBindings()
+      // =>
+      // {
+      //   a: Binding {...},
+      //   b: Binding {...},
+      //   c: Binding {...},
+      //   Fn: Binding {...},
+      //   param_1: Binding {...},
+      //   param_2: Binding {...},
+      //   e: Binding {...},
+      //   f: Binding {...},
+      //   g: Binding {...},
+      //   Cls: Binding {...},
+      // }
+
+      // Get only binding with type `const` and `hoisted`
+      path.scope.getAllBindings('const', 'hoisted')
+      // =>
+      // {
+      //   a: Binding {...},
+      //   e: Binding {...},
+      //   Fn: Binding {...},
+      //   Cls: Binding {...},
+      // }
+    }
+  }
+});
+```
+
+### `renameBinding(oldName, newName)`
+- `oldName`: <`string`> The name of the binding which should be replaced
+- `newName`: <`string`> New name of the binding
+
+Renames all occurrence of the given binding. Covers all the possible cases.
+
+```js
+const ast = parseModule(`
+  let { a } = global;
+
+  f(a);
+
+  ({a} = newValue);
+
+  const x = ({ d, y: [f] } = a) => {
+    target;
+  }
+`)
+
+traverse(ast, {
+  $: { scope: true },
+  Identifier(path) {
+    if (path.node.name === 'target') {
+      // Rename `a` to `newA`
+      path.scope.renameBinding('a', 'newA')
+      // Rename `d` to `nD`
+      path.scope.renameBinding('d', 'nD')
+    }
+  }
+})
+
+// Now if you generate code from the AST
+// you would get this
+//    let { a: newA } = global;
+//
+//    f(newA);
+//
+//    ({ a: newA } = newValue);
+//
+//    const x = ({ d: nD, y: [f] } = newA) => {
+//      target;
+//    }
+```
+
+:::Alert
+This doesn't rename global binding or labels, only renames that are the bindings
+declared in the program.
+:::
