@@ -1,7 +1,7 @@
 import { parseModule } from 'meriyah'
 import { generate } from 'astring'
 
-import { traverse, builders as b,  } from '<project>'
+import { traverse, builders as b, NodePath,  } from '<project>'
 import { NodeT } from '<project>/estree'
 
 test('reference collection', () => {
@@ -700,6 +700,244 @@ describe('methods', () => {
             expect(path.scope.getLabel('block1').references.length).toBe(0)
           }
         }
+      })
+
+      expect(generate(ast)).toMatchSnapshot()
+    })
+  })
+
+  describe('handleRemoval', () => {
+    test('removes references and constant violations', () => {
+      const ast = parseModule(`
+        const b = 0
+
+        {
+          {
+            {
+              {
+                {
+                  {
+                    a.x
+                    a = 1
+                    b = 2
+                  }
+                  a.x
+                  a = 2
+                }
+                a.x
+                a = 2
+              }
+              a.x
+              a = 3
+              b = 4
+              b.x
+            }
+            target
+          }
+          crawl
+          b.x = b.y
+        }
+      `)
+
+      traverse(ast, {
+        $: { scope: true },
+        Program({ scope }) {
+          expect(scope.getGlobalBinding('a').references.length).toBe(4)
+          expect(scope.getGlobalBinding('a').constantViolations.length).toBe(4)
+          expect(scope.getBinding('b').references.length).toBe(3)
+          expect(scope.getBinding('b').constantViolations.length).toBe(2)
+        },
+        Identifier({ node, scope }) {
+          if (node.name === 'target') {
+            scope.path.remove()
+          }
+          if (node.name === 'crawl') {
+            scope.crawl()
+            expect('a' in scope.globalBindings).toBe(false)
+            expect(scope.getBinding('b').references.length).toBe(2)
+            expect(scope.getBinding('b').constantViolations.length).toBe(0)
+          }
+        }
+      })
+
+      expect.assertions(7)
+    })
+
+    test('when removed path is descendant of the scope', () => {
+      const ast = parseModule(`
+        {
+          {
+            {
+              {
+                (() => {
+                  a.x
+                  b.x
+                  c.x
+                })
+              }
+            }
+          }
+          target
+        }
+      `)
+
+      traverse(ast, {
+        $: { scope: true },
+        Program(path) {
+          expect(path.scope.getGlobalBinding('a').references.length).toBe(1)
+          expect(path.scope.getGlobalBinding('b').references.length).toBe(1)
+          expect(path.scope.getGlobalBinding('c').references.length).toBe(1)
+        },
+        ArrowFunctionExpression(path) {
+          path.parentPath.remove()
+        },
+        Identifier({ node, scope }) {
+          if (node.name === 'target') {
+            expect(Object.keys(scope.globalBindings)).toEqual(['target'])
+          }
+        }
+      })
+
+      expect.assertions(4)
+    })
+  })
+
+  describe('generateUid', () => {
+    test('when binding with similar name does not exist', () => {
+      const ast = parseModule('')
+
+      traverse(ast, {
+        $: { scope: true },
+        Program(path) {
+          expect(path.scope.generateUid('name')).toBe('name')
+        }
+      })
+
+      expect.assertions(1)
+    })
+
+    test('when binding with similar name exists', () => {
+      const ast = parseModule(`
+        const a = 0
+        b.x
+      `)
+
+      traverse(ast, {
+        $: { scope: true },
+        Program(path) {
+          expect(path.scope.generateUid('a')).not.toBe('a')
+          expect(path.scope.generateUid('b')).not.toBe('b')
+        } 
+      })
+    })
+  })
+
+  describe('generateDeclaredUidIdentifier', () => {
+    const make = (path: NodePath) => {
+      path.scope.generateDeclaredUidIdentifier('idt')
+      path.scope.generateDeclaredUidIdentifier('idt')
+      path.scope.generateDeclaredUidIdentifier('idt')
+    }
+
+    test('ArrowFunctionExpression', () => {
+      const ast = parseModule(`
+        (() => 0)
+        ;(() => {})
+      `)
+
+      traverse(ast, {
+        $: { scope: true },
+        ArrowFunctionExpression: make
+      })
+
+      expect(generate(ast)).toMatchSnapshot()
+    })
+
+    test('Program, BlockStatement', () => {
+      const ast = parseModule(`
+        {}
+      `)
+
+      traverse(ast, {
+        $: { scope: true },
+        Program: make,
+        BlockStatement: make
+      })
+
+      expect(generate(ast)).toMatchSnapshot()
+    })
+
+    test('SwitchStatement, ClassDeclaration, ClassExpression', () => {
+      const ast = parseModule(`
+        {
+          switch (0) {
+            default: {}
+          }
+        }
+
+        {
+          class Cls {}
+        }
+
+        {
+          () => (class {})
+        }
+      `)
+
+      traverse(ast, {
+        $: { scope: true },
+        SwitchStatement: make,
+        Class: make
+      })
+
+      expect(generate(ast)).toMatchSnapshot()
+    })
+
+    test('DoWhileStatement, ForInStatement, ForOfStatement, ForStatement, WhileStatement', () => {
+      const ast = parseModule(`
+        do f(); while (1);
+        for (let x in y) f(x);
+        for (let x of y) f(x);
+        for (;;) f();
+        while (1) f();
+
+        do {
+          f()
+        } while (1)
+        for (let x in y) {
+          f(x)
+        }
+        for (let x of y) {
+          f(x)
+        }
+        for (;;) {
+          f()
+        }
+        while (1) {
+          f()
+        }
+      `)
+
+      traverse(ast, {
+        $: { scope: true },
+        Loop: make
+      })
+
+      expect(generate(ast)).toMatchSnapshot()
+    })
+
+    test('CatchClause, FunctionDeclaration, FunctionExpression', () => {
+      const ast = parseModule(`
+        try {} catch (e) {}
+        function Fn() {}
+        (function () {})
+      `)
+
+      traverse(ast, {
+        $: { scope: true },
+        CatchClause: make,
+        FunctionDeclaration: make,
+        FunctionExpression: make
       })
 
       expect(generate(ast)).toMatchSnapshot()

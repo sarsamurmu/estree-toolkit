@@ -127,10 +127,11 @@ describe('Methods', () => {
       Literal(path) {
         expect(path.find((p) => p.type === 'Literal').node).toBe(ast.expression)
         expect(path.find((p) => p.type === 'ExpressionStatement').node).toBe(ast)
+        expect(path.find((p) => p.type === 'Program')).toBe(null)
       }
     })
 
-    expect.assertions(2)
+    expect.assertions(3)
   })
 
   test('getFunctionParent', () => {
@@ -1556,6 +1557,48 @@ describe('special cases', () => {
     })
 
     expect.assertions(2)
+  })
+
+  test('runs validation', () => {
+    const ast = {
+      type: 'ArrowFunctionExpression',
+      params: [],
+      body: {
+        type: 'Literal',
+        value: 0
+      },
+      async: false,
+      expression: true
+    }
+
+    traverse(ast, {
+      $: { validateNodes: true },
+      ArrowFunctionExpression(path) {
+        expect(() => path.pushContainer('params', [{ type: 'Identifier', name: 'a' }])).not.toThrowError()
+        expect(() => path.unshiftContainer('params', [{
+          type: 'RestElement',
+          argument: {
+            type: 'Identifier',
+            name: 'rest'
+          }
+        }])).toThrowError()
+      }
+    })
+
+    traverse(ast, {
+      $: { validateNodes: false },
+      ArrowFunctionExpression(path) {
+        expect(() => path.unshiftContainer('params', [{
+          type: 'RestElement',
+          argument: {
+            type: 'Identifier',
+            name: 'rest'
+          }
+        }])).not.toThrowError()
+      }
+    })
+
+    expect.assertions(3)
   })
 
   describe('removal cases', () => {

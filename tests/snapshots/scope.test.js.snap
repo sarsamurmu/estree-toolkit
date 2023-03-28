@@ -22,6 +22,103 @@ block1: for (let y of z) {
 "
 `;
 
+exports[`methods generateDeclaredUidIdentifier ArrowFunctionExpression 1`] = `
+"(() => {
+  var idt, idt2, idt3;
+  return 0;
+});
+(() => {
+  var idt, idt2, idt3;
+});
+"
+`;
+
+exports[`methods generateDeclaredUidIdentifier CatchClause, FunctionDeclaration, FunctionExpression 1`] = `
+"try {} catch (e) {
+  var idt, idt2, idt3;
+}
+function Fn() {
+  var idt, idt2, idt3;
+}
+(function () {
+  var idt, idt2, idt3;
+});
+"
+`;
+
+exports[`methods generateDeclaredUidIdentifier DoWhileStatement, ForInStatement, ForOfStatement, ForStatement, WhileStatement 1`] = `
+"do {
+  var idt, idt2, idt3;
+  f();
+} while (1);
+for (let x in y) {
+  var idt, idt2, idt3;
+  f(x);
+}
+for (let x of y) {
+  var idt, idt2, idt3;
+  f(x);
+}
+for (; ; ) {
+  var idt, idt2, idt3;
+  f();
+}
+while (1) {
+  var idt, idt2, idt3;
+  f();
+}
+do {
+  var idt, idt2, idt3;
+  f();
+} while (1);
+for (let x in y) {
+  var idt, idt2, idt3;
+  f(x);
+}
+for (let x of y) {
+  var idt, idt2, idt3;
+  f(x);
+}
+for (; ; ) {
+  var idt, idt2, idt3;
+  f();
+}
+while (1) {
+  var idt, idt2, idt3;
+  f();
+}
+"
+`;
+
+exports[`methods generateDeclaredUidIdentifier Program, BlockStatement 1`] = `
+"var idt, idt2, idt3;
+{
+  var idt4, idt5, idt6;
+}
+"
+`;
+
+exports[`methods generateDeclaredUidIdentifier SwitchStatement, ClassDeclaration, ClassExpression 1`] = `
+"{
+  var idt, idt2, idt3;
+  switch (0) {
+    default:
+      {}
+  }
+}
+{
+  var idt, idt2, idt3;
+  class Cls {}
+}
+{
+  (() => {
+    var idt, idt2, idt3;
+    return class {};
+  });
+}
+"
+`;
+
 exports[`methods getAllBindings all kind 1`] = `
 "const a = 0;
 const b = 0;

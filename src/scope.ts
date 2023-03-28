@@ -1,16 +1,18 @@
 import { Identifier, JSXIdentifier, Pattern } from 'estree-jsx'
 import { Node, assertNever, PossibleKeysInParent, NodeMap, NodeT, ParentsOf } from './estree'
-import { NodePath } from './nodepath'
+import { NodePath, NodePathT } from './nodepath'
 import { Traverser, ExpandedVisitor, ExpandedVisitors } from './traverse'
 import { Binding, BindingKind, BindingPathT, GlobalBinding } from './binding'
 import { is } from './is'
+import { builders as b } from './builders'
+import { AliasMap } from './aliases'
 
 type CrawlerState = {
   references: NodePath<Identifier | JSXIdentifier>[];
   constantViolations: NodePath<Identifier>[];
   labelReferences: NodePath<Identifier, NodeT<'BreakStatement' | 'ContinueStatement'>>[];
   scope: Scope;
-  childScopedPaths: NodePath<NodeT<ScopedNode>>[];
+  childScopedPaths: NodePathT<ScopedNode>[];
 }
 
 const scopedNodeTypes = [
@@ -530,12 +532,12 @@ const identifierCrawlers: {
           let parentPath = path.parentPath!
           const parentNode = parentPath.node!
           type T = NodeT<'ImportSpecifier'>
-          ctx.newSkipPathStack()
+          ctx.newQueue()
           parentPath = parentPath.replaceWith(Object.assign<any, T, Partial<T>>({}, parentNode, {
             local: Object.assign({}, parentNode.local),
             imported: Object.assign({}, parentNode.imported)
           }))
-          ctx.restorePrevSkipPathStack()
+          ctx.popQueue()
           state.scope.registerBinding('module', parentPath.get('local'), parentPath)
         }
         break
@@ -576,12 +578,12 @@ const identifierCrawlers: {
           let parentPath = path.parentPath!
           const parentNode = parentPath.node!
           type T = NodeT<'ExportSpecifier'>
-          ctx.newSkipPathStack()
+          ctx.newQueue()
           parentPath = parentPath.replaceWith(Object.assign<any, T, Partial<T>>({}, parentNode, {
             local: Object.assign({}, parentNode.local),
             exported: Object.assign({}, parentNode.exported)
           }))
-          ctx.restorePrevSkipPathStack()
+          ctx.popQueue()
           state.references.push(parentPath.get('local'))
         } else {
           state.references.push(path)
@@ -825,14 +827,14 @@ const findVisiblePathsInPattern = (
       break
 
     case 'ObjectPattern': {
-      const properties = (path as NodePath<NodeT<'ObjectPattern'>>).get('properties')
+      const properties = (path as NodePathT<'ObjectPattern'>).get('properties')
       for (let i = 0; i < properties.length; i++) {
         const property = properties[i]
         const propertyNode = property.node!
 
         switch (propertyNode.type) {
           case 'RestElement':
-            findVisiblePathsInPattern(property as NodePath<NodeT<'RestElement'>>, result)
+            findVisiblePathsInPattern(property as NodePathT<'RestElement'>, result)
             break
 
           case 'Property':
@@ -846,23 +848,23 @@ const findVisiblePathsInPattern = (
               if (propertyNode.value === propertyNode.key) {
                 const ctx = path.ctx
                 type T = NodeT<'Property'>
-                ctx.newSkipPathStack()
+                ctx.newQueue()
                 propertyPath = propertyPath.replaceWith(Object.assign<any, T, Partial<T>>({}, propertyNode, {
                   key: Object.assign({}, propertyNode.key),
                   value: Object.assign({}, propertyNode.value)
                 }))
-                ctx.restorePrevSkipPathStack()
+                ctx.popQueue()
               }
 
               findVisiblePathsInPattern(
-                (propertyPath as NodePath<NodeT<'Property'>>).get('value') as NodePath<Pattern>,
+                (propertyPath as NodePathT<'Property'>).get('value') as NodePath<Pattern>,
                 result
               )
             } else /* istanbul ignore if */ if (
               !propertyNode.computed &&
               propertyNode.key.type === 'Identifier'
             ) {
-              const keyPath = (property as NodePath<NodeT<'Property'>>).get('key')
+              const keyPath = (property as NodePathT<'Property'>).get('key')
               result.push(keyPath)
               // Already crawled, skip it
               keyPath.skip()
@@ -874,7 +876,7 @@ const findVisiblePathsInPattern = (
     }
 
     case 'ArrayPattern': {
-      const aPath = (path as NodePath<NodeT<'ArrayPattern'>>)
+      const aPath = (path as NodePathT<'ArrayPattern'>)
       const elementPaths = aPath.get('elements')
       const elements = aPath.node!.elements
       for (let i = 0; i < elementPaths.length; i++) {
@@ -885,11 +887,11 @@ const findVisiblePathsInPattern = (
     }
 
     case 'RestElement':
-      findVisiblePathsInPattern((path as NodePath<NodeT<'RestElement'>>).get('argument'), result)
+      findVisiblePathsInPattern((path as NodePathT<'RestElement'>).get('argument'), result)
       break
 
     case 'AssignmentPattern':
-      findVisiblePathsInPattern((path as NodePath<NodeT<'AssignmentPattern'>>).get('left'), result)
+      findVisiblePathsInPattern((path as NodePathT<'AssignmentPattern'>).get('left'), result)
       break
 
     /* istanbul ignore next */
@@ -920,7 +922,7 @@ const registerConstantViolationFromPattern = (path: NodePath<Pattern>, state: Cr
   }
 }
 
-const registerVariableDeclaration = (path: NodePath<NodeT<'VariableDeclaration'>>, scope: Scope) => {
+const registerVariableDeclaration = (path: NodePathT<'VariableDeclaration'>, scope: Scope) => {
   const kind = path.node!.kind
   const declarators = path.get('declarations')
   for (let i = 0; i < declarators.length; i++) {
@@ -961,10 +963,11 @@ const crawlerVisitor: {
     enter(path, state) {
       const parentType = path.parentPath!.node?.type
 
-      if (path.listKey != null) {
+      // TODO: Change this if there is any `inListJSXIdentifierCrawlers`
+      /* istanbul ignore if */
+      if (path.listKey != null) /* istanbul ignore next */ {
         const crawler = inListJSXIdentifierCrawlers[parentType as ParentsOf<JSXIdentifier[]>['type']]
         if (crawler != null) {
-          // TODO: Change this if there is any `inListJSXIdentifierCrawlers`
           (crawler as any)(path.listKey as never, path, state)
         }
       } else {
@@ -1011,7 +1014,7 @@ const crawlerVisitor: {
   // We are making an exception to handle the case
   cVisitors.FunctionDeclaration =
   cVisitors.ClassDeclaration = {
-    enter(path: NodePath<NodeT<'FunctionDeclaration' | 'ClassDeclaration'>>, state) {
+    enter(path: NodePathT<'FunctionDeclaration' | 'ClassDeclaration'>, state) {
       // ? Register `unknown` binding if `id` is null
       if (path.node!.id != null) {
         const id = path.get('id')
@@ -1043,9 +1046,9 @@ const registerFunctionParams = (paths: NodePath<Pattern>[], scope: Scope) => {
 }
 
 const scopePathCrawlers: {
-  [K in ScopedNode]: null | ((path: NodePath<NodeT<K>>, state: CrawlerState) => void);
+  [K in ScopedNode]: null | ((path: NodePathT<K>, state: CrawlerState) => void);
 } & {
-  ForXStatement: (path: NodePath<NodeT<'ForInStatement' | 'ForOfStatement'>>, state: CrawlerState) => void;
+  ForXStatement: (path: NodePathT<'ForInStatement' | 'ForOfStatement'>, state: CrawlerState) => void;
 } = {
   Program: null,
   FunctionDeclaration(path, { scope }) {
@@ -1075,7 +1078,7 @@ const scopePathCrawlers: {
   },
   BlockStatement(path, { scope }) {
     if (path.parent != null && path.parent.type === 'LabeledStatement') {
-      scope.registerLabel((path.parentPath as NodePath<NodeT<'LabeledStatement'>>).get('label'))
+      scope.registerLabel((path.parentPath as NodePathT<'LabeledStatement'>).get('label'))
     }
   },
   SwitchStatement: null,
@@ -1083,7 +1086,7 @@ const scopePathCrawlers: {
   DoWhileStatement: null,
   ForStatement(path, state) {
     if (path.parent != null && path.parent.type === 'LabeledStatement') {
-      state.scope.registerLabel((path.parentPath as NodePath<NodeT<'LabeledStatement'>>).get('label'))
+      state.scope.registerLabel((path.parentPath as NodePathT<'LabeledStatement'>).get('label'))
     }
 
     if (path.node!.init != null && path.node!.init.type === 'VariableDeclaration') {
@@ -1092,12 +1095,12 @@ const scopePathCrawlers: {
   },
   ForXStatement(path, state) {
     if (path.parent != null && path.parent.type === 'LabeledStatement') {
-      state.scope.registerLabel((path.parentPath as NodePath<NodeT<'LabeledStatement'>>).get('label'))
+      state.scope.registerLabel((path.parentPath as NodePathT<'LabeledStatement'>).get('label'))
     }
 
     if (path.node!.left.type === 'VariableDeclaration') {
       registerVariableDeclaration(
-        path.get('left') as NodePath<NodeT<'VariableDeclaration'>>,
+        path.get('left') as NodePathT<'VariableDeclaration'>,
         state.scope
       )
     } else if (is.pattern(path.node!.left)) {
@@ -1120,18 +1123,30 @@ export type Label = {
   references: NodePath<Identifier, NodeT<'BreakStatement' | 'ContinueStatement'>>[];
 }
 
+//    _|_|_|  _|          _|_|      _|_|_|    _|_|_|  
+//  _|        _|        _|    _|  _|        _|        
+//  _|        _|        _|_|_|_|    _|_|      _|_|    
+//  _|        _|        _|    _|        _|        _|  
+//    _|_|_|  _|_|_|_|  _|    _|  _|_|_|    _|_|_|   
+
 export class Scope {
-  readonly path: NodePath<NodeT<ScopedNode>>
+  readonly path: NodePathT<ScopedNode>
   readonly parent: Scope | null
   readonly children: Scope[] = []
   private initialized = false
-  private prevCrawlerState: Omit<CrawlerState, 'scope' | 'childScopedPaths'> | null = null
   bindings: Record<string, Binding | undefined> = Object.create(null)
   globalBindings: Record<string, GlobalBinding | undefined> = Object.create(null)
   labels: Record<string, Label | undefined> = Object.create(null)
+  private priv = {
+    prevState: null as (Omit<CrawlerState, 'scope' | 'childScopedPaths'> | null),
+    memoizedBindings: Object.create(null) as Record<string, Binding | undefined>,
+    memoizedLabels: Object.create(null) as Record<string, Label | undefined>,
+    idMap: Object.create(null) as Record<string, number>,
+    declaration: null as (NodePathT<'VariableDeclaration'> | null)
+  }
 
   private constructor(path: NodePath, parentScope: Scope | null) {
-    this.path = path as NodePath<NodeT<ScopedNode>>
+    this.path = path as NodePathT<ScopedNode>
     this.parent = parentScope
     if (this.parent != null) this.parent.children.push(this)
   }
@@ -1156,23 +1171,21 @@ export class Scope {
   }
 
   // Temporarily memoize stuffs. Improves performance in deep tree
-  private memoizedBindings: Record<string, Binding | undefined> = Object.create(null)
-  private memoizedLabels: Record<string, Label | undefined> = Object.create(null)
   private getMemoBinding(bindingName: string) {
-    const { memoizedBindings } = this
+    const { memoizedBindings } = this.priv
     return bindingName in memoizedBindings
       ? memoizedBindings[bindingName]
       : (memoizedBindings[bindingName] = this.getBinding(bindingName))
   }
   private getMemoLabel(labelName: string) {
-    const { memoizedLabels } = this
+    const { memoizedLabels } = this.priv
     return labelName in memoizedLabels
       ? memoizedLabels[labelName]
       : (memoizedLabels[labelName] = this.getLabel(labelName))
   }
   private clearMemo() {
-    this.memoizedBindings = Object.create(null)
-    this.memoizedBindings = Object.create(null)
+    this.priv.memoizedBindings = Object.create(null)
+    this.priv.memoizedLabels = Object.create(null)
   }
 
   getProgramScope(): Scope {
@@ -1184,64 +1197,19 @@ export class Scope {
   }
 
   crawl(): void {
+    /* istanbul ignore next */
     if (this.path.node == null) return
+    /* istanbul ignore next */
     if (this.path.removed) {
       throw Error('This scope is no longer part of the AST, the containing path has been removed')
     }
 
-    this.clearMemo()
-
-    if (this.prevCrawlerState != null) {
-      // Rollback previous registrations
-      // This will be used when re-crawling
-
-      const { globalBindings } = this.getProgramScope()
-      const state = this.prevCrawlerState
-
-      for (let i = 0; i < state.references.length; i++) {
-        const path = state.references[i]
-        const bindingName = path.node!.name
-        const binding = this.getMemoBinding(bindingName)
-
-        if (binding != null) {
-          binding.removeReference(path)
-        } else {
-          const globalBinding = globalBindings[bindingName]
-          if (globalBinding != null) {
-            globalBinding.removeReference(path)
-          }
-        }
-      }
-
-      for (let i = 0; i < state.constantViolations.length; i++) {
-        const path = state.constantViolations[i]
-        const bindingName = path.node!.name
-        const binding = this.getMemoBinding(bindingName)
-
-        if (binding != null) {
-          binding.removeConstantViolation(path)
-        } else {
-          const globalBinding = globalBindings[bindingName]
-          if (globalBinding != null) {
-            globalBinding.removeConstantViolation(path)
-          }
-        }
-      }
-
-      for (let i = 0; i < state.labelReferences.length; i++) {
-        const path = state.labelReferences[i]
-        const labelName = path.node!.name
-        const label = this.getMemoLabel(labelName)
-
-        if (label != null) {
-          const idx = label.references.findIndex((x) => x === path)
-          if (idx > -1) label.references.splice(idx, 1)
-        }
-      }
-    }
+    // Rollback previous registrations
+    // This will be used when re-crawling
+    Scope.rollbackState(this)
 
     this.bindings = Object.create(null)
-    this.globalBindings = Object.create(null)
+    this.globalBindings = this.path.type === 'Program' ? Object.create(null) : this.getProgramScope().globalBindings
     this.labels = Object.create(null)
 
     const state: CrawlerState = {
@@ -1277,9 +1245,9 @@ export class Scope {
     this.path.ctx.makeScope = true
     this.path.ctx.restorePrevSkipPathStack()
 
-    {
-      const { globalBindings } = this.getProgramScope()
+    this.clearMemo()
 
+    {
       for (let i = 0; i < state.references.length; i++) {
         const path = state.references[i]
         const bindingName = path.node!.name
@@ -1289,7 +1257,7 @@ export class Scope {
           binding.addReference(path)
         } else {
           (
-            globalBindings[bindingName] ||= new GlobalBinding({ name: bindingName })
+            this.globalBindings[bindingName] ||= new GlobalBinding({ name: bindingName })
           ).addReference(path)
         }
       }
@@ -1303,7 +1271,7 @@ export class Scope {
           binding.addConstantViolation(path)
         } else {
           (
-            globalBindings[bindingName] ||= new GlobalBinding({ name: bindingName })
+            this.globalBindings[bindingName] ||= new GlobalBinding({ name: bindingName })
           ).addConstantViolation(path)
         }
       }
@@ -1320,7 +1288,7 @@ export class Scope {
     }
 
     this.initialized = true
-    this.prevCrawlerState = {
+    this.priv.prevState = {
       references: state.references,
       constantViolations: state.constantViolations,
       labelReferences: state.labelReferences
@@ -1334,6 +1302,97 @@ export class Scope {
     }
   }
 
+  /** Rollback all the changes contributed by this scope
+   * @internal
+   */
+  static rollbackState(scope: Scope) {
+    const { prevState: state } = scope.priv
+    if (state == null) return
+
+    scope.clearMemo()
+
+    for (let i = 0; i < state.references.length; i++) {
+      const path = state.references[i]
+      const bindingName = path.node!.name
+      const binding = scope.getMemoBinding(bindingName)
+
+      if (binding != null) {
+        binding.removeReference(path)
+      } else {
+        const globalBinding = scope.globalBindings[bindingName]
+        if (globalBinding != null) {
+          globalBinding.removeReference(path)
+        }
+      }
+    }
+
+    for (let i = 0; i < state.constantViolations.length; i++) {
+      const path = state.constantViolations[i]
+      const bindingName = path.node!.name
+      const binding = scope.getMemoBinding(bindingName)
+
+      if (binding != null) {
+        binding.removeConstantViolation(path)
+      } else {
+        const globalBinding = scope.globalBindings[bindingName]
+        if (globalBinding != null) {
+          globalBinding.removeConstantViolation(path)
+        }
+      }
+    }
+
+    for (let i = 0; i < state.labelReferences.length; i++) {
+      const path = state.labelReferences[i]
+      const labelName = path.node!.name
+      const label = scope.getMemoLabel(labelName)
+
+      if (label != null) {
+        const idx = label.references.findIndex((x) => x === path)
+        if (idx > -1) label.references.splice(idx, 1)
+      }
+    }
+
+    const globalNames = Object.keys(scope.globalBindings)
+    for (let i = 0; i < globalNames.length; i++) {
+      const name = globalNames[i]
+      const global = scope.globalBindings[name]!
+      if (global.references.length === 0 && global.constantViolations.length === 0) {
+        scope.globalBindings[name] = undefined
+        delete scope.globalBindings[name]
+      }
+    }
+  }
+
+  /** @internal */
+  static recursiveRollback(scope: Scope) {
+    for (let i = 0; i < scope.children.length; i++) {
+      Scope.recursiveRollback(scope.children[i])
+    }
+    Scope.rollbackState(scope)
+  }
+
+  /** @internal */
+  static handleRemoval(scope: Scope, path: NodePath) {
+    if (path === scope.path) {
+      Scope.recursiveRollback(scope)
+      if (scope.parent != null) {
+        const { children } = scope.parent
+        const idx = children.indexOf(scope)
+        if (idx > -1) children.splice(idx, 1)
+      }
+    } else {
+      for (let i = 0; i < scope.children.length; i++) {
+        const child = scope.children[i]
+        if (child.path.isDescendantOf(path)) {
+          Scope.recursiveRollback(child)
+          const idx = scope.children.indexOf(child)
+          if (idx > -1) scope.children.splice(idx, 1)
+        }
+      }
+    }
+  }
+
+  /** @internal */
   registerBinding<T extends BindingKind>(
     kind: T,
     identifierPath: NodePath<Identifier>,
@@ -1411,12 +1470,15 @@ export class Scope {
     return this.getProgramScope().globalBindings[name]
   }
 
+  /** @internal */
   registerLabel(path: NodePath<Identifier, NodeT<'LabeledStatement'>>): void {
     const labelName = path.node!.name
 
+    /* istanbul ignore next */
     if (this.hasLabel(labelName)) {
-      // ! Label has already been declared
-      // TODO: Handle things
+      // Label has already been declared
+      // The parser should already inform the user about this
+      // there's nothing to do in our side
       return
     }
 
@@ -1441,6 +1503,105 @@ export class Scope {
     }
   }
 
+  generateUid(name = '_tmp') {
+    const allBindings = Object.keys(this.getAllBindings()).concat(Object.keys(this.globalBindings))
+    this.priv.idMap[name] ||= 1
+    let fName = name
+    while (allBindings.includes(fName)) {
+      fName = name + ++this.priv.idMap[name]
+    }
+    return fName
+  }
+
+  generateUidIdentifier(name?: string) {
+    return b.identifier(this.generateUid(name))
+  }
+
+  generateDeclaredUidIdentifier(name?: string): NodeT<'Identifier'> {
+    const identifier = this.generateUidIdentifier(name)
+    let declaratorPath: NodePathT<'VariableDeclarator'>
+    const { ctx } = this.path
+
+    ctx.newSkipPathStack()
+    ctx.newQueue()
+
+    if (this.priv.declaration == null) {
+      // Get the closest block statement
+      let block: NodePath | null = null
+
+      switch (this.path.type) {
+        case 'ArrowFunctionExpression':
+          {
+            const path = this.path as NodePathT<'ArrowFunctionExpression'>
+            const body = path.get('body')
+            if (body.type === 'BlockStatement') {
+              block = body
+            } else {
+              const bodyNode = Object.assign({}, body.node) as AliasMap['Expression']
+              block = body.replaceWith(b.blockStatement([b.returnStatement(bodyNode)]))
+            }
+          }
+          break
+
+        case 'Program':
+        case 'BlockStatement':
+          block = this.path
+          break
+
+        case 'SwitchStatement':
+        case 'ClassDeclaration':
+        case 'ClassExpression':
+          ctx.restorePrevSkipPathStack()
+          ctx.popQueue()
+          return this.parent!.generateDeclaredUidIdentifier(name)
+
+        case 'DoWhileStatement':
+        case 'ForInStatement':
+        case 'ForOfStatement':
+        case 'ForStatement':
+        case 'WhileStatement':
+          {
+            const path = this.path as NodePath<AliasMap['Loop']>
+            const body = path.get('body')
+            if (body.type === 'BlockStatement') {
+              block = body
+            } else {
+              const bodyNode = Object.assign({}, body.node) as AliasMap['Statement']
+              block = body.replaceWith(b.blockStatement([bodyNode]))
+            }
+          }
+          break
+        
+        case 'CatchClause':
+        case 'FunctionDeclaration':
+        case 'FunctionExpression':
+          block = (this.path as NodePath<AliasMap['Function'] | NodeT<'CatchClause'>>).get('body')
+          break
+        
+        /* istanbul ignore next */
+        case null: break
+        /* istanbul ignore next */
+        default: assertNever(this.path.type)
+      }
+
+      const declarationNode = b.variableDeclaration('var', [b.variableDeclarator(identifier)])
+      const [declarationPath] = ((block as NodePathT<'BlockStatement'>)
+        .unshiftContainer('body', [declarationNode]) as [NodePathT<'VariableDeclaration'>])
+      this.priv.declaration = declarationPath
+      declaratorPath = declarationPath.get('declarations')[0]
+    } else {
+      [declaratorPath] = this.priv.declaration.pushContainer('declarations', [b.variableDeclarator(identifier)])
+    }
+
+    this.registerBinding('var', declaratorPath.get('id') as NodePathT<'Identifier'>, declaratorPath)
+
+    ctx.restorePrevSkipPathStack()
+    ctx.popQueue()
+
+    return Object.assign({}, identifier)
+  }
+
+  /** @internal */
   private renameConsideringParent(path: NodePath<Identifier>, newName: string) {
     const parent = path.parent!
     if (

@@ -1,4 +1,4 @@
-import { NodePath } from '../nodepath'
+import { NodePath, NodePathT } from '../nodepath'
 import { assertNever, NodeT } from '../estree'
 
 const evaluateBinaryExpr = (left: any, right: any, operator: NodeT<'BinaryExpression'>['operator']) => {
@@ -58,7 +58,7 @@ class Evaluator {
         return { value: path.node.value }
 
       case 'BinaryExpression': {
-        const aPath = path as NodePath<NodeT<'BinaryExpression'>>
+        const aPath = path as NodePathT<'BinaryExpression'>
         const left = this.getEvaluated(aPath.get('left'))
         if (left == null) return
         const right = this.getEvaluated(aPath.get('right'))
@@ -71,7 +71,7 @@ class Evaluator {
       }
 
       case 'UnaryExpression': {
-        const aPath = path as NodePath<NodeT<'UnaryExpression'>>
+        const aPath = path as NodePathT<'UnaryExpression'>
         const arg = this.getEvaluated(aPath.get('argument'))
         if (arg == null) return
 
@@ -99,7 +99,7 @@ class Evaluator {
       }
 
       case 'LogicalExpression': {
-        const aPath = path as NodePath<NodeT<'LogicalExpression'>>
+        const aPath = path as NodePathT<'LogicalExpression'>
         const left = this.getEvaluated(aPath.get('left'))
         const right = this.getEvaluated(aPath.get('right'))
 
@@ -158,7 +158,7 @@ class Evaluator {
       }
 
       case 'ObjectExpression': {
-        const aPath = path as NodePath<NodeT<'ObjectExpression'>>
+        const aPath = path as NodePathT<'ObjectExpression'>
         const object: Record<string, any> = {}
         const properties = aPath.get('properties')
 
@@ -194,7 +194,7 @@ class Evaluator {
       }
 
       case 'ArrayExpression': {
-        const aPath = path as NodePath<NodeT<'ArrayExpression'>>
+        const aPath = path as NodePathT<'ArrayExpression'>
         const array = []
         const elements = aPath.get('elements')
 
@@ -208,7 +208,7 @@ class Evaluator {
       }
 
       case 'ConditionalExpression': {
-        const aPath = path as NodePath<NodeT<'ConditionalExpression'>>
+        const aPath = path as NodePathT<'ConditionalExpression'>
         const test = this.getEvaluated(aPath.get('test'))
         if (test == null) return
 

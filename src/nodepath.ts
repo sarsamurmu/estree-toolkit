@@ -6,6 +6,7 @@ import * as t from './generated/types'
 import { NodePathDocs } from './nodepath-doc'
 import { Definition, definitions } from './definitions'
 import { getNodeValidationEnabled } from './builders'
+import { NodeTypes } from './estree'
 
 // * Tip: Fold the regions for better experience
 
@@ -73,6 +74,7 @@ export class Context {
   }
 
   popQueue() {
+
     return this.queueStack.pop()!
   }
 }
@@ -100,6 +102,9 @@ type NodePathData<T extends Node, P extends Node> = {
   parentPath: NodePath<T, P>['parentPath'];
   ctx: Context;
 }
+
+export type NodePathT<N extends NodeTypes, P extends NodeTypes | null = null> =
+  NodePath<NodeT<N>, null extends P ? Node : NodeT<Exclude<P, null>>>
 
 export class NodePath<T extends Node = Node, P extends Node = Node> implements NodePathDocs {
   readonly node: T | null
@@ -160,6 +165,7 @@ export class NodePath<T extends Node = Node, P extends Node = Node> implements N
   }
 
   protected assertNotRemoved(): void {
+    /* istanbul ignore next */
     if (this.removed) {
       throw new Error('Path is removed and it is now read-only')
     }
@@ -185,6 +191,7 @@ export class NodePath<T extends Node = Node, P extends Node = Node> implements N
   }
 
   traverse<S>(visitors: Visitors<S>, state?: S) {
+    /* istanbul ignore next */
     if (this.node == null) {
       throw new Error('Can not use method `traverse` on a null NodePath')
     }
@@ -235,6 +242,10 @@ export class NodePath<T extends Node = Node, P extends Node = Node> implements N
       ancestor = ancestor.parentPath
     }
     return ancestors
+  }
+
+  isDescendantOf(path: NodePath): boolean {
+    return this.findParent((p) => p === path) != null
   }
 
   //#endregion
@@ -528,6 +539,8 @@ export class NodePath<T extends Node = Node, P extends Node = Node> implements N
     }
 
     this.ctx.restorePrevSkipPathStack()
+
+    if (this.scope != null) Scope.handleRemoval(this.scope, this)
 
     return false
   }

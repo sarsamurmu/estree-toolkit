@@ -1,5 +1,5 @@
-import { builders as b, NodePath, traverse } from '<project>'
-import { NodeT } from '<project>/estree'
+import { builders as b, traverse } from '<project>'
+import { NodePathT } from '<project>'
 
 describe('identifier', () => {
   test('basic builder', () => {
@@ -78,7 +78,7 @@ describe('identifier', () => {
       ] as const
     ].forEach(([type, ast]) => {
       traverse(ast, {
-        [type]: (path: NodePath<NodeT<typeof type>>) => {
+        [type]: (path: NodePathT<typeof type>) => {
           expect(() => path.get('key').replaceWith(b.identifier('if'))).not.toThrow()
           path.node.computed = true
           expect(() => path.get('key').replaceWith(b.identifier('if'))).toThrow()

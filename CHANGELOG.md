@@ -1,3 +1,8 @@
+## 1.6.0
+- New methods for Scope - `generateUid`, `generateUidIdentifier`,
+  `generateDeclaredUidIdentifier`
+- Bug fixes related to scope
+
 ## 1.5.0
 - New methods [`NodePath.getAncestry`](https://estree-toolkit.netlify.app/nodepath/#getancestry)
   and [`Scope.renameBinding`](https://estree-toolkit.netlify.app/scope/#renamebindingoldname-newname)
