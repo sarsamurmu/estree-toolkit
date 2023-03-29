@@ -140,7 +140,27 @@ const fx = require('fx-mod');
 traverse(ast, {
   $: { scope: true },
   Program(path) {
-    path.hasGlobalBinding('require') // => true
+    path.scope.hasGlobalBinding('require') // => true
+  }
+});
+```
+#### Renaming a binding
+```js
+const { traverse } = require('estree-toolkit');
+const { parseModule } = require('meriyah');
+
+const ast = parseModule(`
+const a = 0
+
+a.reload()
+while (a.ok) a.run()
+`);
+
+traverse(ast, {
+  $: { scope: true },
+  Program(path) {
+    // `a` -> `b`
+    path.scope.renameBinding('a', 'b')
   }
 });
 ```
@@ -174,33 +194,6 @@ There are several static utilities that you can use.
 - `evaluateTruthy`\
   Evaluates the path for truthiness and returns `true`, `false` or `undefined` depending on
   evaluation result.
-- `hasBinding`\
-  Checks if any binding with the name is available in the containing scope.
-  ```js
-  const { utils: u, traverse } = require('estree-toolkit');
-  const { parseModule } = require('meriyah');
-
-  const ast = parseModule(`
-    {
-      let a;
-      {
-        id1;
-      }
-    }
-
-    id2;
-  `);
-
-  traverse(ast, {
-    Identifier(path) {
-      if (path.node.name === 'id1') {
-        u.hasBinding(path, 'a') // => true
-      } else if (path.node.name === 'id2') {
-        u.hasBinding(path, 'a') // => false
-      }
-    }
-  });
-  ```
 
 There's more functionalities, please read the documentation.
 
