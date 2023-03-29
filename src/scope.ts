@@ -1167,6 +1167,9 @@ export class Scope {
 
   init(): void {
     if (this.initialized) return
+    if (this.path.type !== 'Program') {
+      this.priv.idMap = this.getProgramScope().priv.idMap
+    }
     this.crawl()
   }
 
@@ -1450,7 +1453,7 @@ export class Scope {
     // eslint-disable-next-line @typescript-eslint/no-this-alias
     let scope: Scope | null = this
     while (scope != null) {
-      for (const name in scope.bindings) {
+      for (const name in scope.bindings as Record<string, any>) {
         if (!(name in result)) {
           if (kindLength === 0 || (kindLength && kindSet.has(scope.bindings[name]!.kind))) {
             result[name] = scope.bindings[name]
@@ -1504,10 +1507,12 @@ export class Scope {
   }
 
   generateUid(name = '_tmp') {
-    const allBindings = Object.keys(this.getAllBindings()).concat(Object.keys(this.globalBindings))
+    const allIDs = Object.keys(this.getAllBindings())
+      .concat(Object.keys(this.globalBindings))
+      .concat(Object.keys(this.priv.idMap))
     this.priv.idMap[name] ||= 1
-    let fName = name
-    while (allBindings.includes(fName)) {
+    let fName = name = name.replace(/[^a-zA-Z_]+/g, '')
+    while (allIDs.includes(fName)) {
       fName = name + ++this.priv.idMap[name]
     }
     return fName
@@ -1518,7 +1523,6 @@ export class Scope {
   }
 
   generateDeclaredUidIdentifier(name?: string): NodeT<'Identifier'> {
-    const identifier = this.generateUidIdentifier(name)
     let declaratorPath: NodePathT<'VariableDeclarator'>
     const { ctx } = this.path
 
@@ -1584,21 +1588,23 @@ export class Scope {
         default: assertNever(this.path.type)
       }
 
-      const declarationNode = b.variableDeclaration('var', [b.variableDeclarator(identifier)])
+      const declarationNode = b.variableDeclaration('var', [b.variableDeclarator(this.generateUidIdentifier(name))])
       const [declarationPath] = ((block as NodePathT<'BlockStatement'>)
         .unshiftContainer('body', [declarationNode]) as [NodePathT<'VariableDeclaration'>])
       this.priv.declaration = declarationPath
       declaratorPath = declarationPath.get('declarations')[0]
     } else {
-      [declaratorPath] = this.priv.declaration.pushContainer('declarations', [b.variableDeclarator(identifier)])
+      [declaratorPath] = this.priv.declaration.pushContainer('declarations', [b.variableDeclarator(this.generateUidIdentifier(name))])
     }
 
-    this.registerBinding('var', declaratorPath.get('id') as NodePathT<'Identifier'>, declaratorPath)
+    const identifier = declaratorPath.get('id') as NodePathT<'Identifier'>
+
+    this.registerBinding('var', identifier, declaratorPath)
 
     ctx.restorePrevSkipPathStack()
     ctx.popQueue()
 
-    return Object.assign({}, identifier)
+    return Object.assign({}, identifier.node)
   }
 
   /** @internal */

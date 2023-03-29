@@ -285,6 +285,39 @@ describe('Methods', () => {
     expect.assertions(1)
   })
 
+  test('isAncestorOf, isDescendantOf', () => {
+    const ast = {
+      type: 'Program',
+      sourceType: 'module',
+      body: [
+        {
+          type: 'ExpressionStatement',
+          expression: {
+            type: 'ArrayExpression',
+            elements: [
+              {
+                type: 'Literal',
+                value: 5
+              }
+            ]
+          }
+        }
+      ]
+    }
+    let program: NodePath, arrayExpr: NodePath, literal: NodePath
+
+    traverse(ast, {
+      Program: (path) => program = path,
+      ArrayExpression: (path) => arrayExpr = path,
+      Literal: (path) => literal = path
+    })
+
+    expect(program.isAncestorOf(arrayExpr)).toBe(true)
+    expect(program.isAncestorOf(literal)).toBe(true)
+    expect(arrayExpr.isDescendantOf(program)).toBe(true)
+    expect(literal.isDescendantOf(program)).toBe(true)
+  })
+
   //#endregion
 
   //#region Modification

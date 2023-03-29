@@ -28,7 +28,7 @@ exports[`methods generateDeclaredUidIdentifier ArrowFunctionExpression 1`] = `
   return 0;
 });
 (() => {
-  var idt, idt2, idt3;
+  var idt4, idt5, idt6;
 });
 "
 `;
@@ -38,10 +38,10 @@ exports[`methods generateDeclaredUidIdentifier CatchClause, FunctionDeclaration,
   var idt, idt2, idt3;
 }
 function Fn() {
-  var idt, idt2, idt3;
+  var idt4, idt5, idt6;
 }
 (function () {
-  var idt, idt2, idt3;
+  var idt7, idt8, idt9;
 });
 "
 `;
@@ -52,39 +52,39 @@ exports[`methods generateDeclaredUidIdentifier DoWhileStatement, ForInStatement,
   f();
 } while (1);
 for (let x in y) {
-  var idt, idt2, idt3;
+  var idt4, idt5, idt6;
   f(x);
 }
 for (let x of y) {
-  var idt, idt2, idt3;
+  var idt7, idt8, idt9;
   f(x);
 }
 for (; ; ) {
-  var idt, idt2, idt3;
+  var idt10, idt11, idt12;
   f();
 }
 while (1) {
-  var idt, idt2, idt3;
+  var idt13, idt14, idt15;
   f();
 }
 do {
-  var idt, idt2, idt3;
+  var idt16, idt17, idt18;
   f();
 } while (1);
 for (let x in y) {
-  var idt, idt2, idt3;
+  var idt19, idt20, idt21;
   f(x);
 }
 for (let x of y) {
-  var idt, idt2, idt3;
+  var idt22, idt23, idt24;
   f(x);
 }
 for (; ; ) {
-  var idt, idt2, idt3;
+  var idt25, idt26, idt27;
   f();
 }
 while (1) {
-  var idt, idt2, idt3;
+  var idt28, idt29, idt30;
   f();
 }
 "
@@ -107,12 +107,12 @@ exports[`methods generateDeclaredUidIdentifier SwitchStatement, ClassDeclaration
   }
 }
 {
-  var idt, idt2, idt3;
+  var idt4, idt5, idt6;
   class Cls {}
 }
 {
   (() => {
-    var idt, idt2, idt3;
+    var idt7, idt8, idt9;
     return class {};
   });
 }

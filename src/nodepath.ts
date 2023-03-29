@@ -244,6 +244,10 @@ export class NodePath<T extends Node = Node, P extends Node = Node> implements N
     return ancestors
   }
 
+  isAncestorOf(path: NodePath): boolean {
+    return path.isDescendantOf(this)
+  }
+
   isDescendantOf(path: NodePath): boolean {
     return this.findParent((p) => p === path) != null
   }

@@ -1,3 +1,6 @@
+## 1.6.1
+- More bug fixes
+
 ## 1.6.0
 - New methods for Scope - `generateUid`, `generateUidIdentifier`,
   `generateDeclaredUidIdentifier`

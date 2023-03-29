@@ -9,7 +9,7 @@ const matches = (object: Record<string, any>, toMatch: Matcher<Node>) => {
   for (const key in toMatch) {
     const value = (toMatch as any)[key]
     if (typeof value == 'function') {
-      if (!value(object[key])) return false
+      if (!value(object[key], object)) return false
     } else if (value !== object[key]) {
       return false
     }

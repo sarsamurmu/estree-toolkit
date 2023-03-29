@@ -221,6 +221,10 @@ export interface NodePathDocs {
   getFunctionParent;
   /** Get all the ancestors. Returns an array. __THIS NODE IS INCLUDED__ */
   getAncestry;
+  /** Checks if the path is ancestor of the given path */
+  isAncestorOf;
+  /** Checks if the path is descendant of the given path */
+  isDescendantOf;
 
   //#endregion
 

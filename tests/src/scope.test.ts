@@ -830,6 +830,18 @@ describe('methods', () => {
         } 
       })
     })
+
+    test('when a name has already been used', () => {
+      const ast = parseModule('')
+
+      traverse(ast, {
+        $: { scope: true },
+        Program(path) {
+          expect(path.scope.generateUid('a')).toBe('a')
+          expect(path.scope.generateUid('a')).toBe('a2')
+        }
+      })
+    })
   })
 
   describe('generateDeclaredUidIdentifier', () => {
