@@ -5,7 +5,7 @@ title: Traversal
 You can traverse the AST using the `traverse` function
 
 ```js
-import { traverse } from 'estree-toolkit';
+const { traverse } = require('estree-toolkit');
 
 traverse(ast, visitors, state);
 ```

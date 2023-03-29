@@ -80,7 +80,7 @@ traverse(ast, {
 ### `crawl()`
 
 Crawl the tree and create all the scope information. Whenever you make a change to the AST
-(like defining a variable, introducing a new global binding etc.), the `Scope` would not reflect the
+(like defining a new variable, introducing a new global binding etc.), the `Scope` would not reflect the
 changes. You would have to run the `crawl()` function manually in order to update the scope information.
 It's recommended that you run this function on `Scope` associated with the `Program` node. 
 
@@ -335,6 +335,80 @@ traverse(ast, {
 });
 ```
 
+### `generateUid(name?)`
+- `name`: <`string`> The preferable name of the UID
+- Returns: <`string`> A unique id
+
+This function generates an unique ID that you can use as a variable's name.
+Makes sure that the unique ID does not clashes with other pre-existing IDs (binding names).
+
+```js
+const ast = parseModule(`
+  const myID = 5
+`)
+
+traverse(ast, {
+  $: { scope: true },
+  Program(path) {
+    path.scope.generateUid() // => _tmp, The `name` defaults to `_tmp`
+    path.scope.generateUid('myID') // => myID1, because `myID` already exists
+    path.scope.generateUid('thatID') // => thatID, because `thatID` does not exist
+  }
+})
+```
+
+### `generateUidIdentifier(name?)`
+- `name`: <`string`> Name of the ID
+- Returns: <`Identifier`> An identifier with its `name` set to the ID
+
+Wraps the value of `generateUid(name?)` in an identifier node and returns the node
+
+```js
+const ast = parseModule(`
+  const a = 0
+`)
+
+traverse(ast, {
+  $: { scope: true },
+  Program(path) {
+    path.scope.generateUidIdentifier('some_id')
+    // => { type: 'Identifier', name: 'some_id' }
+    path.scope.generateUidIdentifier('some_id')
+    // => { type: 'Identifier', name: 'some_id1' }
+    // because the ID `some_id` has been used in the
+    // first generation
+  }
+})
+```
+
+### `generateDeclaredUidIdentifier(name?)`
+- `name`: <`string`> Name of the ID
+- Returns: <`Identifier`> Identifier with the unique ID
+
+Generates an identifier with unique ID and declares the ID as a new variable in the containing scope.
+
+```js
+const ast = parseModule(`
+  const a = 0
+`)
+
+traverse(ast, {
+  $: { scope: true },
+  Program(path) {
+    path.scope.generateDeclaredUidIdentifier('thing')
+    // => { type: 'Identifier', name: 'thing' }
+    path.scope.generateDeclaredUidIdentifier('thing')
+    // => { type: 'Identifier', name: 'thing1' }
+  }
+})
+
+// Now if you generate code from the AST
+// you would get this
+//        var thing, thing1;
+//        const a = 0;
+// as you can see the new IDs are declared as variable
+```
+
 ### `renameBinding(oldName, newName)`
 - `oldName`: <`string`> The name of the binding which should be replaced
 - `newName`: <`string`> New name of the binding
@@ -380,6 +454,6 @@ traverse(ast, {
 ```
 
 :::Alert
-This doesn't rename global binding or labels, only renames that are the bindings
-declared in the program.
+This doesn't rename global binding or labels, only renames the bindings
+that are declared in the program.
 :::

@@ -3,6 +3,8 @@ Test Page
 Welcome
 Traversal
 NodePath
+Builders
+Is
 Scope
 Binding
 GlobalBinding

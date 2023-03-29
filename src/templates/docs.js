@@ -308,6 +308,7 @@ const Toc = ({ content }) => {
     const html = new window.DOMParser().parseFromString(content, 'text/html')
 
     const collectItems = (el) => {
+      if (el == null) return []
       const collection = []
       el.querySelectorAll('li').forEach((li) => {
         if (li.parentElement !== el) return

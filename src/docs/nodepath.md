@@ -286,8 +286,20 @@ Going up the tree returns the NodePath's closest function parent.
 ### `getAncestry()`
 - Returns: <`NodePath[]`> The array containing all ancestors
 
-Goes up the tree and collects all ancestors. The **node itself**
+Goes up the tree and collects all the ancestors. The **node itself**
 is also included in the ancestry.
+
+### `isAncestorOf(path)`
+- `path`: <`NodePath`> The path for which the current path might be a ancestor
+- Returns: <`boolean`> If the current path is ancestor of given path, `true`
+
+Checks if the current path is a ancestor of the given path
+
+### `isDescendantOf(path)`
+- `path`: <`NodePath`> The path for which the current path might be a descendant
+- Returns: <`boolean`> If the current path is descendant of given path, `true`
+
+Checks if the current path is a descendant of the given path
 
 <!--
                                                                                                          

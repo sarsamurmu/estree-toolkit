@@ -5,7 +5,7 @@ title: Utilities
 These are basic utilities that you can use as helper functions
 
 ```js
-import { utils as u } from 'estree-toolkit';
+const { utils: u } = require('estree-toolkit');
 ```
 
 -------------------------------
@@ -28,8 +28,8 @@ These AST Nodes are supported for now
 - `ArrayExpression`
 
 ```js
-import { utils as u, traverse } from 'estree-toolkit';
-import { parseModule } from 'meriyah';
+const { utils: u, traverse } = require('estree-toolkit');
+const { parseModule } = require('meriyah');
 
 traverse(parseModule(`undefined`), {
   Identifier(path) {
@@ -102,8 +102,8 @@ It's just like `evaluate(path)` but it evaluates for truthiness. It returns `tru
 depending on the evaluation result, if it's sure. If it's not sure, it would return `undefined`.
 
 ```js
-import { utils as u, traverse } from 'estree-toolkit';
-import { parseModule } from 'meriyah';
+const { utils: u, traverse } = require('estree-toolkit');
+const { parseModule } = require('meriyah');
 
 traverse(parseModule(`false && unknown`), {
   LogicalExpression(path) {
@@ -140,8 +140,8 @@ This function starts walking up the tree from the `path` and finds if there is a
 with the provided name. If there is any binding it returns `true`, if not then it returns `false`.
 
 ```js
-import { utils as u, traverse } from 'estree-toolkit';
-import { parseModule } from 'meriyah';
+const { utils: u, traverse } = require('estree-toolkit');
+const { parseModule } = require('meriyah');
 
 const ast = parseModule(`
   {
