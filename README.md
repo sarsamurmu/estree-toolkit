@@ -24,6 +24,15 @@ npm i estree-toolkit
 yarn add estree-toolkit
 ```
 
+## Usage
+```js
+// Supports both CommonJS and ES Modules
+// ES Module
+import { traverse, builders as b } from 'estree-toolkit';
+// CommonJS
+const { traverse, builders: b } = require('estree-toolkit');
+```
+
 ## Basic operations
 ### Traversing an AST
 ```js
@@ -128,7 +137,7 @@ traverse(ast, {
   }
 });
 ```
-#### Checking if a global have been used
+#### Checking if a global has been used
 ```js
 const { traverse } = require('estree-toolkit');
 const { parseModule } = require('meriyah');
@@ -163,11 +172,17 @@ traverse(ast, {
     path.scope.renameBinding('a', 'b')
   }
 });
+
+// Output code:
+// const b = 0
+//
+// b.reload()
+// while (b.ok) b.run()
 ```
 ### Utilities
 There are several static utilities that you can use.
 - `evaluate`\
-  Evaluates the given path. For now it only supports evaluation of logical, binary and unary operations.
+  Evaluates the given path.
   ```js
   const { utils: u, traverse } = require('estree-toolkit');
   // We are using `meriyah` but you can use any parser (like `acorn`)
@@ -190,6 +205,23 @@ There are several static utilities that you can use.
       u.evaluate(path) // => undefined
     }
   });
+
+  traverse(parseModule(`
+    ({
+      text: 'This is an object',
+      data: [1, 'two']
+    })
+  `), {
+    ObjectExpression(path) {
+      u.evaluate(path) // => { value: { text: 'This is an object', data: [1, 'two'] } }
+    }
+  });
+
+  traverse(parseModule(`1 > 5 ? 'YES' : 'NO'`), {
+    ConditionalExpression(path) {
+      u.evaluate(path) // => { value: 'NO' }
+    }
+  });
   ```
 - `evaluateTruthy`\
   Evaluates the path for truthiness and returns `true`, `false` or `undefined` depending on
@@ -204,7 +236,7 @@ You can find the documentation at https://estree-toolkit.netlify.app/
 I know there is [Babel](https://github.com/babel/babel). But there are
 other tools which are faster than Babel. For example, [`meriyah`](https://github.com/meriyah/meriyah) is 3x faster than [`@babel/parser`](https://www.npmjs.com/package/@babel/parser), [`astring`](https://github.com/davidbonnet/astring) is up to 50x faster than [`@babel/generator`](https://www.npmjs.com/package/@babel/generator). But these tool only work with ESTree AST. I wanted to use these
 faster alternatives for one of my projects but could not find any traverser with
-batteries-included. So I made one myself, with awesome scope analysis, it has all the things that you would need for traversing an ESTree AST.
+batteries-included. So I built one myself, with awesome scope analysis, it has all the things that you would need for traversing an ESTree AST. Also, a little bit faster than Babel.
 
 ## License
 Licensed under the [MIT License](/LICENSE).

@@ -1,3 +1,7 @@
+## 1.6.2
+- Updated dependencies
+- Added support for ES Modules
+
 ## 1.6.1
 - More bug fixes
 
