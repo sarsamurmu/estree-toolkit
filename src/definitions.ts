@@ -608,7 +608,7 @@ export const definitions: Definitions = Object.assign<any, Definitions>(Object.c
       operator: {
         validate: a.oneOf([
           '=', '+=', '-=', '*=', '/=', '%=', '**=', '<<=', '>>=', '>>>=',
-          '|=', '^=', '&=',
+          '|=', '^=', '&=', '||=', '&&=', '??=',
         ] as const)
       },
       left: {
