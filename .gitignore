@@ -1,5 +1,6 @@
 node_modules
 __tests__
 dist
+dist-es
 coverage
-TODO.txt
+TODO.md

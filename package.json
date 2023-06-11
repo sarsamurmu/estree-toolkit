@@ -3,10 +3,19 @@
   "version": "1.6.1",
   "description": "Traverser, scope tracker, and more tools for working with ESTree AST",
   "main": "./dist/index.js",
-  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist-es/index.mjs",
+      "require": "./dist/index.js"
+    },
+    "./dist/*": "./dist/*.js",
+    "./dist-es/*": "./dist-es/*.mjs",
+    "./package.json": "./package.json"
+  },
   "scripts": {
     "generate": "ts-node ./generator-scripts/index.ts",
-    "build": "npm run generate && npm run build:ts",
+    "build": "npm run generate && npm run build:ts && npm run build:es && node fix-es.js",
+    "build:es": "tsc -p tsconfig.es.json",
     "build:ts": "tsc",
     "build:sourcemap": "tsc --sourceMap",
     "build:watch": "tsc --incremental --sourceMap -w",
