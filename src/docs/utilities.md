@@ -67,13 +67,13 @@ traverse(parseModule(`
   ObjectExpression(path) {
     if (path.parent.type !== 'ExpressionStatement') return;
 
-    u.evaluate(path) // => { a: 1, b: 2, m: { c: 1 } }
+    u.evaluate(path) // => { value: { a: 1, b: 2, m: { c: 1 } } }
   }
 });
 
 traverse(parseModule(`[1, 2, '3']`), {
   ArrayExpression(path) {
-    u.evaluate(path) // => [1, 2, '3']
+    u.evaluate(path) // => { value: [1, 2, '3'] }
   }
 });
 
