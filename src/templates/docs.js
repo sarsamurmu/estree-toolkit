@@ -8,7 +8,7 @@ import { Helmet } from 'react-helmet'
 import * as Octicons from '@primer/octicons-react'
 import SimpleBar from 'simplebar-react'
 
-import 'simplebar/dist/simplebar.min.css'
+import 'simplebar-react/dist/simplebar.min.css'
 import './prism-theme.css'
 import './docs.scss'
 
@@ -136,12 +136,19 @@ const Ctx = React.createContext({
 
 const ThemeButton = ({ toggleTheme, isDarkTheme }) => {
   const [loaded, setLoaded] = React.useState(false)
+  const onEnter = React.useCallback(() => document.body.classList.add('no-transition'), [])
+  const onLeave = React.useCallback(() => document.body.classList.remove('no-transition'), []);
 
   React.useLayoutEffect(() => setLoaded(true), [])
 
   return (
-    <button className='btn-circular theme-btn' onClick={toggleTheme} aria-label='Toggle theme'>
-      {loaded && (isDarkTheme ? <Octicons.MoonIcon size={ 20} /> : <Octicons.SunIcon size={20} />)}
+    <button
+      className='btn-circular theme-btn'
+      onClick={toggleTheme}
+      onMouseEnter={onEnter}
+      onMouseLeave={onLeave}
+      aria-label='Toggle theme'>
+      {loaded && (isDarkTheme ? <Octicons.MoonIcon size={20} /> : <Octicons.SunIcon size={20} />)}
     </button>
   )
 }
