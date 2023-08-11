@@ -115,6 +115,9 @@ export interface NodePathDocs {
    */
   container;
 
+  /** Clone the node associated with the current nodepath */
+  cloneNode;
+
   //#region Traversal
 
   /**
@@ -145,6 +148,8 @@ export interface NodePathDocs {
     ```
    */
   skip;
+  /** Skip all children. Note: Grandchildren are not skipped */
+  skipChildren;
   /**
     Un-skip the path from traversal. Whenever un-skipped, the path would be
     traversed if it's not already traversed
@@ -152,6 +157,10 @@ export interface NodePathDocs {
   unSkip;
   /** Alias of `unSkip` */
   unskip;
+  /** Un-skip all children. Opposite of skipChildren */
+  unSkipChildren;
+  /** Alias of `unSkipChildren` */
+  unskipChildren;
   /** Traverse this path and its children with the given `visitor` and `state` */
   traverse;
 

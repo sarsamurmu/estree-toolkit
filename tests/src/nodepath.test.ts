@@ -1,6 +1,49 @@
 import { NodePath, traverse, types as t } from '<project>'
 
 describe('Methods', () => {
+  //#region Misc.
+
+  describe('cloneNode', () => {
+    test('default', () => {
+      const ast = {
+        type: 'Identifier',
+        name: 'x'
+      }
+
+      traverse(ast, {
+        Identifier(path) {
+          const clone = path.cloneNode()
+          clone.name = 'y'
+        }
+      })
+
+      expect(ast.name).toBe('x')
+    })
+
+    test('custom function', () => {
+      const ast = {
+        type: 'Identifier',
+        name: 'x'
+      }
+
+      traverse(ast, {
+        $: {
+          // Just for test, don't do this in reality
+          cloneFunction: (x) => x
+        },
+        Identifier(path) {
+          const clone = path.cloneNode()
+          clone.name = 'y'
+        }
+      })
+
+      expect(ast.name).toBe('y')
+    })
+  })
+
+  //#endregion
+
+
   //#region Traversal
 
   test('skip', () => {
@@ -78,6 +121,160 @@ describe('Methods', () => {
       expect(expressionMock).toBeCalledTimes(1)
       expect(identifierMock).toBeCalledTimes(0)
     })
+  })
+
+  test('skipChildren', () => {
+    const prop = {
+      type: 'Property',
+      kind: 'init',
+      computed: false,
+      method: false,
+      shorthand: false
+    }
+    const ast1 = {
+      type: 'ExpressionStatement',
+      expression: {
+        type: 'ObjectExpression',
+        properties: [
+          {
+            ...prop,
+            key: { type: 'Identifier', name: 'x' },
+            value: {
+              type: 'ArrayExpression',
+              elements: [
+                { type: 'Identifier', name: 'a' },
+                { type: 'Identifier', name: 'b' }
+              ]
+            },
+          },
+          {
+            ...prop,
+            key: { type: 'Identifier', name: 'y' },
+            value: {
+              type: 'ArrayExpression',
+              elements: [
+                { type: 'Identifier', name: 'c' },
+                { type: 'Identifier', name: 'd' }
+              ]
+            },
+          }
+        ]
+      }
+    }
+    const identifiers1 = []
+
+    traverse(ast1, {
+      Property(path) {
+        if ((path.node.key as t.Identifier).name === 'x') {
+          path.skipChildren()
+        }
+      },
+      Identifier({ node }) {
+        identifiers1.push(node.name)
+      }
+    })
+
+    expect(identifiers1).toEqual(['y', 'c', 'd'])
+
+    const ast2 = {
+      type: 'ArrayExpression',
+      elements: [
+        { type: 'Identifier', name: 'a' },
+        { type: 'Identifier', name: 'b' },
+        { type: 'Identifier', name: 'c' },
+        { type: 'Identifier', name: 'd' }
+      ]
+    }
+    const identifiers2 = []
+
+    traverse(ast2, {
+      ArrayExpression(path) {
+        path.skipChildren()
+      },
+      Identifier({ node }) {
+        identifiers2.push(node.name)
+      }
+    })
+
+    expect(identifiers2).toEqual([])
+  })
+
+  test('unSkipChildren', () => {
+    const prop = {
+      type: 'Property',
+      kind: 'init',
+      computed: false,
+      method: false,
+      shorthand: false
+    }
+    const ast1 = {
+      type: 'ExpressionStatement',
+      expression: {
+        type: 'ObjectExpression',
+        properties: [
+          {
+            ...prop,
+            key: { type: 'Identifier', name: 'x' },
+            value: {
+              type: 'ArrayExpression',
+              elements: [
+                { type: 'Identifier', name: 'a' },
+                { type: 'Identifier', name: 'b' }
+              ]
+            },
+          },
+          {
+            ...prop,
+            key: { type: 'Identifier', name: 'y' },
+            value: {
+              type: 'ArrayExpression',
+              elements: [
+                { type: 'Identifier', name: 'c' },
+                { type: 'Identifier', name: 'd' }
+              ]
+            },
+          }
+        ]
+      }
+    }
+    const identifiers1 = []
+
+    traverse(ast1, {
+      Property(path) {
+        if ((path.node.key as t.Identifier).name === 'x') {
+          path.skipChildren()
+          path.unskipChildren()
+        }
+      },
+      Identifier({ node }) {
+        identifiers1.push(node.name)
+      }
+    })
+
+    expect(identifiers1).toEqual(['x', 'a', 'b', 'y', 'c', 'd'])
+
+    const ast2 = {
+      type: 'ArrayExpression',
+      elements: [
+        { type: 'Identifier', name: 'a' },
+        { type: 'Identifier', name: 'b' },
+        { type: 'Identifier', name: 'c' },
+        { type: 'Identifier', name: 'd' }
+      ]
+    }
+    const identifiers2 = []
+
+    traverse(ast2, {
+      ArrayExpression(path) {
+        path.skipChildren()
+        path.unskipChildren()
+      },
+      Identifier({ node }) {
+        identifiers2.push(node.name)
+      }
+    })
+
+    expect(identifiers2).toEqual(['a', 'b', 'c', 'd'])
   })
 
   //#endregion

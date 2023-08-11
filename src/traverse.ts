@@ -37,6 +37,8 @@ export type TraverseOptions = {
   scope?: boolean;
   /** Enable/disable validation in `Node` builders */
   validateNodes?: boolean;
+  /** Function to use when cloning node using `NodePath.cloneNode()` */
+  cloneFunction?: (node: any) => any;
 }
 
 export class Traverser {

@@ -4,7 +4,7 @@ import { Scope } from './scope'
 import { is } from './is'
 import * as t from './generated/types'
 import { NodePathDocs } from './nodepath-doc'
-import { Definition, definitions } from './definitions'
+import { Definition, definitions, visitorKeys } from './definitions'
 import { getNodeValidationEnabled } from './builders'
 import { NodeTypes } from './estree'
 
@@ -15,11 +15,18 @@ const mapSet = <K, V>(map: Map<K, V>, key: K, value: V): V => {
   return value
 }
 
+declare const structuredClone: (x: any) => any
+
 export class Context {
+  /**
+   * Don't depend on `pathCache` to get children,
+   * because it may not be initialized when you call it
+   */
   pathCache = new Map<NodePath | null, Map<Node | null, NodePath>>()
   scopeCache = new Map<NodePath, Scope>()
   makeScope = false
   shouldValidateNodes = getNodeValidationEnabled()
+  cloneFunction = (node: any): any => structuredClone(node)
   private currentSkipPaths = new Set<NodePath>()
   private readonly skipPathSetStack = [this.currentSkipPaths]
   /** Store newly added nodes to this queue for traversal */
@@ -32,6 +39,9 @@ export class Context {
     this.makeScope = options?.scope === true
     if (options?.validateNodes != null) {
       this.shouldValidateNodes = options.validateNodes
+    }
+    if (typeof options?.cloneFunction === 'function') {
+      this.cloneFunction = options.cloneFunction
     }
   }
 
@@ -74,7 +84,6 @@ export class Context {
   }
 
   popQueue() {
-
     return this.queueStack.pop()!
   }
 }
@@ -146,8 +155,7 @@ export class NodePath<T extends Node = Node, P extends Node = Node> implements N
       return new this(data)
     }
 
-    const pathCache = data.ctx.pathCache
-    const { parentPath } = data
+    const { ctx: { pathCache }, parentPath } = data
     const children = pathCache.get(parentPath) || mapSet(pathCache, parentPath, new Map<Node, NodePath>())
     return (children.get(data.node) || mapSet(children, data.node, new NodePath<any, any>(data)))
   }
@@ -171,8 +179,19 @@ export class NodePath<T extends Node = Node, P extends Node = Node> implements N
     }
   }
 
+  protected assertNotNull(methodName: string): void {
+    /* istanbul ignore next */
+    if (this.node == null) {
+      throw new Error(`Can not use method \`${methodName}\` on a null NodePath`)
+    }
+  }
+
   get parentKey(): string | null {
     return this.listKey != null ? this.listKey : (this.key as string)
+  }
+
+  cloneNode(): T | null {
+    return this.ctx.cloneFunction(this.node)
   }
 
   //#region Traversal
@@ -181,7 +200,23 @@ export class NodePath<T extends Node = Node, P extends Node = Node> implements N
     this.ctx.setSkipped(this)
   }
 
+  skipChildren() {
+    this.assertNotNull('skipChildren')
+    const node = this.node!
+    const keys = visitorKeys[this.type!] || Object.keys(node)
+    for (let i = 0; i < keys.length; i++) {
+      const key = keys[i]
+      const value = (node as any)[key]
+      if (Array.isArray(value)) {
+        this.get<Node[]>(key).forEach((p) => p.skip())
+      } else if (typeof value.type === 'string') {
+        this.get<Node>(key).skip()
+      }
+    }
+  }
+
   unSkip() {
+    this.assertNotRemoved()
     this.ctx.setNotSkipped(this)
     this.ctx.pushToQueue([this], 'unSkipped')
   }
@@ -190,14 +225,25 @@ export class NodePath<T extends Node = Node, P extends Node = Node> implements N
     this.unSkip()
   }
 
+  unSkipChildren() {
+    this.assertNotRemoved()
+    this.assertNotNull('unSkipChildren')
+    // We can use `pathCache` here because it has already been
+    // built when `skipChildren` was used
+    // And if `pathCache` has not been built that means
+    // the children were not skipped in the first place
+    this.ctx.pathCache.get(this)?.forEach((p) => p.unSkip())
+  }
+
+  unskipChildren() {
+    this.unSkipChildren()
+  }
+
   traverse<S>(visitors: Visitors<S>, state?: S) {
-    /* istanbul ignore next */
-    if (this.node == null) {
-      throw new Error('Can not use method `traverse` on a null NodePath')
-    }
+    this.assertNotNull('traverse')
 
     Traverser.traverseNode({
-      node: this.node,
+      node: this.node!,
       parentPath: this.parentPath,
       visitors,
       state,
