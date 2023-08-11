@@ -1,3 +1,6 @@
+## 1.7.0
+- New method for NodePath - `cloneNode`, `skipChildren`, `unSkipChildren`
+
 ## 1.6.2
 - Updated dependencies
 - Added support for ES Modules
