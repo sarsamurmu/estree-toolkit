@@ -1,3 +1,6 @@
+## 1.7.1
+- Enabled `"moduleResolution": "bundler"` support for typescript
+
 ## 1.7.0
 - New method for NodePath - `cloneNode`, `skipChildren`, `unSkipChildren`
 
