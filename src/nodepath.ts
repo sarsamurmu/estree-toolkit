@@ -207,6 +207,7 @@ export class NodePath<T extends Node = Node, P extends Node = Node> implements N
     for (let i = 0; i < keys.length; i++) {
       const key = keys[i]
       const value = (node as any)[key]
+      if (value == null) continue
       if (Array.isArray(value)) {
         this.get<Node[]>(key).forEach((p) => p.skip())
       } else if (typeof value.type === 'string') {
