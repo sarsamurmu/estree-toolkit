@@ -1,3 +1,6 @@
+## 1.7.2
+- Fix crash when one of the children was `null` when calling `skipChildren`
+
 ## 1.7.1
 - Enabled `"moduleResolution": "bundler"` support for typescript
 

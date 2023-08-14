@@ -124,6 +124,7 @@ describe('Methods', () => {
   })
 
   test('skipChildren', () => {
+    // Basic
     const prop = {
       type: 'Property',
       kind: 'init',
@@ -176,6 +177,7 @@ describe('Methods', () => {
 
     expect(identifiers1).toEqual(['y', 'c', 'd'])
 
+    // With children array
     const ast2 = {
       type: 'ArrayExpression',
       elements: [
@@ -197,6 +199,29 @@ describe('Methods', () => {
     })
 
     expect(identifiers2).toEqual([])
+
+    // `null` children
+    const ast3 = {
+      type: 'IfStatement',
+      test: {
+        type: 'Identifier',
+        name: 'x'
+      },
+      consequent: {
+        type: 'ExpressionStatement',
+        expression: {
+          type: 'Identifier',
+          name: 'y'
+        }
+      },
+      alternate: null
+    }
+
+    expect(() => traverse(ast3, {
+      IfStatement(path) {
+        path.skipChildren()
+      }
+    })).not.toThrow()
   })
 
   test('unSkipChildren', () => {
