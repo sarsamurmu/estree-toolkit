@@ -32,7 +32,13 @@
     "estree",
     "ast",
     "traverse",
-    "scope"
+    "scope",
+    "analysis",
+    "walker",
+    "binding",
+    "fast",
+    "acorn",
+    "meriyah"
   ],
   "repository": "github:sarsamurmu/estree-toolkit",
   "homepage": "https://estree-toolkit.netlify.app/",
