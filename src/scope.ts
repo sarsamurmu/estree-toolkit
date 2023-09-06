@@ -1074,7 +1074,9 @@ const scopePathCrawlers: {
     registerFunctionParams(path.get('params'), scope)
   },
   CatchClause(path, { scope }) {
-    registerBindingFromPattern(path.get('param'), scope, 'let', path)
+    if (path.has('param')) {
+      registerBindingFromPattern(path.get('param'), scope, 'let', path)
+    }
   },
   BlockStatement(path, { scope }) {
     if (path.parent != null && path.parent.type === 'LabeledStatement') {

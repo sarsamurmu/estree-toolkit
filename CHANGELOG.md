@@ -1,3 +1,6 @@
+## 1.7.3
+- Handle cases where `CatchClause` parameter is null
+
 ## 1.7.2
 - Fix crash when one of the children was `null` when calling `skipChildren`
 
