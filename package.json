@@ -9,23 +9,15 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@mdx-js/loader": "^3.0.1",
-    "@mdx-js/react": "^3.0.1",
-    "@next/mdx": "^14.2.3",
     "@primer/octicons-react": "^19.9.0",
-    "@types/mdx": "^2.0.13",
+    "@shikijs/rehype": "^1.5.1",
     "hastscript": "^9.0.0",
     "interweave": "^13.1.0",
     "interweave-ssr": "^2.0.0",
-    "jsdom": "^24.0.0",
     "mdast-util-to-string": "^4.0.0",
     "next": "14.2.3",
-    "prismjs": "^1.29.0",
     "react": "^18",
     "react-dom": "^18",
-    "react-syntax-highlighter": "^15.5.0",
-    "rehype-parse": "^9.0.0",
-    "rehype-sanitize": "^6.0.0",
     "rehype-stringify": "^10.0.0",
     "remark-directive": "^3.0.0",
     "remark-frontmatter": "^5.0.0",
@@ -39,7 +31,6 @@
     "vfile-matter": "^5.0.0"
   },
   "devDependencies": {
-    "@shikijs/rehype": "^1.5.1",
     "eslint": "^8",
     "eslint-config-next": "14.2.3"
   }

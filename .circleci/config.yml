@@ -1,0 +1,13 @@
+version: 2.1
+
+jobs:
+  skipper:
+    docker:
+      - image: cimg/base:stable
+    steps:
+      - run: exit 0
+
+workflows:
+  run:
+    jobs:
+      - skipper
