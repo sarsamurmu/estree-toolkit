@@ -166,6 +166,13 @@ tracking is disabled.
 
 -->
 
+### `cloneNode()`
+
+Clone the node associated with the path using `structuredClone` or
+the [custom clone function](/traversal#options) provided.
+
+ Also [check this out](/builders#mistakes) for learning more about why is it important to clone a node.
+
 ### `skip()`
 
 Skips the path from traversal

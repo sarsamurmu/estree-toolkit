@@ -140,6 +140,11 @@ For now, therese are the available options
   nodes are inserted into the AST. Generally, you wouldn't need it, but if your
   AST uses modified nodes then you may need to disable node validation.
 
+- `cloneFunction`: <`(node: any) => any`> Function which will be used to clone nodes (basically JS objects)
+  using [`NodePath.cloneNode`](/nodepath#clonenode). Cloning should be **deep cloning** and not shallow cloning.
+  By default it uses [`structuredClone`](https://developer.mozilla.org/en-US/docs/Web/API/structuredClone).
+  Also [check this out](/builders#mistakes) for learning more about why is it important to clone a node.
+
 --------------------------------------------------
 
 ## Examples
