@@ -120,6 +120,7 @@ export const hasBinding = (() => {
 
   const parentTypes = [
     'BlockStatement',
+    'CatchClause',
     'ForStatement',
     'ForInStatement',
     'ForOfStatement',
@@ -145,6 +146,13 @@ export const hasBinding = (() => {
       switch (node.type) {
         case 'BlockStatement': {
           if (findInStatements(node.body, bindingName)) {
+            return true
+          }
+          break
+        }
+
+        case 'CatchClause': {
+          if (node.param != null && findInPattern(node.param, bindingName)) {
             return true
           }
           break

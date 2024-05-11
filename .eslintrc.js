@@ -48,6 +48,12 @@ module.exports = {
     ecmaVersion: 2020,
     sourceType: 'module'
   },
+  ignorePatterns: [
+    'dist',
+    'dist-es',
+    'generator-scripts',
+    'src/generated'
+  ],
   rules: {
     'indent': ['error', 2, { SwitchCase: 1 }],
     'quotes': ['error', 'single', { avoidEscape: true }],

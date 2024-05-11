@@ -1,3 +1,7 @@
+## 1.7.4
+- Add `CatchClause` to `hasBinding`
+- Updated dependencies
+
 ## 1.7.3
 - Handle cases where `CatchClause` parameter is null
 

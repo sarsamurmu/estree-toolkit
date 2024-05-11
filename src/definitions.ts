@@ -999,10 +999,12 @@ export const definitions: Definitions = Object.assign<any, Definitions>(Object.c
   },
   ExportDefaultDeclaration: {
     indices: {
+      // @ts-expect-error the `estree` package made types more complex
       declaration: 0
     },
     fields: {
       declaration: {
+        // @ts-expect-error the `estree` package made types more complex
         validate: a.OR(a.nodeAlias('Declaration'), a.nodeAlias('Expression'))
       }
     }

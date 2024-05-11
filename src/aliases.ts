@@ -85,7 +85,8 @@ export const aliases: {
     MetaProperty: 0,
     AwaitExpression: 0,
     ImportExpression: 0,
-    JSXElement: 0
+    JSXElement: 0,
+    JSXFragment: 0
   }),
   Pattern: clean({
     Identifier: 0,

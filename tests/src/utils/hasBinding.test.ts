@@ -209,3 +209,24 @@ test('for..in and for..of statement', () => {
 
   expect.assertions(2 * 6)
 })
+
+test('catch clause', () => {
+  const ast = parseModule(`
+    try {} catch ({ a, b, c: [d, e] }) {
+      targetNode;
+    }
+  `)
+
+  traverse(ast, {
+    Identifier(path) {
+      if (path.node.name !== 'targetNode') return
+      expect(u.hasBinding(path, 'a')).toBe(true)
+      expect(u.hasBinding(path, 'b')).toBe(true)
+      expect(u.hasBinding(path, 'c')).toBe(false)
+      expect(u.hasBinding(path, 'd')).toBe(true)
+      expect(u.hasBinding(path, 'e')).toBe(true)
+    }
+  })
+
+  expect.assertions(5)
+})
