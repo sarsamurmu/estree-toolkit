@@ -1,30 +1,18 @@
-import React from 'react'
-import { graphql } from 'gatsby'
+// import "@/styles/globals.css";
+
+import React, { useEffect } from 'react'
+import Head from 'next/head'
+import Link from 'next/link'
 import { Interweave } from 'interweave'
-import { Link } from 'gatsby'
-import { PrismLight as SyntaxHighlighter } from 'react-syntax-highlighter'
-import { javascript } from 'react-syntax-highlighter/dist/esm/languages/prism'
-import { Helmet } from 'react-helmet'
 import * as Octicons from '@primer/octicons-react'
 import SimpleBar from 'simplebar-react'
+import * as InterweaveSSR from 'interweave-ssr'
 
-import 'simplebar-react/dist/simplebar.min.css'
-import './prism-theme.css'
-import './docs.scss'
-
-SyntaxHighlighter.registerLanguage('js', javascript)
-
-/* global SSR_MODE */
-
-if (SSR_MODE) {
-  const { JSDOM } = require('jsdom')
-  global.window = (new JSDOM('', { url: 'http://localhost' })).window
-  global.document = global.window.document
-}
+InterweaveSSR.polyfill()
 
 const CopyButton = () => {
   const [copied, setCopied] = React.useState(false)
-  
+
   const onClick = (e) => {
     const codeText = e.nativeEvent.target.closest('.inner').querySelector('code').innerText
     try {
@@ -38,7 +26,7 @@ const CopyButton = () => {
 
   return (
     <button className='copy-button' onClick={onClick} aria-label='Copy code block content'>
-      {SSR_MODE ? 'COPY' : (copied ? <Octicons.CheckIcon fill="#07bd5f" /> : <Octicons.CopyIcon />)}
+      {copied ? <Octicons.CheckIcon fill="#07bd5f" /> : <Octicons.CopyIcon />}
     </button>
   )
 }
@@ -60,7 +48,7 @@ const CodeWrapper = ({ children, title }) => {
 const Alert = ({ children }) => (
   <div className='alert fromDirective'>
     <div className='wrapper'>{children}</div>
-    <span className='icon'>{!SSR_MODE && <Octicons.InfoIcon size={24} />}</span>
+    <span className='icon'><Octicons.InfoIcon size={24} /></span>
   </div>
 )
 
@@ -75,7 +63,7 @@ const Tabs = ({ children }) => {
             key={name}
             onClick={() => setActiveTab(name)}
             {...(name === activeTab ? { className: 'active' } : {})}>
-              {name}
+            {name}
           </li>
         ))}
       </ul>
@@ -90,38 +78,25 @@ const TabItem = ({ children }) => <div>{children}</div>
 
 const interweaveTransform = (node, children) => {
   switch (node.tagName.toLowerCase()) {
-    case 'code': {
-      const match = /(?:language|lang)-(\w+)/.exec(node.className || '')
-      const title = node.dataset.meta
-      if (match) {
-        return (
-          SSR_MODE ? (
-            <CodeWrapper title={title}>
-              <code className={node.className}>{children}</code>
-            </CodeWrapper>
-          ) : (
-              <SyntaxHighlighter
-                language={match[1]}
-                PreTag={CodeWrapper}
-                useInlineStyles={false}
-                children={children[0].trim()}
-                title={title} />
-          )
-        )
+    case 'pre': {
+      if (node.getAttribute('class').includes('shiki')) {
+        const title = node.getAttribute('title')
+        return <CodeWrapper title={title}>{children[0]}</CodeWrapper>
       }
       break
     }
 
     case 'alert': {
-      return <Alert children={children} />
+      return <Alert>{children}</Alert>
     }
 
     case 'tabs': {
-      return <Tabs children={children} />
+      return <Tabs>{children}</Tabs>
     }
-    
+
     case 'tab': {
-      return <TabItem name={children.shift()} children={children} />
+      const name = children.shift()
+      return <TabItem name={name}>{children}</TabItem>
     }
   }
 }
@@ -129,17 +104,14 @@ const interweaveTransform = (node, children) => {
 const Ctx = React.createContext({
   toc: false,
   sidenav: false,
-  openSidenav() {},
-  closeToc() {},
-  closeSidenav() {}
+  openSidenav() { },
+  closeToc() { },
+  closeSidenav() { }
 });
 
 const ThemeButton = ({ toggleTheme, isDarkTheme }) => {
-  const [loaded, setLoaded] = React.useState(false)
   const onEnter = React.useCallback(() => document.body.classList.add('no-transition'), [])
   const onLeave = React.useCallback(() => document.body.classList.remove('no-transition'), []);
-
-  React.useLayoutEffect(() => setLoaded(true), [])
 
   return (
     <button
@@ -148,7 +120,7 @@ const ThemeButton = ({ toggleTheme, isDarkTheme }) => {
       onMouseEnter={onEnter}
       onMouseLeave={onLeave}
       aria-label='Toggle theme'>
-      {loaded && (isDarkTheme ? <Octicons.MoonIcon size={20} /> : <Octicons.SunIcon size={20} />)}
+      {isDarkTheme ? <Octicons.MoonIcon size={20} /> : <Octicons.SunIcon size={20} />}
     </button>
   )
 }
@@ -161,7 +133,7 @@ const OtherLinks = () => (
     ].map(([name, Icon, url]) => (
       <li key={name}>
         <a href={url} target='_blank' rel='noopener noreferrer'>
-          {!SSR_MODE && <Icon size={18} />}
+          <Icon size={18} />
           {name}
         </a>
       </li>
@@ -171,20 +143,31 @@ const OtherLinks = () => (
 
 const Header = ({ title }) => {
   const { openSidenav } = React.useContext(Ctx)
-  const [theme, setTheme] = React.useState(window.localStorage.getItem('theme') || 'light')
+  const [theme, setTheme] = React.useState('light')
+  const [themeLoaded, setThemeLoaded] = React.useState(false)
   const toggleTheme = React.useCallback(() => setTheme((t) => t === 'light' ? 'dark' : 'light'), [])
 
   React.useEffect(() => {
+    console.log('Theme LOADED', window.localStorage.getItem('theme'))
+    if (!themeLoaded) {
+      setTheme(window.localStorage.getItem('theme') || 'light')
+      setThemeLoaded(true)
+    }
+  }, [themeLoaded])
+
+  React.useEffect(() => {
+    console.log('Theme SET', theme)
+    if (!themeLoaded) return
     document.documentElement.setAttribute('theme', theme)
-    localStorage.setItem('theme', theme)
-  }, [theme])
+    window.localStorage.setItem('theme', theme)
+  }, [theme, themeLoaded])
 
   return (
     <header>
       <button className='btn-circular menu-btn' onClick={openSidenav} aria-label='Open navigation menu'>
-        {!SSR_MODE && <Octicons.ThreeBarsIcon size={20} />}
+        <Octicons.ThreeBarsIcon size={20} />
       </button>
-      <Link to='/' className='title'>{title}</Link>
+      <Link href='/' className='title'>{title}</Link>
       <i className='divider' />
       <OtherLinks />
       <ThemeButton {...{ toggleTheme, isDarkTheme: theme === 'dark' }} />
@@ -192,14 +175,14 @@ const Header = ({ title }) => {
   )
 }
 
-const Footer = ({ pageOrder }) => {
+const Footer = ({ pages }) => {
   const { prev, next } = React.useMemo(() => {
-    const currIdx = pageOrder.findIndex(({ current }) => current)
+    const currIdx = pages.findIndex(({ current }) => current)
     return {
-      prev: pageOrder[currIdx - 1],
-      next: pageOrder[currIdx + 1]
+      prev: pages[currIdx - 1],
+      next: pages[currIdx + 1]
     }
-  }, [pageOrder])
+  }, [pages])
 
   return (
     <footer>
@@ -207,13 +190,13 @@ const Footer = ({ pageOrder }) => {
         {[['Previous', prev], ['Next', next]].map(([type, item], idx) => (
           <Link
             className={(item ? '' : 'hidden') + (prev && next ? 'joined' : '')}
-            to={item ? ('../' + item.slug) : '#'}
+            href={item ? ('../' + item.slug) : '#'}
             key={type}>
             <div>
               <span>{type}</span>
-              <span>{item && item.title}</span>
+              <span>{item ? item.title : ''}</span>
             </div>
-            {!SSR_MODE && (idx === 0 ? <Octicons.ArrowLeftIcon size={26} /> : <Octicons.ArrowRightIcon size={26} />)}
+            {idx === 0 ? <Octicons.ArrowLeftIcon size={26} /> : <Octicons.ArrowRightIcon size={26} />}
           </Link>
         ))}
       </div>
@@ -231,7 +214,7 @@ const Sidenav = ({ items }) => {
       <ul>
         {items.map(({ title, slug, current }) => (
           <li key={slug}>
-            <Link {...(current ? { className: 'current' } : {})} to={'../' + slug}>{title}</Link>
+            <Link {...(current ? { className: 'current' } : {})} href={'../' + slug}>{title}</Link>
           </li>
         ))}
       </ul>
@@ -255,7 +238,7 @@ const useActiveHeader = (headers) => {
             const containerRect = container.getBoundingClientRect();
             const tocItem = document.getElementById(`toc-item-${headers[i]}`);
             const tocItemPos = tocItem.getBoundingClientRect().top;
-            
+
             const isContentUp = tocItemPos < (containerRect.top + 100);
             const isContentDown = tocItemPos > (containerRect.bottom - 150);
 
@@ -302,50 +285,23 @@ const renderTocList = (parentUrl, items, activeHeader) => (
   </ul>
 )
 
-const TocList = ({ items, headers }) => {
+const TOCList = ({ items, headers }) => {
   const activeHeader = useActiveHeader(headers)
-  
+
   return renderTocList('', items, activeHeader)
 }
 
-const Toc = ({ content }) => {
+const TOC = ({ tree }) => {
   const { toc: isOpen, closeToc } = React.useContext(Ctx)
-  const tocListProps = React.useMemo(() => {
-    const headers = []
-    const html = new window.DOMParser().parseFromString(content, 'text/html')
-
-    const collectItems = (el) => {
-      if (el == null) return []
-      const collection = []
-      el.querySelectorAll('li').forEach((li) => {
-        if (li.parentElement !== el) return
-        const a = li.querySelector('a')
-        const ul = li.querySelector('ul')
-        collection.push({
-          title: a.textContent,
-          isCode: a.firstChild.tagName === 'CODE',
-          url: a.getAttribute('href'),
-          items: ul ? collectItems(ul) : null
-        })
-        headers.push(a.getAttribute('href').slice(1))
-      })
-      return collection
-    }
-
-    return {
-      headers,
-      items: collectItems(html.querySelector('ul'))
-    }
-  }, [content])
 
   return (
     <div className={`toc ${isOpen ? 'open' : ''}`}>
       <span>Table of Contents</span>
       <button className='toc-closer btn-circular' onClick={closeToc} aria-label='Close table of contents side menu'>
-        {!SSR_MODE && <Octicons.XIcon size={18} />}
+        <Octicons.XIcon size={18} />
       </button>
       <SimpleBar className='toc-list-wrapper'>
-        <TocList {...tocListProps} />
+        <TOCList {...tree} />
       </SimpleBar>
     </div>
   )
@@ -361,33 +317,10 @@ const Dimmer = () => {
   )
 }
 
-export default function Documentation({ 
-  data: { markdownRemark, allMarkdownRemark, pageOrder: pageOrderData, site: { siteMetadata: site } }
-}) {
+export function DocsPage({ frontmatter, content, site, toc, pages }) {
   const [isTocOpen, setTocOpen] = React.useState(false)
   const [isSidenavOpen, setSidenavOpen] = React.useState(false)
   const openToc = React.useCallback(() => setTocOpen(true), [])
-  const pageOrder = React.useMemo(() => (
-    allMarkdownRemark.edges
-      .map(({ node: { id, slug, frontmatter: { title } } }) => ({ title, slug, current: id === markdownRemark.id }))
-      .filter(({ slug }) => {
-        if (process.env.NODE_ENV === 'production') {
-          return !(/^__/.test(slug))
-        }
-        return true
-      })
-      .sort((a, b) => {
-        const orderOf = ({ title }) => pageOrderData.items[title] || -1;
-
-        [a, b].forEach(({ title }) => {
-          if (!(title in pageOrderData.items)) {
-            console.error(`${title} has not been added to __order.txt`)
-          }
-        })
-
-        return orderOf(a) - orderOf(b)
-      })
-  ), [pageOrderData, allMarkdownRemark, markdownRemark]);
   const providerValue = {
     toc: isTocOpen,
     sidenav: isSidenavOpen,
@@ -395,80 +328,40 @@ export default function Documentation({
     closeToc() { isTocOpen && setTocOpen(false) },
     closeSidenav() { setSidenavOpen(false) }
   }
-  const metaTitle = `${markdownRemark.frontmatter.title} | ${site.metaTitle}`
-  const pageUrl = new window.URL(markdownRemark.slug, site.url).toString()
+  const metaTitle = `${frontmatter.title} | ${site.metaTitle}`
 
   return (
-    <div>
-      <Helmet>
-        <html lang='en' />
+    <>
+      <Head>
         <meta charSet='utf-8' />
         <title>{metaTitle}</title>
         {/* <meta name='description' content={site.description} /> */}
-        <link rel='canonical' href={pageUrl} />
+        <link rel='canonical' href={site.url} />
         <meta name='robots' content='index, follow' />
 
         <meta property='og:type' content='documentation' />
         <meta property='og:title' content={metaTitle} />
         {/* <meta property='og:description' content={site.description} /> */}
         {/* <meta property='og:image' content='LINK TO THE IMAGE FILE' /> */}
-        <meta property='og:url' content={pageUrl} />
+        <meta property='og:url' content={site.url} />
         <meta property='og:site_name' content={site.metaTitle} />
-      </Helmet>
+      </Head>
 
       <Ctx.Provider value={providerValue}>
         <Header title={site.title} />
-        <Sidenav items={pageOrder} />
-        <Toc content={markdownRemark.tableOfContents} />
+        <Sidenav items={pages} />
+        <TOC tree={toc} />
         <Dimmer />
 
         <div className='md-content'>
-          <h1>{markdownRemark.frontmatter.title}</h1>
-          <Interweave content={markdownRemark.html} transform={interweaveTransform} />
-          <Footer pageOrder={pageOrder} />
+          <h1>{frontmatter.title}</h1>
+          <Interweave content={content} transform={interweaveTransform} />
+          <Footer pages={pages} />
           <button className='toc-opener btn-circular' onClick={openToc} aria-label='Open table of contents side menu'>
-            {!SSR_MODE && <Octicons.QuoteIcon size={18} />}
+            <Octicons.QuoteIcon size={18} />
           </button>
         </div>
       </Ctx.Provider>
-    </div>
+    </>
   )
 }
-
-export const pageQuery = graphql`
-  query DocPageQuery($id: String) {
-    site {
-      siteMetadata {
-        title
-        metaTitle
-        url
-      }
-    }
-
-    pageOrder {
-      items(from: "src/docs/__order.txt")
-    }
-
-    markdownRemark(id: { eq: $id }) {
-      id
-      html
-      tableOfContents
-      slug
-      frontmatter {
-        title
-      }
-    }
-
-    allMarkdownRemark {
-      edges {
-        node {
-          id
-          slug
-          frontmatter {
-            title
-          }
-        }
-      }
-    }
-  }
-`

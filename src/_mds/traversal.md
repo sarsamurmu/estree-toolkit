@@ -169,7 +169,7 @@ traverse(ast, {
   }
 });
 ```
-``` Output
+```txt Output
 Name is - a
 Name is - b
 Name is - c
@@ -200,7 +200,7 @@ traverse(ast, {
   }
 });
 ```
-``` Output
+```txt Output
 FunctionDeclaration:
 a
 b
@@ -454,7 +454,7 @@ traverse(ast, {
 });
 ```
 
-``` Output
+```txt Output
 a
 b
 c
