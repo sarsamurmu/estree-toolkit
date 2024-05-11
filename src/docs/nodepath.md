@@ -199,7 +199,20 @@ traversed if it's not already traversed
 
 ### `unskip()`
 
-Alias of `unSkip`
+Alias for `unSkip`
+
+### `skipChildren()`
+
+Skips all children of the path from traversal
+
+### `unSkipChildren()`
+
+Un-skip all children of the path from traversal. Whenever un-skipped, children of
+the path would be traversed if the children is not already traversed
+
+### `unskipChildren()`
+
+Alias for `unSkipChildren`
 
 ### `traverse(visitor, state)`
 - `visitor`: <`Visitor`> Object to use as the visitor
