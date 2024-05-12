@@ -162,7 +162,8 @@ export async function getStaticProps({ params: { slug } }) {
         site: {
           title: 'estree-toolkit',
           metaTitle: 'estree-toolkit - Tools for working with ESTree AST',
-          url: 'https://estree-toolkit.netlify.app/' + slug
+          url: 'https://estree-toolkit.netlify.app/' + slug,
+          description: 'Traverser, scope tracker, and more tools for working with ESTree AST'
         }
       }
     };

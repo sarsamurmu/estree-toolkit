@@ -335,16 +335,17 @@ export function DocsPage({ frontmatter, content, site, toc, pages }) {
       <Head>
         <meta charSet='utf-8' />
         <title>{metaTitle}</title>
-        {/* <meta name='description' content={site.description} /> */}
+        <meta name='description' content={site.description} />
         <link rel='canonical' href={site.url} />
         <meta name='robots' content='index, follow' />
 
         <meta property='og:type' content='documentation' />
         <meta property='og:title' content={metaTitle} />
-        {/* <meta property='og:description' content={site.description} /> */}
+        <meta property='og:description' content={site.description} />
         {/* <meta property='og:image' content='LINK TO THE IMAGE FILE' /> */}
         <meta property='og:url' content={site.url} />
         <meta property='og:site_name' content={site.metaTitle} />
+        <link rel='icon' href='/favicon.svg' />
       </Head>
 
       <Ctx.Provider value={providerValue}>
