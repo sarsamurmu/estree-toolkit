@@ -345,7 +345,7 @@ export function DocsPage({ frontmatter, content, site, toc, pages }) {
         {/* <meta property='og:image' content='LINK TO THE IMAGE FILE' /> */}
         <meta property='og:url' content={site.url} />
         <meta property='og:site_name' content={site.metaTitle} />
-        <link rel='icon' href='/favicon.svg' />
+        <link rel='icon' href='/favicon.ico' />
       </Head>
 
       <Ctx.Provider value={providerValue}>
