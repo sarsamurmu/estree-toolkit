@@ -1,3 +1,6 @@
+## 1.7.5
+- Remove unused dependencies
+
 ## 1.7.4
 - Add `CatchClause` to `hasBinding`
 - Updated dependencies
