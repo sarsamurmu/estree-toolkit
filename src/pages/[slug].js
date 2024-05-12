@@ -17,14 +17,14 @@ import { DocsPage } from '@/components/docs-page'
 
 function addID(node, nodes, headers) {
   const id = toString(node)
+    .replace(/[^a-zA-Z\d\s-]/g, '')
+    .split(' ')
+    .join('-')
+    .toLowerCase()
   nodes[id] = (nodes[id] || 0) + 1
   node.data = node.data || {
     hProperties: {
-      id: `${id}${nodes[id] > 1 ? ` ${nodes[id] - 1}` : ''}`
-        .replace(/[^a-zA-Z\d\s-]/g, '')
-        .split(' ')
-        .join('-')
-        .toLowerCase(),
+      id: `${id}${nodes[id] > 1 ? `-${nodes[id]}` : ''}`,
     },
   }
   headers.push(node.data.hProperties.id)
@@ -35,6 +35,7 @@ function transformNode(node, output, indexMap) {
     title: toString(node),
     depth: node.depth,
     url: '#' + node.data.hProperties.id,
+    isCode: node.children.length === 1 && node.children[0].type === 'inlineCode',
     items: [],
   }
 

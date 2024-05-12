@@ -148,7 +148,6 @@ const Header = ({ title }) => {
   const toggleTheme = React.useCallback(() => setTheme((t) => t === 'light' ? 'dark' : 'light'), [])
 
   React.useEffect(() => {
-    console.log('Theme LOADED', window.localStorage.getItem('theme'))
     if (!themeLoaded) {
       setTheme(window.localStorage.getItem('theme') || 'light')
       setThemeLoaded(true)
@@ -156,7 +155,6 @@ const Header = ({ title }) => {
   }, [themeLoaded])
 
   React.useEffect(() => {
-    console.log('Theme SET', theme)
     if (!themeLoaded) return
     document.documentElement.setAttribute('theme', theme)
     window.localStorage.setItem('theme', theme)
