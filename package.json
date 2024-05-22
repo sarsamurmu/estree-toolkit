@@ -10,7 +10,7 @@
   },
   "dependencies": {
     "@primer/octicons-react": "^19.9.0",
-    "@shikijs/rehype": "^1.5.1",
+    "@shikijs/rehype": "^1.6.0",
     "hastscript": "^9.0.0",
     "interweave": "^13.1.0",
     "interweave-ssr": "^2.0.0",
@@ -24,7 +24,7 @@
     "remark-parse": "^11.0.0",
     "remark-rehype": "^11.1.0",
     "remark-stringify": "^11.0.0",
-    "sass": "^1.77.1",
+    "sass": "^1.77.2",
     "simplebar-react": "^3.2.5",
     "unified": "^11.0.4",
     "unist-util-visit": "^5.0.0",
