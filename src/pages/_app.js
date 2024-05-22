@@ -1,5 +1,5 @@
 import 'simplebar-react/dist/simplebar.min.css'
-import '@/styles/docs.scss'
+import '@/styles/global.scss'
 
 export default function App({ Component, pageProps, ...rest }) {
   return <Component {...pageProps} />

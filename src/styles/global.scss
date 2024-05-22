@@ -1,0 +1,96 @@
+@import './mixins';
+@import './colors';
+
+body {
+  font-family: 'Sora', sans-serif;
+  background-color: var(--body-bg);
+  color: var(--body-text);
+  line-height: calc(1em + 0.725rem);
+
+  @include small {
+    --header-height: 60px;
+  }
+
+  &.no-transition * {
+    transition-duration: 0s !important;
+  }
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: 'Lexend Deca', sans-serif;
+  font-weight: normal;
+  scroll-margin-top: calc(var(--header-height) + 18px);
+
+  >code {
+    line-break: anywhere;
+  }
+}
+
+h1 {
+  font-size: 2.25rem;
+}
+
+h2 {
+  font-size: 1.875rem;
+}
+
+h3 {
+  font-size: 1.5rem;
+}
+
+hr {
+  border-style: none;
+  border-top: $border;
+  margin: 30px 0;
+}
+
+a {
+  color: var(--link);
+  text-decoration: none;
+
+  &:hover {
+    text-decoration: dashed;
+    text-decoration-line: revert;
+    text-decoration-skip-ink: none;
+    text-underline-offset: 4px;
+    text-decoration-thickness: 2px;
+  }
+}
+
+code {
+  font-family: 'JetBrains Mono', monospace;
+  font-variant-ligatures: none;
+
+  &:not([class*=language-]) {
+    background-color: var(--code-bg);
+    padding: 2px 5px;
+    border: 1px solid var(--code-border);
+    border-radius: 4px;
+    line-height: 1.8;
+    font-size: 92%;
+  }
+
+  &[class*=language-] {
+    display: block;
+    width: max-content;
+    overflow-y: visible;
+    padding: 14px 20px;
+    padding-right: 40px;
+    font-size: 13px;
+    white-space: pre;
+    line-height: 1.5;
+  }
+}
+
+.simplebar-scrollbar:before {
+  background-color: rgb(139, 139, 139);
+
+  &.simplebar-visible {
+    opacity: 0.3;
+  }
+}

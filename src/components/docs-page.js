@@ -1,5 +1,3 @@
-// import "@/styles/globals.css";
-
 import React, { useEffect } from 'react'
 import Head from 'next/head'
 import Link from 'next/link'
@@ -7,6 +5,7 @@ import { Interweave } from 'interweave'
 import * as Octicons from '@primer/octicons-react'
 import SimpleBar from 'simplebar-react'
 import * as InterweaveSSR from 'interweave-ssr'
+import s from '@/styles/docs.module.scss'
 
 InterweaveSSR.polyfill()
 
@@ -14,7 +13,7 @@ const CopyButton = () => {
   const [copied, setCopied] = React.useState(false)
 
   const onClick = (e) => {
-    const codeText = e.nativeEvent.target.closest('.inner').querySelector('code').innerText
+    const codeText = e.nativeEvent.target.closest('.' + s.inner).querySelector('code').innerText
     try {
       window.navigator.clipboard.writeText(codeText)
       setCopied(true)
@@ -25,7 +24,7 @@ const CopyButton = () => {
   }
 
   return (
-    <button className='copy-button' onClick={onClick} aria-label='Copy code block content'>
+    <button className={s.copyButton} onClick={onClick} aria-label='Copy code block content'>
       {copied ? <Octicons.CheckIcon fill="#07bd5f" /> : <Octicons.CopyIcon />}
     </button>
   )
@@ -33,11 +32,11 @@ const CopyButton = () => {
 
 const CodeWrapper = ({ children, title }) => {
   return (
-    <div className='code-block'>
+    <div className={s.codeBlock}>
       {title && <span>{title}</span>}
-      <div className='inner'>
+      <div className={s.inner}>
         <CopyButton />
-        <div className='wrapper'>
+        <div className={s.wrapper}>
           {children}
         </div>
       </div>
@@ -46,9 +45,9 @@ const CodeWrapper = ({ children, title }) => {
 }
 
 const Alert = ({ children }) => (
-  <div className='alert fromDirective'>
-    <div className='wrapper'>{children}</div>
-    <span className='icon'><Octicons.InfoIcon size={24} /></span>
+  <div className={`${s.alert} ${s.fromDirective}`}>
+    <div className={s.wrapper}>{children}</div>
+    <span className={s.icon}><Octicons.InfoIcon size={24} /></span>
   </div>
 )
 
@@ -56,18 +55,18 @@ const Tabs = ({ children }) => {
   const [activeTab, setActiveTab] = React.useState(children[0].props.name);
 
   return (
-    <div className='tabs fromDirective'>
+    <div className={`${s.tabs} ${s.fromDirective}`}>
       <ul>
         {children.map(({ props: { name } }) => (
           <li
             key={name}
             onClick={() => setActiveTab(name)}
-            {...(name === activeTab ? { className: 'active' } : {})}>
+            {...(name === activeTab ? { className: s.active } : {})}>
             {name}
           </li>
         ))}
       </ul>
-      <div className='content'>
+      <div className={s.content}>
         {children.find(({ props: { name } }) => activeTab === name).props.children}
       </div>
     </div>
@@ -115,7 +114,7 @@ const ThemeButton = ({ toggleTheme, isDarkTheme }) => {
 
   return (
     <button
-      className='btn-circular theme-btn'
+      className={`${s.btnCircular} ${s.themeBtn}`}
       onClick={toggleTheme}
       onMouseEnter={onEnter}
       onMouseLeave={onLeave}
@@ -126,7 +125,7 @@ const ThemeButton = ({ toggleTheme, isDarkTheme }) => {
 }
 
 const OtherLinks = () => (
-  <ul className='links'>
+  <ul className={s.links}>
     {[
       ['GitHub', Octicons.MarkGithubIcon, 'https://github.com/sarsamurmu/estree-toolkit'],
       ['npm', Octicons.PackageIcon, 'https://www.npmjs.com/package/estree-toolkit']
@@ -161,12 +160,12 @@ const Header = ({ title }) => {
   }, [theme, themeLoaded])
 
   return (
-    <header>
-      <button className='btn-circular menu-btn' onClick={openSidenav} aria-label='Open navigation menu'>
+    <header className={s.header}>
+      <button className={`${s.btnCircular} ${s.menuBtn}`} onClick={openSidenav} aria-label='Open navigation menu'>
         <Octicons.ThreeBarsIcon size={20} />
       </button>
-      <Link href='/' className='title'>{title}</Link>
-      <i className='divider' />
+      <Link href='/' className={s.title}>{title}</Link>
+      <i className={s.divider} />
       <OtherLinks />
       <ThemeButton {...{ toggleTheme, isDarkTheme: theme === 'dark' }} />
     </header>
@@ -183,11 +182,11 @@ const Footer = ({ pages }) => {
   }, [pages])
 
   return (
-    <footer>
-      <div className='next-prev-container'>
+    <footer className={s.footer}>
+      <div className={s.nextPrevContainer}>
         {[['Previous', prev], ['Next', next]].map(([type, item], idx) => (
           <Link
-            className={(item ? '' : 'hidden') + (prev && next ? 'joined' : '')}
+            className={`${item ? '' : s.hidden} ${prev && next ? s.joined : ''}`}
             href={item ? ('../' + item.slug) : '#'}
             key={type}>
             <div>
@@ -208,11 +207,11 @@ const Sidenav = ({ items }) => {
   const { sidenav } = React.useContext(Ctx);
 
   return (
-    <div className={`sidenav ${sidenav ? 'open' : ''}`}>
+    <div className={`${s.sidenav} ${sidenav ? s.open : ''}`}>
       <ul>
         {items.map(({ title, slug, current }) => (
           <li key={slug}>
-            <Link {...(current ? { className: 'current' } : {})} href={'../' + slug}>{title}</Link>
+            <Link {...(current ? { className: s.current } : {})} href={'../' + slug}>{title}</Link>
           </li>
         ))}
       </ul>
@@ -232,9 +231,9 @@ const useActiveHeader = (headers) => {
         const rect = el.getBoundingClientRect()
         if (rect.top < 200 && rect.top > 10) {
           if (activeHeader !== headers[i]) {
-            const container = document.querySelector('.toc .simplebar-content-wrapper');
+            const container = document.querySelector(`.${s.toc} .simplebar-content-wrapper`);
             const containerRect = container.getBoundingClientRect();
-            const tocItem = document.getElementById(`toc-item-${headers[i]}`);
+            const tocItem = document.getElementById(`tocItem-${headers[i]}`);
             const tocItemPos = tocItem.getBoundingClientRect().top;
 
             const isContentUp = tocItemPos < (containerRect.top + 100);
@@ -268,13 +267,13 @@ const useActiveHeader = (headers) => {
 }
 
 const renderTocList = (parentUrl, items, activeHeader) => (
-  <ul className={parentUrl === '' ? 'top-ul' : ''}>
+  <ul className={parentUrl === '' ? s.topUl : ''}>
     {items.map((item) => (
       <li
         key={parentUrl + item.url}
-        {...(activeHeader === item.url.slice(1) ? { className: 'active' } : {})}
-        id={`toc-item-${item.url.slice(1)}`}>
-        <a href={item.url} {...(item.isCode ? { className: 'code' } : {})}>
+        {...(activeHeader === item.url.slice(1) ? { className: s.active } : {})}
+        id={`tocItem-${item.url.slice(1)}`}>
+        <a href={item.url} {...(item.isCode ? { className: s.code } : {})}>
           {item.title}
         </a>
         {item.items && renderTocList(item.url, item.items, activeHeader)}
@@ -293,12 +292,12 @@ const TOC = ({ tree }) => {
   const { toc: isOpen, closeToc } = React.useContext(Ctx)
 
   return (
-    <div className={`toc ${isOpen ? 'open' : ''}`}>
+    <div className={`${s.toc} ${isOpen ? s.open : ''}`}>
       <span>Table of Contents</span>
-      <button className='toc-closer btn-circular' onClick={closeToc} aria-label='Close table of contents side menu'>
+      <button className={`${s.tocCloser} ${s.btnCircular}`} onClick={closeToc} aria-label='Close table of contents side menu'>
         <Octicons.XIcon size={18} />
       </button>
-      <SimpleBar className='toc-list-wrapper'>
+      <SimpleBar className={s.tocListWrapper}>
         <TOCList {...tree} />
       </SimpleBar>
     </div>
@@ -310,7 +309,7 @@ const Dimmer = () => {
 
   return (
     <div
-      className={`dimmer ${toc || sidenav ? 'active' : ''}`}
+      className={`${s.dimmer} ${toc || sidenav ? s.actives : ''}`}
       onClick={() => toc ? closeToc() : closeSidenav()} />
   )
 }
@@ -352,11 +351,11 @@ export function DocsPage({ frontmatter, content, site, toc, pages }) {
         <TOC tree={toc} />
         <Dimmer />
 
-        <div className='md-content'>
+        <div className={s.mdContent}>
           <h1>{frontmatter.title}</h1>
           <Interweave content={content} transform={interweaveTransform} />
           <Footer pages={pages} />
-          <button className='toc-opener btn-circular' onClick={openToc} aria-label='Open table of contents side menu'>
+          <button className={`${s.tocOpener} ${s.btnCircular}`} onClick={openToc} aria-label='Open table of contents side menu'>
             <Octicons.QuoteIcon size={18} />
           </button>
         </div>
