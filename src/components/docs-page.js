@@ -309,7 +309,7 @@ const Dimmer = () => {
 
   return (
     <div
-      className={`${s.dimmer} ${toc || sidenav ? s.actives : ''}`}
+      className={`${s.dimmer} ${toc || sidenav ? s.active : ''}`}
       onClick={() => toc ? closeToc() : closeSidenav()} />
   )
 }
