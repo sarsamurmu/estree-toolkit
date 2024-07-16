@@ -75,7 +75,7 @@ export type Builders = {
   privateIdentifier(name: PrivateIdentifier['name']): PrivateIdentifier;
   propertyDefinition(key: PropertyDefinition['key'], value: PropertyDefinition['value'], computed?: PropertyDefinition['computed'], _static?: PropertyDefinition['static']): PropertyDefinition;
   staticBlock(body: StaticBlock['body']): StaticBlock;
-  jsxIdentifier(): JSXIdentifier;
+  jsxIdentifier(name: JSXIdentifier['name']): JSXIdentifier;
   jsxNamespacedName(namespace: JSXNamespacedName['namespace'], name: JSXNamespacedName['name']): JSXNamespacedName;
   jsxMemberExpression(object: JSXMemberExpression['object'], property: JSXMemberExpression['property']): JSXMemberExpression;
   jsxEmptyExpression(): JSXEmptyExpression;
