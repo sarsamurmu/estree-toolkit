@@ -19,7 +19,7 @@ interface Some extends Record<string, Record<string, unknown>> {}
 for (const key in definitions) {
   const nodeType = key as keyof Definitions
 
-  const lowerCasedNodeType = nodeType[0].toLowerCase() + nodeType.slice(1)
+  const lowerCasedNodeType = (nodeType[0].toLowerCase() + nodeType.slice(1)).replace(/^jsx/i, 'jsx')
   const definition: Definition = (definitions as any)[nodeType]
   const { fields } = definition
   const fieldNames = getFieldsOf(definition, 'builder');
