@@ -1127,7 +1127,7 @@ export const definitions: Definitions = Object.assign<any, Definitions>(Object.c
   /// JSX
   JSXIdentifier: {
     indices: {
-      name: false
+      name: [0, false]
     },
     fields: {
       name: {
