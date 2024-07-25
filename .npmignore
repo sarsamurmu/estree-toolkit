@@ -6,6 +6,7 @@ dist/**/*.{map,tsbuildinfo}
 generator-scripts/
 src/
 tests/
+patches/
 .eslintignore
 .eslintrc.js
 codecov.yml

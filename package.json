@@ -1,6 +1,6 @@
 {
   "name": "estree-toolkit",
-  "version": "1.7.5",
+  "version": "1.7.6",
   "description": "Traverser, scope tracker, and more tools for working with ESTree AST",
   "main": "./dist/index.js",
   "exports": {
@@ -25,7 +25,7 @@
     "test:watch": "jest --watch",
     "test:build": "tsc -p ./tests/build.tsconfig.json",
     "test:build:watch": "tsc -p ./tests/build.tsconfig.json --incremental -w",
-    "test:ci": "npm run generate && npm run build:sourcemap && npm run test:build && npm run test:run",
+    "test:ci": "patch-package && npm run generate && npm run build:sourcemap && npm run test:build && npm run test:run",
     "lint": "eslint \"{src,tests}/**/*.{js,ts}\""
   },
   "keywords": [
@@ -52,9 +52,10 @@
     "astring": "^1.8.6",
     "eslint": "^8.57.0",
     "jest": "^29.7.0",
-    "meriyah": "^4.4.2",
+    "meriyah": "^5.0.0",
+    "patch-package": "^8.0.0",
     "ts-node": "^10.9.2",
-    "typescript": "^5.4.5",
+    "typescript": "^5.5.4",
     "typescript-eslint": "^7.8.0"
   },
   "dependencies": {

@@ -9,7 +9,8 @@
       "<project>": ["../src"],
       "<project>/*": ["../src/*"]
     },
-    "lib": ["ESNext"]
+    "lib": ["ESNext"],
+    "resolveJsonModule": true
   },
   "include": [
     "./src/**/*"

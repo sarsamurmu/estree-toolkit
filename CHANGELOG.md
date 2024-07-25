@@ -1,3 +1,6 @@
+## 1.7.6
+- Fix JSX related builder names
+
 ## 1.7.5
 - Remove unused dependencies
 

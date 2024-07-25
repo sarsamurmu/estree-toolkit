@@ -1,0 +1,12 @@
+diff --git a/node_modules/meriyah/dist/src/meriyah.d.ts b/node_modules/meriyah/dist/src/meriyah.d.ts
+index 5ce9c5b..33a4b83 100644
+--- a/node_modules/meriyah/dist/src/meriyah.d.ts
++++ b/node_modules/meriyah/dist/src/meriyah.d.ts
+@@ -1,6 +1,6 @@
+ import { Options } from './parser';
+ import * as ESTree from './estree';
+-import { version } from '../package.json';
++import { version } from '../../package.json';
+ export declare function parseScript(source: string, options?: Options): ESTree.Program;
+ export declare function parseModule(source: string, options?: Options): ESTree.Program;
+ export declare function parse(source: string, options?: Options): ESTree.Program;
