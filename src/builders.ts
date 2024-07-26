@@ -1,6 +1,7 @@
 import { Builders } from './generated/builders-type'
 import { definitions, Definition, Definitions, DefinitionField, getFieldsOf } from './definitions'
 import { runValidation } from './assert'
+import { toCamelCase } from './string'
 
 let shouldValidateNodes = true
 
@@ -19,12 +20,11 @@ interface Some extends Record<string, Record<string, unknown>> {}
 for (const key in definitions) {
   const nodeType = key as keyof Definitions
 
-  const lowerCasedNodeType = (nodeType[0].toLowerCase() + nodeType.slice(1)).replace(/^jsx/i, 'jsx')
   const definition: Definition = (definitions as any)[nodeType]
   const { fields } = definition
   const fieldNames = getFieldsOf(definition, 'builder');
 
-  (builders as any)[lowerCasedNodeType] = (...args: any[]) => {
+  (builders as any)[toCamelCase(nodeType)] = (...args: any[]) => {
     const node: Record<string, unknown> = { type: nodeType }
 
     fieldNames.forEach((fieldName, index) => {

@@ -3,12 +3,11 @@ import path from 'path';
 
 import { definitions } from '../src/definitions';
 import { aliases } from '../src/aliases';
+import { toCamelCase } from '../src/string'
 
 let content = '';
 const nodeTypes = Object.keys(definitions);
 const aliasNames = Object.keys(aliases);
-
-const lowerCase = (str: string) => (str[0].toLowerCase() + str.slice(1)).replace(/^jsx/i, 'jsx');
 
 content += `
 // Generated file. Do not modify by hands.
@@ -32,13 +31,13 @@ export type Checker<T extends Node> = {
 content += '\n\nexport type Is = {\n';
 
 nodeTypes.forEach((nodeName) => {
-  content += `  ${lowerCase(nodeName)}: Checker<${nodeName}>;\n`;
+  content += `  ${toCamelCase(nodeName)}: Checker<${nodeName}>;\n`;
 });
 
 content += '\n';
 
 aliasNames.forEach((aliasName) => {
-  content += `  ${lowerCase(aliasName)}: Checker<AliasMap['${aliasName}']>;\n`;
+  content += `  ${toCamelCase(aliasName)}: Checker<AliasMap['${aliasName}']>;\n`;
 });
 
 content += '}';
