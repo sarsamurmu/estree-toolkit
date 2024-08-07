@@ -4,6 +4,7 @@ import { Is, Matcher } from './generated/is-type'
 import { definitions } from './definitions'
 import { aliases } from './aliases'
 import { NodePath } from './nodepath'
+import { toCamelCase } from './string'
 
 const matches = (object: Record<string, any>, toMatch: Matcher<Node>) => {
   for (const key in toMatch) {
@@ -17,12 +18,10 @@ const matches = (object: Record<string, any>, toMatch: Matcher<Node>) => {
   return true
 }
 
-const lowerCase = (str: string) => str[0].toLowerCase() + str.slice(1)
-
 export const is: Is = {} as any
 
 for (const nodeType in definitions) {
-  (is as any)[lowerCase(nodeType)] = (
+  (is as any)[toCamelCase(nodeType)] = (
     nodeOrNodePath: Node | NodePath | null | undefined,
     toMatch?: Matcher<Node>
   ) => {
@@ -35,7 +34,7 @@ for (const nodeType in definitions) {
     const node: Node | null = (nodeOrNodePath as NodePath).ctx != null
       ? (nodeOrNodePath as NodePath).node
       : (nodeOrNodePath as Node)
-    
+
     return (
       node != null && node.type === nodeType &&
       (toMatch != null ? matches(node, toMatch) : true)
@@ -44,7 +43,7 @@ for (const nodeType in definitions) {
 }
 
 for (const aliasName in aliases) {
-  (is as any)[lowerCase(aliasName)] = (
+  (is as any)[toCamelCase(aliasName)] = (
     nodeOrNodePath: Node | NodePath | null | undefined,
     toMatch?: Matcher<Node>
   ) => {

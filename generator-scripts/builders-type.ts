@@ -2,6 +2,7 @@ import fs from 'fs';
 import path from 'path';
 
 import { Definition, DefinitionField, definitions, getFieldsOf } from '../src/definitions';
+import { toCamelCase } from '../src/string'
 
 let content = '';
 const nodeNames = Object.keys(definitions);
@@ -27,7 +28,6 @@ content += '\n\nexport type Builders = {\n';
 const defaultKey: keyof DefinitionField<any, any> = 'default';
 nodeNames.forEach((nodeName) => {
   const definition: Definition = definitions[nodeName];
-  const lowerCasedTypeName = (nodeName[0].toLowerCase() + nodeName.slice(1)).replace(/^jsx/i, 'jsx');
   const parameters = getFieldsOf(definition, 'builder').map((fieldName) => {
     const field: DefinitionField<any, any> = definition.fields[fieldName];
     const optional = defaultKey in field;
@@ -35,7 +35,7 @@ nodeNames.forEach((nodeName) => {
     return `${(isReserved(fieldName) ? '_' : '') + fieldName}${optional ? '?' : ''}: ${field.type || `${nodeName}['${fieldName}']` }`
   }).join(', ');
 
-  content += `  ${lowerCasedTypeName}(${parameters}): ${nodeName};\n`;
+  content += `  ${toCamelCase(nodeName)}(${parameters}): ${nodeName};\n`;
 });
 
 content += '}';
