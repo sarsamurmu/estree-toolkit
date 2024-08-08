@@ -1,3 +1,6 @@
+## 1.7.7
+- More fix to JSX related builders
+
 ## 1.7.6
 - Fix JSX related builder names
 
