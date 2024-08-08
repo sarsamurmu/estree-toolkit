@@ -238,5 +238,8 @@ other tools which are faster than Babel. For example, [`meriyah`](https://github
 faster alternatives for one of my projects but could not find any traverser with
 batteries-included. So I built one myself, with awesome scope analysis, it has all the things that you would need for traversing an ESTree AST. Also, a little bit faster than Babel.
 
+## Need help?
+If you need help in any kind of ESTree AST modification, then don't hesitate to open a new discussion in [Q&A Discussions](https://github.com/sarsamurmu/estree-toolkit/discussions/categories/q-a). I will try my best to help you :)
+
 ## License
 Licensed under the [MIT License](/LICENSE).
