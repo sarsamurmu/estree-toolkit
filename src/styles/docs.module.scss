@@ -299,6 +299,7 @@ $toc-width: 230px;
   border-radius: 8px;
   background-color: var(--code-block-bg);
   border: $border;
+  margin-block: 10px;
 
   > span {
     color: rgb(230, 230, 230);
