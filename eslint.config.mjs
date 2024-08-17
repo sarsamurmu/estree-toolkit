@@ -18,7 +18,7 @@ const rules = {
   '@typescript-eslint/no-unsafe-return': 'off',
   '@typescript-eslint/no-unsafe-member-access': 'off',
   '@typescript-eslint/no-unsafe-argument': 'off',
-  '@typescript-eslint/no-unnecessary-type-assertion': 'off'
+  '@typescript-eslint/no-unnecessary-type-assertion': 'off',
 
   'comma-spacing': 'off',
   '@stylistic/ts/comma-spacing': 'error',
@@ -80,7 +80,13 @@ export default [
       }],
       'quote-props': ['error', 'as-needed'],
       'semi': ['error', 'never'],
-    }
+    },
+    ignores: [
+      'dist/**',
+      'dist-es/**',
+      'generator-scripts/**',
+      'src/generated'
+    ]
   },
   ...tseslint.config({
     files: ['**/*.ts'],
@@ -94,7 +100,7 @@ export default [
     }
   }),
   ...tseslint.config({
-    files: ['**/*.test.ts'],
+    files: ['tests/**/*.test.ts'],
     ...common,
     languageOptions: {
       parserOptions: {
