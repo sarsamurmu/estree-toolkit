@@ -1,10 +1,8 @@
-import { Node } from './estree'
-
 import { Is, Matcher } from './generated/is-type'
 import { definitions } from './definitions'
 import { aliases } from './aliases'
 import { NodePath } from './nodepath'
-import { toCamelCase } from './string'
+import { Node, toCamelCase } from './helpers'
 
 const matches = (object: Record<string, any>, toMatch: Matcher<Node>) => {
   for (const key in toMatch) {

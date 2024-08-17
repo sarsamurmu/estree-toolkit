@@ -1,4 +1,4 @@
-import { BaseNode, Node, ParentsOf } from './estree'
+import { BaseNode, Node, ParentsOf } from './helpers'
 import * as a from './assert'
 
 type NodeKeys<N> = Exclude<keyof N, keyof BaseNode>

@@ -1,7 +1,7 @@
 import { Builders } from './generated/builders-type'
 import { definitions, Definition, Definitions, DefinitionField, getFieldsOf } from './definitions'
 import { runValidation } from './assert'
-import { toCamelCase } from './string'
+import { toCamelCase } from './helpers'
 
 let shouldValidateNodes = true
 
@@ -14,7 +14,7 @@ export const getNodeValidationEnabled = () => shouldValidateNodes
 export const builders: Builders = {} as any
 
 // Pseudo type for some kind of value, actual value may not like this type
-// eslint-disable-next-line @typescript-eslint/no-empty-interface
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 interface Some extends Record<string, Record<string, unknown>> {}
 
 for (const key in definitions) {

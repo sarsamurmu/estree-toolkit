@@ -1,7 +1,7 @@
 import * as ESTree from 'estree-jsx'
 
 /** Creates a clean object that doesn't have any prototype */
-const clean = <T>(obj: T): T => Object.assign(Object.create(null), obj)
+const clean = <T>(obj: T): T => Object.assign(Object.create(null), obj) as T
 
 export type AliasMap = {
   Function: ESTree.Function;

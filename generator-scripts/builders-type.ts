@@ -2,7 +2,7 @@ import fs from 'fs';
 import path from 'path';
 
 import { Definition, DefinitionField, definitions, getFieldsOf } from '../src/definitions';
-import { toCamelCase } from '../src/string'
+import { toCamelCase } from '../src/helpers'
 
 let content = '';
 const nodeNames = Object.keys(definitions);

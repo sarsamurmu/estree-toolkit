@@ -1,4 +1,4 @@
-import { Node, BaseNode, NodeT, ParentsOf } from './estree'
+import { Node, BaseNode, NodeT, ParentsOf, NodeTypes } from './helpers'
 import { TraverseOptions, Traverser, Visitors } from './traverse'
 import { Scope } from './scope'
 import { is } from './is'
@@ -6,7 +6,6 @@ import * as t from './generated/types'
 import { NodePathDocs } from './nodepath-doc'
 import { Definition, definitions, visitorKeys } from './definitions'
 import { getNodeValidationEnabled } from './builders'
-import { NodeTypes } from './estree'
 
 // * Tip: Fold the regions for better experience
 
@@ -441,6 +440,7 @@ export class NodePath<T extends Node = Node, P extends Node = Node> implements N
   ): T[K] extends (infer U | null)[]
     ? U extends Node ? NodePath<U, T>[] : NodePath<never, T>[]
     : T[K] extends Node ? NodePath<T[K], T> : NodePath<never, T>
+  // eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents
   get<N extends Node | Node[] | unknown = unknown>(
     key: string
   ): unknown extends N
@@ -482,7 +482,7 @@ export class NodePath<T extends Node = Node, P extends Node = Node> implements N
       listKey: null,
       parentPath: this as any as NodePath,
       ctx: this.ctx
-    }).init() as NodePath
+    }).init()
   }
 
   getSibling<N extends Node = Node>(key: string | number): NodePath<N> | undefined | never {

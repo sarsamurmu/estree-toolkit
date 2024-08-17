@@ -1,7 +1,7 @@
 import { parseModule } from 'meriyah'
 
 import { traverse, utils as u } from '<project>'
-import { NodeT } from '<project>/estree'
+import { NodeT } from '<project>/helpers'
 
 test('getCommonAncestor', () => {
   const ast = parseModule(`

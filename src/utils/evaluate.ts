@@ -1,5 +1,5 @@
 import { NodePath, NodePathT } from '../nodepath'
-import { assertNever, NodeT } from '../estree'
+import { assertNever, NodeT } from '../helpers'
 
 const evaluateBinaryExpr = (left: any, right: any, operator: NodeT<'BinaryExpression'>['operator']) => {
   switch (operator) {

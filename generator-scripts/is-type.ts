@@ -3,7 +3,7 @@ import path from 'path';
 
 import { definitions } from '../src/definitions';
 import { aliases } from '../src/aliases';
-import { toCamelCase } from '../src/string'
+import { toCamelCase } from '../src/helpers'
 
 let content = '';
 const nodeTypes = Object.keys(definitions);
@@ -13,7 +13,7 @@ content += `
 // Generated file. Do not modify by hands.
 // Run "npm run generate" to re-generate this file.
 
-import { Node, BaseNode } from '../estree';
+import { Node, BaseNode } from '../helpers';
 import { ${nodeTypes.join(', ')} } from 'estree-jsx';
 import { NodePath } from '../nodepath';
 import type { AliasMap } from '../aliases';

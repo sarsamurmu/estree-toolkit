@@ -1,5 +1,5 @@
 import { Identifier, JSXIdentifier, Pattern } from 'estree-jsx'
-import { Node, assertNever, PossibleKeysInParent, NodeMap, NodeT, ParentsOf } from './estree'
+import { Node, assertNever, PossibleKeysInParent, NodeMap, NodeT, ParentsOf } from './helpers'
 import { NodePath, NodePathT } from './nodepath'
 import { Traverser, ExpandedVisitor, ExpandedVisitors } from './traverse'
 import { Binding, BindingKind, BindingPathT, GlobalBinding } from './binding'

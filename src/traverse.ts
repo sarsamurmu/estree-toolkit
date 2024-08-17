@@ -1,5 +1,4 @@
-import { Node } from './estree'
-
+import { Node } from './helpers'
 import { Context, NodePath } from './nodepath'
 import { visitorKeys } from './definitions'
 import { aliases, AliasMap } from './aliases'

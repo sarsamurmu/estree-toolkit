@@ -1,4 +1,4 @@
-import { BaseNode, NodeT, NodeTypes } from './estree'
+import { BaseNode, NodeT, NodeTypes } from './helpers'
 import { aliases, AliasMap } from './aliases'
 
 /**

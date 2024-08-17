@@ -5,7 +5,7 @@ import {
   Statement,
   ModuleDeclaration
 } from 'estree-jsx'
-import { NodeMap } from '../estree'
+import { NodeMap } from '../helpers'
 import { NodePath } from '../nodepath'
 
 export const hasBinding = (() => {

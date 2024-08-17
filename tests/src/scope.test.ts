@@ -2,7 +2,7 @@ import { parseModule } from 'meriyah'
 import { generate } from 'astring'
 
 import { traverse, builders as b, NodePath,  } from '<project>'
-import { NodeT } from '<project>/estree'
+import { NodeT } from '<project>/helpers'
 
 test('reference collection', () => {
   const source = `

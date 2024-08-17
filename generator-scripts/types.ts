@@ -9,7 +9,7 @@ let content = `
 // Generated file. Do not modify by hands.
 // Run "npm run generate" to re-generate this file.
 
-export { Node } from '../estree';
+export { Node } from '../helpers';
 export { SimpleLiteral, RegExpLiteral, ${nodeTypes.join(', ')} } from 'estree-jsx';
 `.trim();
 
