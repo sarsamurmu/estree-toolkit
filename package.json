@@ -41,7 +41,10 @@
     "acorn",
     "meriyah"
   ],
-  "repository": "github:sarsamurmu/estree-toolkit",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sarsamurmu/estree-toolkit.git"
+  },
   "homepage": "https://estree-toolkit.netlify.app/",
   "author": "Sarsa Murmu <sarsamurmu05@gmail.com>",
   "license": "MIT",
