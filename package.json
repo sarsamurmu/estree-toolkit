@@ -15,7 +15,7 @@
   },
   "scripts": {
     "generate": "ts-node ./generator-scripts/index.ts",
-    "build": "npm run generate && npm run build:ts && npm run build:es && node fix-es.js",
+    "build": "node remove-files.js && npm run generate && npm run build:ts && npm run build:es && node fix-es.js",
     "build:es": "tsc -p tsconfig.es.json",
     "build:ts": "tsc",
     "build:sourcemap": "tsc --sourceMap",

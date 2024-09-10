@@ -17,3 +17,4 @@ tsconfig.es.json
 snapshotResolver.js
 TODO.md
 fix-es.js
+remove-files.js
