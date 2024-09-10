@@ -1,6 +1,6 @@
 {
   "name": "estree-toolkit",
-  "version": "1.7.7",
+  "version": "1.7.8",
   "description": "Traverser, scope tracker, and more tools for working with ESTree AST",
   "main": "./dist/index.js",
   "exports": {
@@ -46,18 +46,18 @@
   "author": "Sarsa Murmu <sarsamurmu05@gmail.com>",
   "license": "MIT",
   "devDependencies": {
-    "@eslint/js": "^9.9.0",
-    "@stylistic/eslint-plugin": "^2.6.4",
+    "@eslint/js": "^9.10.0",
+    "@stylistic/eslint-plugin": "^2.7.2",
     "@types/eslint__js": "^8.42.3",
     "@types/jest": "^29.5.12",
-    "astring": "^1.8.6",
-    "eslint": "^9.9.0",
+    "astring": "^1.9.0",
+    "eslint": "^9.10.0",
     "jest": "^29.7.0",
     "meriyah": "^5.0.0",
     "patch-package": "^8.0.0",
     "ts-node": "^10.9.2",
     "typescript": "^5.5.4",
-    "typescript-eslint": "^8.1.0"
+    "typescript-eslint": "^8.4.0"
   },
   "dependencies": {
     "@types/estree": "^1.0.5",
