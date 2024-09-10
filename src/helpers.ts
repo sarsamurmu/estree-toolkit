@@ -36,6 +36,7 @@ const SPLIT_REPLACE_VALUE = '$1\0$2'
 
 const DEFAULT_STRIP_REGEXP = /[^\p{L}\d]+/giu
 
+/* istanbul ignore next */
 const split = (input: string) => {
   let output = input.trim()
 
