@@ -603,7 +603,11 @@ const identifierCrawlers: {
   },
   PropertyDefinition(key, path, state) {
     switch (key) {
-      case 'key': break
+      case 'key':
+        if (path.parent!.computed) {
+          state.references.push(path)
+        }
+        break
       case 'value':
         state.references.push(path)
         break

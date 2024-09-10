@@ -45,7 +45,7 @@ test('reference collection', () => {
     export default ExportDefaultDeclaration_declaration;
     export { ExportSpecifier_local as x }
     export * as exportAllDeclaration_exported from '';
-    class x { propertyDefinition_key = PropertyDefinition_value }
+    class x { propertyDefinition_key = PropertyDefinition_value; [PropertyDefinition_key_computed] = 0 }
     // --------------------- JSX ----------------------------
     <a b={JSXExpressionContainer_expression} />;
     <a {...JSXSpreadAttribute_argument} />;
