@@ -1,7 +1,7 @@
 export { evaluate, evaluateTruthy } from './evaluate'
 export { hasBinding } from './hasBinding'
 
-import { NodePath } from '../nodepath'
+import { NodePath, NodePathT } from '../nodepath'
 
 export const getCommonAncestor = (paths: NodePath[]): NodePath | null => {
   const ancestorsArr = []
@@ -24,4 +24,25 @@ export const getCommonAncestor = (paths: NodePath[]): NodePath | null => {
     }
     common = currAncestor
   }
+}
+
+export const isReference = (path: NodePathT<'Identifier' | 'JSXIdentifier'>, includeGlobals = true) => {
+  if (!path.scope) {
+    throw new Error("Can't use isReference() when `scope` is not enabled")
+  }
+
+  const binding = path.scope.getBinding(path.node!.name)
+  if (binding != null) {
+    return path === binding.identifierPath || binding.references.includes(path)
+  }
+
+  if (!includeGlobals) return false
+
+  const globalBinding = path.scope.getGlobalBinding(path.node!.name)
+  if (globalBinding != null) {
+    return globalBinding.references.includes(path)
+  }
+  
+  
+  return false
 }
