@@ -1,3 +1,7 @@
+## 1.7.8
+- Add `isReference` utility function
+- Fix reference collection issue with computed `PropertyDefinition`
+
 ## 1.7.7
 - More fix to JSX related builders
 
