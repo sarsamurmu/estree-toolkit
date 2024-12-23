@@ -172,3 +172,12 @@ traverse(ast, {
 - Returns: <`NodePath`> The NodePath of the ancestor
 
 Finds the closest common parent (or ancestor) for all the provided `paths`
+
+------------------------------------
+
+## `isReference(path, includeGlobals)`
+- `path`: <`NodePath<Identifier | JSXIdentifier>`> The path which should be checked
+- `includeGlobals`: <`boolean`> Whether global bindings should be included while checking for references
+- Returns: <`boolean`> Whether the path is a reference
+
+Port of [is-reference](https://www.npmjs.com/package/is-reference). Functionality of this function is identical to the npm package.
