@@ -86,7 +86,7 @@ export const value = <T extends [ValueType, ...ValueType[]]>(
 
 const reservedKeywords = new Set(`
 do if in for let new try var case else enum
-eval false null undefined NaN this true void
+eval false null NaN this true void
 with break catch class const super throw while
 yield delete export import public return static
 switch typeof default extends finally package
