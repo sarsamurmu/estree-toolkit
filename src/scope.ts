@@ -460,6 +460,9 @@ const identifierCrawlers: {
       case 'source':
         state.references.push(path)
         break
+      case 'options':
+        state.references.push(path)
+        break
       /* istanbul ignore next */
       default: assertNever(key)
     }
@@ -611,6 +614,13 @@ const identifierCrawlers: {
       case 'value':
         state.references.push(path)
         break
+      /* istanbul ignore next */
+      default: assertNever(key)
+    }
+  },
+  ImportAttribute(key) {
+    switch (key) {
+      case 'key': break
       /* istanbul ignore next */
       default: assertNever(key)
     }

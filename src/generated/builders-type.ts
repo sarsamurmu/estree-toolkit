@@ -52,7 +52,7 @@ export type Builders = {
   classExpression(id: ClassExpression['id'], body: ClassExpression['body'], superClass?: ClassExpression['superClass']): ClassExpression;
   metaProperty(meta: MetaProperty['meta'], property: MetaProperty['property']): MetaProperty;
   awaitExpression(argument: AwaitExpression['argument']): AwaitExpression;
-  importExpression(source: ImportExpression['source']): ImportExpression;
+  importExpression(source: ImportExpression['source'], options?: ImportExpression['options']): ImportExpression;
   chainExpression(expression: ChainExpression['expression']): ChainExpression;
   property(kind: Property['kind'], key: Property['key'], value: Property['value'], computed?: Property['computed'], shorthand?: Property['shorthand']): Property;
   super(): Super;
@@ -64,10 +64,10 @@ export type Builders = {
   assignmentPattern(left: AssignmentPattern['left'], right: AssignmentPattern['right']): AssignmentPattern;
   classBody(body: ClassBody['body']): ClassBody;
   methodDefinition(kind: MethodDefinition['kind'], key: MethodDefinition['key'], value: MethodDefinition['value'], computed?: MethodDefinition['computed'], _static?: MethodDefinition['static']): MethodDefinition;
-  importDeclaration(specifiers: ImportDeclaration['specifiers'], source: ImportDeclaration['source']): ImportDeclaration;
-  exportNamedDeclaration(declaration: ExportNamedDeclaration['declaration'], specifiers?: ExportNamedDeclaration['specifiers'], source?: ExportNamedDeclaration['source']): ExportNamedDeclaration;
+  importDeclaration(specifiers: ImportDeclaration['specifiers'], source: ImportDeclaration['source'], attributes?: ImportDeclaration['attributes']): ImportDeclaration;
+  exportNamedDeclaration(declaration: ExportNamedDeclaration['declaration'], specifiers?: ExportNamedDeclaration['specifiers'], source?: ExportNamedDeclaration['source'], attributes?: ExportNamedDeclaration['attributes']): ExportNamedDeclaration;
   exportDefaultDeclaration(declaration: ExportDefaultDeclaration['declaration']): ExportDefaultDeclaration;
-  exportAllDeclaration(source: ExportAllDeclaration['source'], exported?: ExportAllDeclaration['exported']): ExportAllDeclaration;
+  exportAllDeclaration(source: ExportAllDeclaration['source'], exported?: ExportAllDeclaration['exported'], attributes?: ExportAllDeclaration['attributes']): ExportAllDeclaration;
   importSpecifier(imported: ImportSpecifier['imported'], local?: ImportSpecifier['local']): ImportSpecifier;
   importDefaultSpecifier(local: ImportDefaultSpecifier['local']): ImportDefaultSpecifier;
   importNamespaceSpecifier(local: ImportNamespaceSpecifier['local']): ImportNamespaceSpecifier;

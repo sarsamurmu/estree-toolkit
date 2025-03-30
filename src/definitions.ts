@@ -1,4 +1,4 @@
-import { BaseNode, Node, ParentsOf } from './helpers'
+import { BaseNode, cleanObj, Node, ParentsOf } from './helpers'
 import * as a from './assert'
 
 type NodeKeys<N> = Exclude<keyof N, keyof BaseNode>
@@ -27,13 +27,15 @@ export type Definition<N extends Node = Node> = {
 
 export type Definitions = {
   [N in Node as `${N['type']}`]: Definition<N>;
+} & {
+  XP: Definition<Node>
 }
 
 const anyValidate = {
   validate: a.any
 }
 
-export const definitions: Definitions = Object.assign<any, Definitions>(Object.create(null), {
+export const definitions = cleanObj<Definitions>({
   Identifier: {
     indices: {
       name: [0, false]
@@ -796,11 +798,16 @@ export const definitions: Definitions = Object.assign<any, Definitions>(Object.c
   },
   ImportExpression: {
     indices: {
-      source: 0
+      source: 0,
+      options: 1
     },
     fields: {
       source: {
         validate: a.nodeAlias('Expression')
+      },
+      options: {
+        validate: a.nullable(a.nodeAlias('Expression')),
+        default: null
       }
     }
   },
@@ -966,7 +973,8 @@ export const definitions: Definitions = Object.assign<any, Definitions>(Object.c
   ImportDeclaration: {
     indices: {
       specifiers: 0,
-      source: 1
+      source: 1,
+      attributes: 2,
     },
     fields: {
       specifiers: {
@@ -974,6 +982,10 @@ export const definitions: Definitions = Object.assign<any, Definitions>(Object.c
       },
       source: {
         validate: a.node('Literal')
+      },
+      attributes: {
+        default: () => [],
+        validate: a.arrayOf(a.node('ImportAttribute'))
       }
     }
   },
@@ -981,7 +993,8 @@ export const definitions: Definitions = Object.assign<any, Definitions>(Object.c
     indices: {
       declaration: 0,
       specifiers: 1,
-      source: 2
+      source: 2,
+      attributes: 3
     },
     fields: {
       declaration: {
@@ -994,6 +1007,10 @@ export const definitions: Definitions = Object.assign<any, Definitions>(Object.c
       source: {
         default: null,
         validate: a.nullable(a.node('Literal'))
+      },
+      attributes: {
+        default: () => [],
+        validate: a.arrayOf(a.node('ImportAttribute'))
       }
     }
   },
@@ -1012,7 +1029,8 @@ export const definitions: Definitions = Object.assign<any, Definitions>(Object.c
   ExportAllDeclaration: {
     indices: {
       source: 0,
-      exported: 1
+      exported: 1,
+      attributes: 2
     },
     fields: {
       source: {
@@ -1021,6 +1039,10 @@ export const definitions: Definitions = Object.assign<any, Definitions>(Object.c
       exported: {
         default: null,
         validate: a.nullable(a.OR(a.node('Identifier'), a.node('Literal')))
+      },
+      attributes: {
+        default: () => [],
+        validate: a.arrayOf(a.node('ImportAttribute'))
       }
     }
   },

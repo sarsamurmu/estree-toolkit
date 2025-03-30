@@ -1,5 +1,5 @@
 diff --git a/node_modules/meriyah/dist/src/meriyah.d.ts b/node_modules/meriyah/dist/src/meriyah.d.ts
-index 5ce9c5b..55c3b7b 100644
+index 5ce9c5b..33a4b83 100644
 --- a/node_modules/meriyah/dist/src/meriyah.d.ts
 +++ b/node_modules/meriyah/dist/src/meriyah.d.ts
 @@ -1,6 +1,6 @@

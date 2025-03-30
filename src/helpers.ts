@@ -1,6 +1,7 @@
 import type { Node as _Node, JSXSpreadChild, BaseNode } from 'estree-jsx'
+import type { ImportAttribute } from 'estree'
 
-export type Node = _Node | JSXSpreadChild
+export type Node = _Node | JSXSpreadChild | ImportAttribute
 
 export { BaseNode }
 
@@ -72,3 +73,6 @@ export const toCamelCase = (input: string) => {
 
   return output
 }
+
+/** Creates a clean object that doesn't have any prototype */
+export const cleanObj = <T>(obj: T): T => Object.assign(Object.create(null), obj) as T
