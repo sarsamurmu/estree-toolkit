@@ -27,8 +27,6 @@ export type Definition<N extends Node = Node> = {
 
 export type Definitions = {
   [N in Node as `${N['type']}`]: Definition<N>;
-} & {
-  XP: Definition<Node>
 }
 
 const anyValidate = {
@@ -1149,6 +1147,20 @@ export const definitions = cleanObj<Definitions>({
         validate: a.arrayOf(a.nodeAlias('Statement'))
       },
       innerComments: anyValidate
+    }
+  },
+  ImportAttribute: {
+    indices: {
+      key: 0,
+      value: 1
+    },
+    fields: {
+      key: {
+        validate: a.node('Identifier', 'Literal')
+      },
+      value: {
+        validate: a.node('Literal'),
+      }
     }
   },
 

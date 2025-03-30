@@ -84,6 +84,7 @@ exportSpecifier
 privateIdentifier
 propertyDefinition
 staticBlock
+importAttribute
 jsxIdentifier
 jsxNamespacedName
 jsxMemberExpression
