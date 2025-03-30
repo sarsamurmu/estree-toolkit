@@ -1,4 +1,4 @@
-import { Node } from './helpers'
+import { Node, NodeMap } from './helpers'
 import { Context, NodePath } from './nodepath'
 import { visitorKeys } from './definitions'
 import { aliases, AliasMap } from './aliases'
@@ -22,11 +22,31 @@ export type ExpandedVisitor<T extends Node, S> = {
 
 export type Visitor<T extends Node = Node, S = unknown> = VisitorFn<T, S> | ExpandedVisitor<T, S>
 
-export type Visitors<S> = {
+type VisitorMap =
+  & AliasMap
+  & NodeMap
+  & { [type: string]: never }
+
+type NodesFromUnion<K extends string> = K extends `${infer Head}|${infer Rest}`
+  ? VisitorMap[Head] extends never
+    ? never
+    : NodesFromUnion<Rest> extends never
+      ? never
+      : VisitorMap[Head] | NodesFromUnion<Rest>
+  : VisitorMap[K]
+
+type ComputedVisitors<Keys extends string, S> = {
+  [K in Keys]?: NodesFromUnion<K> extends never ? never : Visitor<NodesFromUnion<K>, S>
+}
+
+export type Visitors<S, CompT extends string = ''> = {
   [K in Node as `${K['type']}`]?: Visitor<K, S>;
 } & {
   [K in keyof AliasMap]?: Visitor<AliasMap[K], S>;
+} & {
+  comp?: ComputedVisitors<CompT, S>;
 }
+
 export type ExpandedVisitors<S = unknown> = {
   [type: string]: ExpandedVisitor<Node, S> | undefined;
 }
@@ -133,7 +153,7 @@ export class Traverser {
     visitedPaths.add(path)
 
     const { new: newPaths, unSkipped: unSkippedPaths } = cleanup()
-    
+
     for (let i = 0; i < newPaths.length; i++) {
       if (visitorCtx.stopped) break
       this.visitPath(visitorCtx, newPaths[i], state, visitedPaths)
@@ -150,24 +170,29 @@ export class Traverser {
     // You can use functional approach here
     // Because this code won't run many times like other code does
 
-    Object.keys(visitors).forEach((keyName) => {
-      const keys = ([] as string[]).concat(...keyName.split('|').map(
-        (key) => key in aliases ? Object.keys((aliases as any)[key]) : [key]
-      ))
-      const visitor = (visitors as Record<string, Visitor<Node>>)[keyName]
-      if (typeof visitor == 'function') {
-        keys.forEach((key) => {
-          expandedVisitors[key] = { enter: visitor }
-        })
-      } else if (typeof visitor == 'object') {
-        keys.forEach((key) => {
-          expandedVisitors[key] = {
-            enter: visitor.enter,
-            leave: visitor.leave
-          }
-        })
-      }
-    })
+    const expand = (obj: any) => {
+      Object.keys(obj).forEach((keyName) => {
+        const keys = ([] as string[]).concat(...keyName.split('|').map(
+          (key) => key in aliases ? Object.keys((aliases as any)[key]) : [key]
+        ))
+        const visitor = (obj as Record<string, Visitor<Node>>)[keyName]
+        if (typeof visitor == 'function') {
+          keys.forEach((key) => {
+            expandedVisitors[key] = { enter: visitor }
+          })
+        } else if (typeof visitor == 'object') {
+          keys.forEach((key) => {
+            expandedVisitors[key] = {
+              enter: visitor.enter,
+              leave: visitor.leave
+            }
+          })
+        }
+      })
+    }
+
+    if (visitors.comp != null) expand(visitors.comp)
+    expand(visitors)
 
     return expandedVisitors
   }
@@ -215,9 +240,9 @@ export class Traverser {
   }
 }
 
-export const traverse = <NodeT, StateT>(
+export const traverse = <NodeT, StateT, CompT extends string>(
   node: NodeT,
-  visitors: Visitors<StateT> & { $?: TraverseOptions },
+  visitors: Visitors<StateT, CompT> & { $?: TraverseOptions },
   state?: StateT
 ) => {
   const ctx = new Context(visitors.$)

@@ -81,7 +81,7 @@ export const hasBinding = (() => {
           if (specifier.local != null) {
             if (specifier.local.name === bindingName) return true
           } else {
-            if (specifier.imported.name === bindingName) return true
+            if (specifier.imported.type === 'Identifier' && specifier.imported.name === bindingName) return true
           }
           break
       }

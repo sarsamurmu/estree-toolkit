@@ -584,7 +584,7 @@ const identifierCrawlers: {
             exported: Object.assign({}, parentNode.exported)
           }))
           ctx.popQueue()
-          state.references.push(parentPath.get('local'))
+          state.references.push(parentPath.get('local') as NodePath<Identifier, NodeT<'ExportSpecifier'>>)
         } else {
           state.references.push(path)
         }

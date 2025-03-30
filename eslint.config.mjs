@@ -50,20 +50,6 @@ const common = {
   rules: { ...rules }
 }
 
-/* export default tseslint.config(
-  eslint.configs.recommended,
-  ...tseslint.configs.recommendedTypeChecked,
-  {
-    languageOptions: {
-      parserOptions: {
-        project: './tsconfig.json',
-        tsconfigRootDir: import.meta.dirname,
-      },
-    },
-    rules: { ...rules }
-  }
-) */
-
 export default [
   {
     rules: {

@@ -85,9 +85,13 @@ describe('visitor expansion', () => {
     } as const
     const state = {}
 
-    const mockFn = jest.fn<void, [NodePath, any]>()
+    const mockFn1 = jest.fn<void, [NodePath, any]>()
+    const mockFn2 = jest.fn<void, [NodePath, any]>()
     traverse(ast, {
-      ['Program|Identifier' as any]: mockFn,
+      ['Program|Identifier' as any]: mockFn1,
+      comp: {
+        'Program|Identifier': mockFn2
+      }
     }, state)
 
     const toMatch = [
@@ -95,8 +99,13 @@ describe('visitor expansion', () => {
       ast.body[0].expression.elements[0],
       ast.body[0].expression.elements[1]
     ]
-    for (let i = 0; i < mockFn.mock.calls.length; i++) {
-      const callArgs = mockFn.mock.calls[i]
+    for (let i = 0; i < mockFn1.mock.calls.length; i++) {
+      const callArgs = mockFn1.mock.calls[i]
+      expect(callArgs[0].node).toBe(toMatch[i])
+      expect(callArgs[1]).toBe(state)
+    }
+    for (let i = 0; i < mockFn2.mock.calls.length; i++) {
+      const callArgs = mockFn2.mock.calls[i]
       expect(callArgs[0].node).toBe(toMatch[i])
       expect(callArgs[1]).toBe(state)
     }
@@ -167,6 +176,27 @@ describe('visitor expansion', () => {
 
     expect(mockFn3).toHaveBeenCalledTimes(1)
     expect(mockFn1).toHaveBeenCalledTimes(0)
+    expect(mockFn2).toHaveBeenCalledTimes(0)
+  })
+
+  test('`comp` should have less priority', () => {
+    const ast = {
+      type: 'Program',
+      sourceType: 'module',
+      body: []
+    }
+
+    const mockFn1 = jest.fn<void, [NodePath]>()
+    const mockFn2 = jest.fn<void, [NodePath]>()
+
+    traverse(ast, {
+      Program: mockFn1,
+      comp: {
+        'Program|Identifier': mockFn2
+      }
+    })
+
+    expect(mockFn1).toHaveBeenCalledTimes(1)
     expect(mockFn2).toHaveBeenCalledTimes(0)
   })
 })

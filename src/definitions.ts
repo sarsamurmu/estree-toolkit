@@ -591,7 +591,7 @@ export const definitions: Definitions = Object.assign<any, Definitions>(Object.c
         ] as const)
       },
       left: {
-        validate: a.nodeAlias('Expression')
+        validate: a.OR(a.nodeAlias('Expression'), a.node('PrivateIdentifier'))
       },
       right: {
         validate: a.nodeAlias('Expression')
@@ -1020,7 +1020,7 @@ export const definitions: Definitions = Object.assign<any, Definitions>(Object.c
       },
       exported: {
         default: null,
-        validate: a.nullable(a.node('Identifier'))
+        validate: a.nullable(a.OR(a.node('Identifier'), a.node('Literal')))
       }
     }
   },
@@ -1031,10 +1031,16 @@ export const definitions: Definitions = Object.assign<any, Definitions>(Object.c
     },
     fields: {
       imported: {
-        validate: a.node('Identifier')
+        validate: a.OR(a.node('Identifier'), a.node('Literal'))
       },
       local: {
-        default: (node) => ({ type: 'Identifier', name: node.imported.name }),
+        default: (node) => {
+          if (node.imported.type === 'Identifier')  {
+            return { type: 'Identifier', name: node.imported.name }
+          }
+
+          throw new Error('Provide `local` value when `imported` is not an `Identifier`')
+        },
         validate: a.node('Identifier')
       }
     }
@@ -1066,11 +1072,11 @@ export const definitions: Definitions = Object.assign<any, Definitions>(Object.c
     },
     fields: {
       local: {
-        validate: a.node('Identifier')
+        validate: a.OR(a.node('Identifier'), a.node('Literal'))
       },
       exported: {
-        default: (node) => ({ type: 'Identifier', name: node.local.name }),
-        validate: a.node('Identifier')
+        default: ({ local }) => structuredClone(local),
+        validate: a.OR(a.node('Identifier'), a.node('Literal'))
       }
     }
   },

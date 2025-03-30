@@ -1,5 +1,5 @@
 diff --git a/node_modules/meriyah/dist/src/meriyah.d.ts b/node_modules/meriyah/dist/src/meriyah.d.ts
-index 5ce9c5b..33a4b83 100644
+index 5ce9c5b..55c3b7b 100644
 --- a/node_modules/meriyah/dist/src/meriyah.d.ts
 +++ b/node_modules/meriyah/dist/src/meriyah.d.ts
 @@ -1,6 +1,6 @@
@@ -10,3 +10,16 @@ index 5ce9c5b..33a4b83 100644
  export declare function parseScript(source: string, options?: Options): ESTree.Program;
  export declare function parseModule(source: string, options?: Options): ESTree.Program;
  export declare function parse(source: string, options?: Options): ESTree.Program;
+diff --git a/node_modules/meriyah/dist/src/parser.d.ts b/node_modules/meriyah/dist/src/parser.d.ts
+index bd59988..2fdc16a 100644
+--- a/node_modules/meriyah/dist/src/parser.d.ts
++++ b/node_modules/meriyah/dist/src/parser.d.ts
+@@ -15,7 +15,7 @@ export interface Options {
+     lexical?: boolean;
+     source?: string;
+     jsx?: boolean;
+-    onComment?: Comment[] | OnComment;
++    onComment?: ESTree.Comment[] | OnComment;
+     onInsertedSemicolon?: OnInsertedSemicolon;
+     onToken?: Token[] | OnToken;
+     uniqueKeyInPattern?: boolean;

@@ -43,7 +43,6 @@ describe('Methods', () => {
 
   //#endregion
 
-
   //#region Traversal
 
   test('skip', () => {

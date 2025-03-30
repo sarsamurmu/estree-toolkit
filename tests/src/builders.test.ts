@@ -86,3 +86,9 @@ test('validation', () => {
     }
   })
 })
+
+test('special validation cases', () => {
+  expect(() => b.importSpecifier(b.literal('some-stuff'))).toThrow()
+  expect(() => b.importSpecifier(b.literal('some-stuff'), b.identifier('x'))).not.toThrow()
+  expect(() => b.importSpecifier(b.identifier('some'))).not.toThrow()
+})
