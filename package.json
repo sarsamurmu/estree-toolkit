@@ -1,6 +1,6 @@
 {
   "name": "estree-toolkit",
-  "version": "1.7.9",
+  "version": "1.7.10",
   "description": "Traverser, scope tracker, and more tools for working with ESTree AST",
   "main": "./dist/index.js",
   "exports": {
@@ -65,7 +65,7 @@
     "typescript-eslint": "^8.28.0"
   },
   "dependencies": {
-    "@types/estree": "^1.0.7",
-    "@types/estree-jsx": "^1.0.5"
+    "@types/estree": ">=1.0.7",
+    "@types/estree-jsx": ">=1.0.5"
   }
 }

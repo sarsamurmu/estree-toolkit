@@ -1,3 +1,6 @@
+## 1.7.10
+- Enforce `@types/estree` version
+
 ## 1.7.9
 - Better type support when sharing a visitor between different node types using the new `comp` field
 - Fix `undefined` being marked as a reserved keyword
