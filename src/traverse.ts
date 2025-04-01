@@ -240,7 +240,7 @@ export class Traverser {
   }
 }
 
-export const traverse = <NodeT, StateT, CompT extends string>(
+export const traverse = <NodeT, StateT, CompT extends string = never>(
   node: NodeT,
   visitors: Visitors<StateT, CompT> & { $?: TraverseOptions },
   state?: StateT
