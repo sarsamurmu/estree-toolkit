@@ -185,8 +185,8 @@ Name is - d
 
 ### Sharing a visitor function between two node types
 
-You can share a visitor with two or more node types using this shorthand syntax,
-simply by separating them with `|`
+It is possible to share a visitor with two or more node types. Put those visitors
+inside of the `comp` property. Use `|` (pipe) to seperate the node type names.
 
 ::::Tabs
 :::Tab[Code + Output]
@@ -194,15 +194,19 @@ simply by separating them with `|`
 const ast = { /* Check AST tab */ }
 
 traverse(ast, {
-  'FunctionDeclaration|FunctionExpression|ArrowFunctionExpression': (path) => {
-    console.log(path.type + ':');
-    path.node.params.forEach((param) => {
-      if (param.type === 'Identifier') {
-        console.log(param.name);
-      }
-    });
-    console.log();
-  }
+  comp: {
+    'FunctionDeclaration|FunctionExpression|ArrowFunctionExpression'(path) {
+      console.log(path.type + ':');
+      path.node.params.forEach((param) => {
+        if (param.type === 'Identifier') {
+          console.log(param.name);
+        }
+      });
+      console.log();
+    },
+    // ... Other mutliple node types visitors
+  },
+  // ... Other single node type visitors
 });
 ```
 ```txt Output
