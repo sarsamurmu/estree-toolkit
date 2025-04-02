@@ -76,6 +76,7 @@ $toc-width: 230px;
       svg {
         vertical-align: middle !important;
         margin-right: 5px;
+        margin-bottom: 5px;
       }
     }
   }
@@ -153,7 +154,7 @@ $toc-width: 230px;
         color: var(--sidenav-text);
         text-decoration: none;
         // border-radius: 6px 0px 0px 6px;
-        font-size: 14px;
+        font-size: 0.95rem;
 
         &.current {
           color: var(--sidenav-active-text);

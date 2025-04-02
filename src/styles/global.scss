@@ -2,10 +2,11 @@
 @import './colors';
 
 body {
-  font-family: 'Sora', sans-serif;
+  font-family: 'DM Sans', sans-serif;
   background-color: var(--body-bg);
   color: var(--body-text);
   line-height: calc(1em + 0.725rem);
+  font-size: 1.1rem;
 
   @include small {
     --header-height: 60px;
