@@ -1,4 +1,4 @@
-## 1.7.11
+## 1.7.12
 - Add default type for generic `CompT` of `traverse` function
 
 ## 1.7.10
