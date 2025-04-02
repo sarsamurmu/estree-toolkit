@@ -1,3 +1,6 @@
+## 1.7.11
+- Add default type for generic `CompT` of `traverse` function
+
 ## 1.7.10
 - Enforce `@types/estree` version
 
