@@ -81,7 +81,7 @@ Visitor function is the function that gets called when the traverser *enters* or
 ```js
 const visitors = {
   // This is our visitor function
-  Identifier(path, state) => {}
+  Identifier(path, state) {}
 }
 
 const visitors = {
