@@ -9,29 +9,29 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@primer/octicons-react": "^19.9.0",
-    "@shikijs/rehype": "^1.6.0",
-    "hastscript": "^9.0.0",
-    "interweave": "^13.1.0",
+    "@primer/octicons-react": "^19.15.1",
+    "@shikijs/rehype": "^3.2.2",
+    "hastscript": "^9.0.1",
+    "interweave": "^13.1.1",
     "interweave-ssr": "^2.0.0",
     "mdast-util-to-string": "^4.0.0",
-    "next": "14.2.3",
-    "react": "^18",
-    "react-dom": "^18",
-    "rehype-stringify": "^10.0.0",
-    "remark-directive": "^3.0.0",
+    "next": "15.3.0",
+    "react": "^19",
+    "react-dom": "^19",
+    "rehype-stringify": "^10.0.1",
+    "remark-directive": "^4.0.0",
     "remark-frontmatter": "^5.0.0",
     "remark-parse": "^11.0.0",
-    "remark-rehype": "^11.1.0",
+    "remark-rehype": "^11.1.2",
     "remark-stringify": "^11.0.0",
-    "sass": "^1.77.2",
-    "simplebar-react": "^3.2.5",
-    "unified": "^11.0.4",
+    "sass": "^1.86.3",
+    "simplebar-react": "^3.3.0",
+    "unified": "^11.0.5",
     "unist-util-visit": "^5.0.0",
-    "vfile-matter": "^5.0.0"
+    "vfile-matter": "^5.0.1"
   },
   "devDependencies": {
-    "eslint": "^8",
-    "eslint-config-next": "14.2.3"
+    "eslint": "^9",
+    "eslint-config-next": "15.3.0"
   }
 }

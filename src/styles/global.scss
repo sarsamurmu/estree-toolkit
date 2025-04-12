@@ -1,5 +1,5 @@
-@import './mixins';
-@import './colors';
+@use './mixins';
+@use './colors';
 
 body {
   font-family: 'DM Sans', sans-serif;
@@ -8,7 +8,7 @@ body {
   line-height: calc(1em + 0.725rem);
   font-size: 1.1rem;
 
-  @include small {
+  @include mixins.small {
     --header-height: 60px;
   }
 
@@ -46,7 +46,7 @@ h3 {
 
 hr {
   border-style: none;
-  border-top: $border;
+  border-top: mixins.$border;
   margin: 30px 0;
 }
 
