@@ -981,9 +981,10 @@ describe('methods', () => {
 
         ({a} = newGlobal)
 
-        const x = ({ d, y: [f] } = a) => {
+        const x = ({ d, y: [f], h = 1 } = a) => {
           rep_d_e;
           rep_f_g;
+          rep_h_i;
         }
       `)
 
