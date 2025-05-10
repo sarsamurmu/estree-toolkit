@@ -1632,6 +1632,14 @@ export class Scope {
     ) {
       (parent.value as Identifier).name = newName
       parent.shorthand = (parent.value as Identifier).name === (parent.key as Identifier).name
+    } else if (
+      parent.type === 'AssignmentPattern' &&
+      path.parentPath?.parent?.type === 'Property' &&
+      path.parentPath.parentPath?.parent?.type === 'ObjectPattern'
+    ) {
+      const property = path.parentPath.parent
+      parent.left = b.identifier(newName)
+      property.shorthand = parent.left.name === (property.key as Identifier).name
     } else {
       path.node!.name = newName
     }

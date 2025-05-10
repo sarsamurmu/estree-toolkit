@@ -151,9 +151,10 @@ exports[`methods rename Patterns 1`] = `
 "const {a: b} = global;
 rep_a_b;
 ({a: b} = newGlobal);
-const x = ({d: e, y: [g]} = b) => {
+const x = ({d: e, y: [g], h: i = 1} = b) => {
   rep_d_e;
   rep_f_g;
+  rep_h_i;
 };
 "
 `;
