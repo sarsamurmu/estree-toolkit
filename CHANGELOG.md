@@ -1,3 +1,6 @@
+## 1.7.13
+- Fix incorrect renaming in `AssignmentPattern` inside `ObjectPattern`
+
 ## 1.7.12
 - Add default type for generic `CompT` of `traverse` function
 
