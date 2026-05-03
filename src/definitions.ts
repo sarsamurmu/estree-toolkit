@@ -33,6 +33,8 @@ const anyValidate = {
   validate: a.any
 }
 
+declare const structuredClone: (x: any) => any
+
 export const definitions = cleanObj<Definitions>({
   Identifier: {
     indices: {
@@ -475,7 +477,7 @@ export const definitions = cleanObj<Definitions>({
     },
     fields: {
       kind: {
-        validate: a.oneOf(['var', 'let', 'const'] as const)
+        validate: a.oneOf(['var', 'let', 'const', 'using', 'await using'] as const)
       },
       declarations: {
         validate: a.arrayOf(a.node('VariableDeclarator'))

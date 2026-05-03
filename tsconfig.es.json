@@ -2,7 +2,7 @@
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "outDir": "./dist-es",
-    "module": "ES6",
-    "moduleResolution": "node"
+    "module": "ES2020",
+    "moduleResolution": "bundler"
   }
 }

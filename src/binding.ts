@@ -41,7 +41,7 @@ class BaseBinding {
   }
 }
 
-export type BindingKind = 'var' | 'let' | 'const' | 'param' | 'unknown' | 'hoisted' | 'local' | 'module'
+export type BindingKind = 'var' | 'let' | 'const' | 'param' | 'unknown' | 'hoisted' | 'local' | 'module' | 'using' | 'await using'
 export type BindingPathT<T extends BindingKind> = (
   {
     hoisted: NodePath<FunctionDeclaration | ClassDeclaration>;
@@ -51,7 +51,7 @@ export type BindingPathT<T extends BindingKind> = (
     param: NodePath<Pattern>;
     unknown: NodePath<FunctionDeclaration | ClassDeclaration>;
   } & {
-    [_ in 'var' | 'const']: NodePath<VariableDeclarator>;
+    [_ in 'var' | 'const' | 'using' | 'await using']: NodePath<VariableDeclarator>;
   }
 )[T]
 

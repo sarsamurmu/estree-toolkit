@@ -1,6 +1,6 @@
 import { parseModule } from 'meriyah'
 
-import { traverse, utils as u } from '<project>'
+import { NodePath, traverse, utils as u } from '<project>'
 import { NodeT } from '<project>/helpers'
 
 test('getCommonAncestor', () => {
@@ -38,7 +38,7 @@ test('getCommonAncestor', () => {
       }
     }
   `)
-  const paths = []
+  const paths: NodePath[] = []
 
   traverse(ast, {
     Identifier(path) {
@@ -100,7 +100,7 @@ describe('isReference', () => {
     class x { target = 1 }
   `
   
-  const findTargetReferenceCount = (code) => {
+  const findTargetReferenceCount = (code: string) => {
     let count = 0
 
     traverse(parseModule(code), {

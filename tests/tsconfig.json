@@ -1,16 +1,19 @@
 {
   "compilerOptions": {
+    "rootDir": "..",
     "target": "ESNext",
     "module": "CommonJS",
     "outDir": "../__tests__",
     "sourceMap": true,
-    "baseUrl": "./",
     "paths": {
       "<project>": ["../src"],
       "<project>/*": ["../src/*"]
     },
     "lib": ["ESNext"],
-    "resolveJsonModule": true
+    "resolveJsonModule": true,
+    "types": ["node", "jest"],
+    "strictNullChecks": false,
+    "noImplicitAny": false
   },
   "include": [
     "./src/**/*"

@@ -4,7 +4,7 @@ test('runValidation', () => {
   expect(() => a.runValidation(() => null, null)).not.toThrow()
   expect(() => {
     a.runValidation(() => '@error_message', null)
-  }).toThrowError('@error_message')
+  }).toThrow('@error_message')
 })
 
 test('chain', () => {
@@ -16,13 +16,13 @@ test('chain', () => {
   /* eslint-enable @typescript-eslint/no-unused-vars */
 
   expect(a.chain(mock1, mock2, mock3, mock4)(100)).toBe('@error_message')
-  expect(mock1).toBeCalledTimes(1)
+  expect(mock1).toHaveBeenCalledTimes(1)
   expect(mock1.mock.calls[0][0]).toBe(100)
-  expect(mock2).toBeCalledTimes(1)
+  expect(mock2).toHaveBeenCalledTimes(1)
   expect(mock2.mock.calls[0][0]).toBe(100)
-  expect(mock3).toBeCalledTimes(1)
+  expect(mock3).toHaveBeenCalledTimes(1)
   expect(mock3.mock.calls[0][0]).toBe(100)
-  expect(mock4).toBeCalledTimes(0)
+  expect(mock4).toHaveBeenCalledTimes(0)
 })
 
 describe('OR', () => {
@@ -34,10 +34,10 @@ describe('OR', () => {
     /* eslint-enable @typescript-eslint/no-unused-vars */
 
     expect(a.OR(mock1, mock2, mock3)(54)).toBe(null)
-    expect(mock1).toBeCalledTimes(1)
+    expect(mock1).toHaveBeenCalledTimes(1)
     expect(mock1.mock.calls[0][0]).toBe(54)
-    expect(mock2).toBeCalledTimes(0)
-    expect(mock3).toBeCalledTimes(0)
+    expect(mock2).toHaveBeenCalledTimes(0)
+    expect(mock3).toHaveBeenCalledTimes(0)
   })
 
   test('passes one', () => {
@@ -48,11 +48,11 @@ describe('OR', () => {
     /* eslint-enable @typescript-eslint/no-unused-vars */
 
     expect(a.OR(mock1, mock2, mock3)(44)).toBe(null)
-    expect(mock1).toBeCalledTimes(1)
+    expect(mock1).toHaveBeenCalledTimes(1)
     expect(mock1.mock.calls[0][0]).toBe(44)
-    expect(mock2).toBeCalledTimes(1)
+    expect(mock2).toHaveBeenCalledTimes(1)
     expect(mock2.mock.calls[0][0]).toBe(44)
-    expect(mock3).toBeCalledTimes(0)
+    expect(mock3).toHaveBeenCalledTimes(0)
   })
 
   test('fails all', () => {
@@ -63,11 +63,11 @@ describe('OR', () => {
     /* eslint-enable @typescript-eslint/no-unused-vars */
 
     expect(a.OR(mock1, mock2, mock3)(40)).toContain('@error_1\n@error_2\n@error_3')
-    expect(mock1).toBeCalledTimes(1)
+    expect(mock1).toHaveBeenCalledTimes(1)
     expect(mock1.mock.calls[0][0]).toBe(40)
-    expect(mock2).toBeCalledTimes(1)
+    expect(mock2).toHaveBeenCalledTimes(1)
     expect(mock2.mock.calls[0][0]).toBe(40)
-    expect(mock3).toBeCalledTimes(1)
+    expect(mock3).toHaveBeenCalledTimes(1)
     expect(mock3.mock.calls[0][0]).toBe(40)
   })
 })

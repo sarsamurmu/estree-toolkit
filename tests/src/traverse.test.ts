@@ -257,7 +257,7 @@ test('does not visit removed paths', () => {
     Identifier: mockFn
   })
 
-  expect(mockFn).toBeCalledTimes(0)
+  expect(mockFn).toHaveBeenCalledTimes(0)
 })
 
 describe('stopping traversal does not traverse', () => {
@@ -284,7 +284,7 @@ describe('stopping traversal does not traverse', () => {
       Literal: mockFn
     })
 
-    expect(mockFn).toBeCalledTimes(0)
+    expect(mockFn).toHaveBeenCalledTimes(0)
   })
 
   test('siblings', () => {
@@ -310,7 +310,7 @@ describe('stopping traversal does not traverse', () => {
       Identifier: mockFn
     })
 
-    expect(mockFn).toBeCalledTimes(0)
+    expect(mockFn).toHaveBeenCalledTimes(0)
   })
 
   test('keyed siblings', () => {
@@ -338,7 +338,7 @@ describe('stopping traversal does not traverse', () => {
       Identifier: mockFn
     })
 
-    expect(mockFn).toBeCalledTimes(0)
+    expect(mockFn).toHaveBeenCalledTimes(0)
   })
 
   test('on leave fn', () => {
@@ -368,7 +368,7 @@ describe('stopping traversal does not traverse', () => {
       Identifier: mockFn
     })
 
-    expect(mockFn).toBeCalledTimes(0)
+    expect(mockFn).toHaveBeenCalledTimes(0)
   })
 
   test('newly added nodes', () => {
@@ -403,7 +403,7 @@ describe('stopping traversal does not traverse', () => {
       Identifier: mockFn
     })
 
-    expect(mockFn).toBeCalledTimes(0)
+    expect(mockFn).toHaveBeenCalledTimes(0)
   })
 
   test('unSkipped nodes', () => {
@@ -443,7 +443,7 @@ describe('stopping traversal does not traverse', () => {
       Identifier: mockFn
     })
 
-    expect(mockFn).toBeCalledTimes(0)
+    expect(mockFn).toHaveBeenCalledTimes(0)
   })
 })
 

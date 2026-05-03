@@ -941,6 +941,9 @@ const registerVariableDeclaration = (path: NodePathT<'VariableDeclaration'>, sco
   const declarators = path.get('declarations')
   for (let i = 0; i < declarators.length; i++) {
     const declarator = declarators[i]
+    // NOTE: When the kind is `using` and `await using`, we don't really need to
+    // extract from pattern, because destructuring is not supported with
+    // `using` and `await using`
     registerBindingFromPattern(declarator.get('id'), scope, kind, declarator)
   }
 }

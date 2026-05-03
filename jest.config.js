@@ -1,6 +1,6 @@
 /** @type import('@jest/types').Config.InitialOptions */
 module.exports = {
-  roots: ['__tests__'],
+  roots: ['./__tests__/tests/src/'],
   testMatch: ['**/__tests__/**/*.test.js'],
   coverageReporters: ['lcov', 'text-summary'],
   collectCoverageFrom: ['dist/**/*.js'],

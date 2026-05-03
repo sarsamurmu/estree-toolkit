@@ -64,8 +64,8 @@ describe('Methods', () => {
       Identifier: identifierMock
     })
 
-    expect(expressionMock).toBeCalledTimes(1)
-    expect(identifierMock).toBeCalledTimes(0)
+    expect(expressionMock).toHaveBeenCalledTimes(1)
+    expect(identifierMock).toHaveBeenCalledTimes(0)
   })
 
   describe('unSkip', () => {
@@ -90,8 +90,8 @@ describe('Methods', () => {
         Identifier: identifierMock
       })
 
-      expect(expressionMock).toBeCalledTimes(1)
-      expect(identifierMock).toBeCalledTimes(1)
+      expect(expressionMock).toHaveBeenCalledTimes(1)
+      expect(identifierMock).toHaveBeenCalledTimes(1)
     })
 
     test('does not traverses the unSkipped path when not in visiting phase', () => {
@@ -117,8 +117,8 @@ describe('Methods', () => {
 
       identifierPath.unskip()
 
-      expect(expressionMock).toBeCalledTimes(1)
-      expect(identifierMock).toBeCalledTimes(0)
+      expect(expressionMock).toHaveBeenCalledTimes(1)
+      expect(identifierMock).toHaveBeenCalledTimes(0)
     })
   })
 
@@ -586,7 +586,7 @@ describe('Methods', () => {
       }))
     })
 
-    expect(mockFn).toBeCalledTimes(5)
+    expect(mockFn).toHaveBeenCalledTimes(5)
     expect(ast).toEqual({
       type: 'ArrayExpression',
       elements: [
@@ -676,7 +676,7 @@ describe('Methods', () => {
       }))
     })
 
-    expect(mockFn).toBeCalledTimes(5)
+    expect(mockFn).toHaveBeenCalledTimes(5)
     expect(ast).toEqual({
       type: 'ArrayExpression',
       elements: [
@@ -759,7 +759,7 @@ describe('Methods', () => {
       Literal: mockFn1
     })
 
-    expect(mockFn1).toBeCalledTimes(4)
+    expect(mockFn1).toHaveBeenCalledTimes(4)
     expect(ast1).toEqual({
       type: 'ArrayExpression',
       elements: [
@@ -808,7 +808,7 @@ describe('Methods', () => {
       Literal: mockFn2
     })
 
-    expect(mockFn2).toBeCalledTimes(2)
+    expect(mockFn2).toHaveBeenCalledTimes(2)
     expect(ast2).toEqual({
       type: 'ArrayExpression',
       elements: [
@@ -860,7 +860,7 @@ describe('Methods', () => {
       Literal: mockFn1
     })
 
-    expect(mockFn1).toBeCalledTimes(4)
+    expect(mockFn1).toHaveBeenCalledTimes(4)
     expect(ast1).toEqual({
       type: 'ArrayExpression',
       elements: [
@@ -909,7 +909,7 @@ describe('Methods', () => {
       Literal: mockFn2
     })
 
-    expect(mockFn2).toBeCalledTimes(2)
+    expect(mockFn2).toHaveBeenCalledTimes(2)
     expect(ast2).toEqual({
       type: 'ArrayExpression',
       elements: [
@@ -1456,7 +1456,7 @@ describe('Methods', () => {
       }))
     })
 
-    expect(mockFn).toBeCalledTimes(4)
+    expect(mockFn).toHaveBeenCalledTimes(4)
     expect(ast).toEqual({
       type: 'ArrayExpression',
       elements: [
@@ -1522,7 +1522,7 @@ describe('Methods', () => {
       }))
     })
 
-    expect(mockFn).toBeCalledTimes(4)
+    expect(mockFn).toHaveBeenCalledTimes(4)
     expect(ast).toEqual({
       type: 'ArrayExpression',
       elements: [
@@ -1828,14 +1828,14 @@ describe('special cases', () => {
     traverse(ast, {
       $: { validateNodes: true },
       ArrowFunctionExpression(path) {
-        expect(() => path.pushContainer('params', [{ type: 'Identifier', name: 'a' }])).not.toThrowError()
+        expect(() => path.pushContainer('params', [{ type: 'Identifier', name: 'a' }])).not.toThrow()
         expect(() => path.unshiftContainer('params', [{
           type: 'RestElement',
           argument: {
             type: 'Identifier',
             name: 'rest'
           }
-        }])).toThrowError()
+        }])).toThrow()
       }
     })
 
@@ -1848,7 +1848,7 @@ describe('special cases', () => {
             type: 'Identifier',
             name: 'rest'
           }
-        }])).not.toThrowError()
+        }])).not.toThrow()
       }
     })
 
