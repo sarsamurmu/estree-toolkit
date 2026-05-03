@@ -1,3 +1,7 @@
+## 1.7.14
+- New binding kind added - `using` and `await using`
+- Updated dependencies
+
 ## 1.7.13
 - Fix incorrect renaming in `AssignmentPattern` inside `ObjectPattern`
 
