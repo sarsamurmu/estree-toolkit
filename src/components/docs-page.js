@@ -198,7 +198,7 @@ const Footer = ({ pages }) => {
         ))}
       </div>
       <hr />
-      <p>© Copyright 2024 Sarsa Murmu. All rights reserved.</p>
+      <p>© Copyright 2026 Sarsa Murmu. All rights reserved.</p>
     </footer>
   )
 }

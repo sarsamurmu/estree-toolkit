@@ -89,10 +89,12 @@ code {
   }
 }
 
-.simplebar-scrollbar:before {
-  background-color: rgb(139, 139, 139);
+.simplebar-scrollbar {
+  &:before {
+    background-color: rgb(139, 139, 139);
+  }
 
-  &.simplebar-visible {
+  &.simplebar-visible:before {
     opacity: 0.3;
   }
 }
