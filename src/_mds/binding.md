@@ -96,6 +96,14 @@ import x from 'mod';
 import * as x from 'mod';
 // Kind of `x` is 'module'
 ```
+```js using
+using x = acquireResource();
+// Kind of `x` is `using`
+```
+```js await using
+await using x = await acquireResourceAsync();
+// Kind of `x` is `await using`
+```
 
 ### `name`
 - Type: `string`
@@ -153,7 +161,7 @@ All paths that references this binding.
 All paths that reassigns the value of this binding.
 
 ```js
-const x = 0;
+let x = 0;
 
 // This is a constant violation
 x = 0;
