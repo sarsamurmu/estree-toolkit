@@ -115,7 +115,7 @@ describe('isReference', () => {
     return count
   }
 
-  const toCases = (x: string) => x.split('---').map(x => x.trim())
+  const toCases = (x: string) => x.split('---').map((x) => x.trim())
   
   test.each(toCases(positiveCases))('positive - %s', (code) => {
     expect(findTargetReferenceCount(code)).toBe(1)

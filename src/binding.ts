@@ -28,6 +28,7 @@ class BaseBinding {
   // arrays, anyway someone's hardly gonna use this remove* methods
   removeReference(path: NodePath<Identifier | JSXIdentifier>) {
     const idx = this.references.findIndex((x) => x === path)
+    /* istanbul ignore else */
     if (idx > -1) this.references.splice(idx, 1)
   }
 
@@ -37,6 +38,7 @@ class BaseBinding {
 
   removeConstantViolation(path: NodePath<Identifier>) {
     const idx = this.constantViolations.findIndex((x) => x === path)
+    /* istanbul ignore else */
     if (idx > -1) this.constantViolations.splice(idx, 1)
   }
 }

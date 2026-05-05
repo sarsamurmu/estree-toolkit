@@ -984,7 +984,7 @@ export const definitions = cleanObj<Definitions>({
         validate: a.node('Literal')
       },
       attributes: {
-        default: () => [],
+        default: /* istanbul ignore next */ () => [],
         validate: a.arrayOf(a.node('ImportAttribute'))
       }
     }
@@ -1009,7 +1009,7 @@ export const definitions = cleanObj<Definitions>({
         validate: a.nullable(a.node('Literal'))
       },
       attributes: {
-        default: () => [],
+        default: /* istanbul ignore next */ () => [],
         validate: a.arrayOf(a.node('ImportAttribute'))
       }
     }
@@ -1041,7 +1041,7 @@ export const definitions = cleanObj<Definitions>({
         validate: a.nullable(a.OR(a.node('Identifier'), a.node('Literal')))
       },
       attributes: {
-        default: () => [],
+        default: /* istanbul ignore next */ () => [],
         validate: a.arrayOf(a.node('ImportAttribute'))
       }
     }

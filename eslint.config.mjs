@@ -1,18 +1,27 @@
-import eslint from '@eslint/js'
+import js from '@eslint/js'
+import { defineConfig } from 'eslint/config'
 import tseslint from 'typescript-eslint'
-import stylisticTS from '@stylistic/eslint-plugin-ts'
-import stylisticJS from '@stylistic/eslint-plugin-js'
+import stylistic from '@stylistic/eslint-plugin'
 
 /* eslint-disable quote-props */
 
-const rules = {
+const baseRules = {
+  'eqeqeq': ['error', 'smart'],
+  'no-var': 'error',
+  'no-unneeded-ternary': 'error',
+  'arrow-parens': ['error', 'always'],
+  'quote-props': ['error', 'as-needed'],
+}
+
+const tsRules = {
   '@typescript-eslint/no-unnecessary-boolean-literal-compare': 'error',
-  'no-useless-constructor': 'off',
   '@typescript-eslint/no-useless-constructor': 'error',
   '@typescript-eslint/require-await': 'error',
+  '@typescript-eslint/no-for-in-array': 'error',
+  '@typescript-eslint/no-namespace': ['error', { allowDeclarations: true }],
+
   '@typescript-eslint/no-explicit-any': 'off',
   '@typescript-eslint/explicit-function-return-type': 'off',
-  '@typescript-eslint/no-for-in-array': 'error',
   '@typescript-eslint/no-unsafe-assignment': 'off',
   '@typescript-eslint/no-unsafe-call': 'off',
   '@typescript-eslint/no-unsafe-return': 'off',
@@ -20,79 +29,81 @@ const rules = {
   '@typescript-eslint/no-unsafe-argument': 'off',
   '@typescript-eslint/no-unnecessary-type-assertion': 'off',
 
-  'comma-spacing': 'off',
-  '@stylistic/ts/comma-spacing': 'error',
-  'quotes': 'off',
-  '@stylistic/ts/quotes': ['error', 'single', { avoidEscape: true }],
+  'no-useless-constructor': 'off',
   'require-await': 'off',
-  'space-before-function-paren': 'off',
-  '@stylistic/ts/space-before-function-paren': ['error', {
-    anonymous: 'always',
-    named: 'never',
-    asyncArrow: 'always'
-  }],
-  '@stylistic/ts/explicit-module-boundary-types': 'off',
-  '@typescript-eslint/no-namespace': ['error', { allowDeclarations: true }],
-  '@stylistic/ts/no-non-null-assertion': 'off',
-  'semi': 'off',
-  '@stylistic/ts/semi': ['error', 'never'],
 }
 
-const common = {
-  extends: [
-    eslint.configs.recommended,
-    ...tseslint.configs.recommendedTypeChecked,
-  ],
-  plugins: {
-    '@stylistic/ts': stylisticTS,
-    '@stylistic/js': stylisticJS
-  },
-  rules: { ...rules }
-}
-
-export default [
-  {
-    rules: {
-      'indent': ['error', 2, { SwitchCase: 1 }],
-      'quotes': ['error', 'single', { avoidEscape: true }],
-      'eqeqeq': ['error', 'smart'],
-      'arrow-parens': ['error', 'always'],
-      'no-var': 'error',
-      'no-unneeded-ternary': 'error',
-      'space-before-function-paren': ['error', {
-        anonymous: 'always',
-        named: 'never',
-        asyncArrow: 'always'
-      }],
-      'quote-props': ['error', 'as-needed'],
-      'semi': ['error', 'never'],
+const stylisticRules = {
+  '@stylistic/comma-spacing': 'error',
+  '@stylistic/quotes': ['error', 'single', { avoidEscape: true }],
+  '@stylistic/semi': ['error', 'never'],
+  '@stylistic/space-before-function-paren': [
+    'error',
+    {
+      anonymous: 'always',
+      named: 'never',
+      asyncArrow: 'always',
     },
+  ],
+}
+
+export default defineConfig([
+  {
+    extends: [js.configs.recommended],
+    rules: baseRules,
     ignores: [
       'dist/**',
       'dist-es/**',
       'generator-scripts/**',
-      'src/generated'
-    ]
+      'src/generated',
+    ],
   },
-  ...tseslint.config({
-    files: ['**/*.ts'],
+
+  {
+    files: ['src/**/*.ts'],
     ignores: ['src/generated/*.ts'],
-    ...common,
+    extends: [tseslint.configs.recommendedTypeChecked],
+
     languageOptions: {
+      parser: tseslint.parser,
       parserOptions: {
         project: './tsconfig.json',
         tsconfigRootDir: import.meta.dirname,
       },
-    }
-  }),
-  ...tseslint.config({
-    files: ['tests/**/*.test.ts'],
-    ...common,
+    },
+
+    plugins: {
+      '@typescript-eslint': tseslint.plugin,
+      '@stylistic': stylistic,
+    },
+
+    rules: {
+      ...tsRules,
+      ...stylisticRules,
+    },
+  },
+
+  {
+    files: ['tests/**/*.ts'],
+    extends: [tseslint.configs.recommendedTypeChecked],
+
     languageOptions: {
+      parser: tseslint.parser,
       parserOptions: {
         project: './tests/tsconfig.json',
         tsconfigRootDir: import.meta.dirname,
       },
-    }
-  })
-]
+    },
+
+    plugins: {
+      '@typescript-eslint': tseslint.plugin,
+      '@stylistic': stylistic,
+    },
+
+    rules: {
+      ...tsRules,
+      ...stylisticRules,
+      '@typescript-eslint/no-unnecessary-boolean-literal-compare': 'off'
+    },
+  },
+])

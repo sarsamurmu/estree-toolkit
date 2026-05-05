@@ -38,7 +38,8 @@ test('reference collection', () => {
     TaggedTemplateExpression_tag\`\`;
     (class extends ClassExpression_superClass {});
     import.meta;
-    import(ImportExpression_source);
+    import(ImportExpression_source, ImportExpression_options);
+    import {} from '' with { importAttribute_key: '' };
     ({ [Property_key]: Property_value, x: x });
     [...SpreadElement_argument];
     class x { methodDefinition_key() {} [MethodDefinition_key_computed]() {} }
